@@ -1,0 +1,23 @@
+<h2>{{ survey.name }}</h2>
+
+<p>
+Title: {{survey.title}}
+</p>
+<p>
+Author: {{survey.author}}
+</p>
+
+{% if survey.initialized %}
+<p>
+  This survey is already initialized. You may not modify it any more. You can now upload
+  scans and correct the result (once implemented).
+</p>
+{% else %}
+<p>
+  The questionnaire for this survey is still being designed. Please finish the
+  questionnaire, and initialize the project.
+</p>
+<p>
+  <a href="{% url 'questionnaire_edit' survey.id %}">Edit the questionnaire.</a>
+</p>
+{% endif %}

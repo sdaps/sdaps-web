@@ -1,0 +1,5 @@
+sdaps_web/settings.py
+rest_framework
+*.pyc
+*~
+*.db

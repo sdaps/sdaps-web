@@ -1,0 +1,22 @@
+This is absolutely experimental code. It is just public in case someone
+is interested in development.
+
+This repository contains the beginning of a django application that can be
+used as a frontend for SDAPS. Some of the basic ideas:
+ * Leave the current SDAPS codebase pretty much unchanged for now.
+   This primarily means we do not touch the data model for now, and
+   stay with the pickled data storage.
+   This probably means that storing corrections will be very inefficient
+   for now.
+ * Editing is done by dynamically building a LaTeX file for the questions.
+   Questionnaires can be designed directly in django.
+   Previewing is done using pdf.js.
+ * backbone.js seems like a sane way for some of the data model needs
+   (questionnaire creation and correction).
+ * Long running tasks are executed in the background using celery.
+
+Anyone interested in moving this forwared please drop me a line. Note that I
+have not yet attached a license to it (probably GPLv3+, but I am thinking
+about using some AGPL like license).
+
+Well, that is about it for now.

@@ -1,0 +1,138 @@
+<html>
+<head>
+  <!-- Use latest PDF.js build from Github -->
+  <script type="text/javascript" src="{{ STATIC_URL }}/sdaps_ctl/pdf.js"></script>
+
+</head>
+
+<h2>{{ survey.name }}</h2>
+
+<p>
+Title: {{survey.title}}
+</p>
+<p>
+Author: {{survey.author}}
+</p>
+
+
+<div id="texcode" style="border:1px solid red; width: 48%; height: 80%; overflow: scroll; float: left;">
+asdf<br/>
+
+
+</div>
+
+<div id="preview-widget" style="border:1px solid green; width: 48%; height: 80%; float: right;">
+  <div>
+    <button id="prev" onclick="goPrevious()">Previous</button>
+    <button id="next" onclick="goNext()">Next</button>
+    &nbsp; &nbsp;
+    <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+  </div>
+  <div id="preview-container" style="overflow: scroll; min-height: 100%; max-height: 100%" >
+    <canvas id="preview"/>
+  </div>
+</div>
+
+
+  <script type="text/javascript">
+    var url = '{% url "questionnaire_download" survey.id %}';
+
+    // Disable workers to avoid yet another cross-origin issue (workers need the URL of
+    // the script to be loaded, and currently do not allow cross-origin scripts)
+    //
+    PDFJS.disableWorker = true;
+
+    var pdfDoc = null,
+        pageNum = 1,
+        scale = 0.8,
+        canvas = document.getElementById('preview'),
+        ctx = canvas.getContext('2d'),
+        pdfDoc_last_modified_time = null;
+
+    //
+    // Get page info from document, resize canvas accordingly, and render page
+    //
+    function renderPage(num) {
+      // Using promise to fetch the page
+      pdfDoc.getPage(num).then(function(page) {
+        var viewport = page.getViewport(scale);
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        // Render PDF page into canvas context
+        var renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        page.render(renderContext);
+      });
+
+      // Update page counters
+      document.getElementById('page_num').textContent = pageNum;
+      document.getElementById('page_count').textContent = pdfDoc.numPages;
+    }
+
+    //
+    // Go to previous page
+    //
+    function goPrevious() {
+      if (pageNum <= 1)
+        return;
+      pageNum--;
+      renderPage(pageNum);
+    }
+
+    //
+    // Go to next page
+    //
+    function goNext() {
+      if (pageNum >= pdfDoc.numPages)
+        return;
+      pageNum++;
+      renderPage(pageNum);
+    }
+
+    function downloadAndDisplayPdf() {
+        xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.responseType = "arraybuffer";
+
+        if (pdfDoc_last_modified_time !== null) {
+            xhr.setRequestHeader('If-Modified-Since', pdfDoc_last_modified_time);
+        }
+
+        xhr.onload = (function() {
+            if (xhr.status == 304)
+                return;
+
+            var data = new Uint8Array(xhr.response || xhr.mozResponseArrayBuffer);
+
+            pdfDoc_last_modified_time = xhr.getResponseHeader('Last-Modified')
+
+            PDFJS.getDocument(data).then(function getPdfHelloWorld(_pdfDoc) {
+                pdfDoc = _pdfDoc;
+                renderPage(pageNum);
+            });
+
+      }).bind(this);
+
+        xhr.send(null)
+    }
+
+
+    function reloadPDF() {
+        // And again!
+        setTimeout(reloadPDF, 5000);
+
+        // XXX: This should only rerender, if the file is modified!
+
+        downloadAndDisplayPdf();
+    }
+
+    downloadAndDisplayPdf();
+
+    setTimeout(reloadPDF, 5000);
+  </script>  
+
+</html>
+
