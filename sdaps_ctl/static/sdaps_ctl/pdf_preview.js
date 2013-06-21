@@ -60,23 +60,21 @@
     },
 
     render: function() {
-      preview = this;
-
       /* Using promise to fetch the page. */
-      this.pdf.getPage(this.page).then(function(page) {
-        var viewport = page.getViewport(preview.scale);
-        preview.canvas.height = viewport.height;
-        preview.canvas.width = viewport.width;
+      this.pdf.getPage(this.page).then((function(page) {
+        var viewport = page.getViewport(this.scale);
+        this.canvas.height = viewport.height;
+        this.canvas.width = viewport.width;
 
         /* Render into the already created context. */
         var renderContext = {
-          canvasContext: preview.ctx,
+          canvasContext: this.ctx,
           viewport: viewport
         };
         page.render(renderContext);
 
-        preview.ensureTimeout();
-      });
+        this.ensureTimeout();
+      }).bind(this));
 
       /* Update the page count*/
       this.$('#page_num')[0].textContent = this.page;
@@ -84,24 +82,22 @@
     },
 
     download: function() {
-      preview = this;
-
       xhr = new XMLHttpRequest();
-      xhr.open("GET", preview.url, true);
+      xhr.open("GET", this.url, true);
       xhr.responseType = "arraybuffer";
 
-      if (preview.last_modified_time !== null) {
-          xhr.setRequestHeader('If-Modified-Since', preview.last_modified_time);
+      if (this.last_modified_time !== null) {
+          xhr.setRequestHeader('If-Modified-Since', this.last_modified_time);
       }
 
       xhr.onload = (function() {
           if (xhr.status == 304) {
-            preview.ensureTimeout();
+            this.ensureTimeout();
             return;
           }
 
           if (xhr.status == 404) {
-            preview.ensureTimeout();
+            this.ensureTimeout();
             return;
           }
 
@@ -109,11 +105,11 @@
 
           this.last_modified_time = xhr.getResponseHeader('Last-Modified')
 
-          PDFJS.getDocument(data).then(function getPdfHelloWorld(_pdfDoc) {
-              preview.pdf = _pdfDoc;
-              preview.render();
-          });
-      }).bind(preview);
+          PDFJS.getDocument(data).then((function getPdfHelloWorld(_pdfDoc) {
+              this.pdf = _pdfDoc;
+              this.render();
+          }).bind(this));
+      }).bind(this);
 
       xhr.send(null)
     },
@@ -122,7 +118,7 @@
       if (this.timeout_registered)
         return;
 
-      setTimeout(this.autoreload.bind(preview), 5000);
+      setTimeout(this.autoreload.bind(this), 5000);
       this.timeout_registered = true;
     },
 
