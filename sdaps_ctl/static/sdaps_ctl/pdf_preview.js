@@ -75,14 +75,12 @@
         };
         page.render(renderContext);
 
-        /* Queue a new render event! */
-        if (!preview.timeout_registered)
-          setTimeout(preview.autoreload.bind(preview), 5000);
+        preview.ensureTimeout();
       });
 
       /* Update the page count*/
-      this.$('#page_num').textContent = this.page;
-      this.$('#page_count').textContent = this.pdf.numPages;
+      this.$('#page_num')[0].textContent = this.page;
+      this.$('#page_count')[0].textContent = this.pdf.numPages;
     },
 
     download: function() {
@@ -114,6 +112,14 @@
       }).bind(preview);
 
       xhr.send(null)
+    },
+
+    ensureTimeout: function() {
+      if (this.timeout_registered)
+        return;
+
+      setTimeout(this.autoreload.bind(preview), 5000);
+      this.timeout_registered = true;
     },
 
     autoreload: function() {
