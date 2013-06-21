@@ -95,11 +95,15 @@
       }
 
       xhr.onload = (function() {
-          if (xhr.status == 304)
-              return;
+          if (xhr.status == 304) {
+            preview.ensureTimeout();
+            return;
+          }
 
-          if (xhr.status == 404)
-              return;
+          if (xhr.status == 404) {
+            preview.ensureTimeout();
+            return;
+          }
 
           var data = new Uint8Array(xhr.response || xhr.mozResponseArrayBuffer);
 
