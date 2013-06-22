@@ -186,3 +186,6 @@ djcelery.setup_loader()
 # SDAPS
 SDAPS_PROJECT_ROOT = '/tmp/projects'
 
+#: Render delay in seconds
+SDAPS_RENDER_DELAY = 1
+

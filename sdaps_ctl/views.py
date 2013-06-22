@@ -79,9 +79,6 @@ def edit_questionnaire(request, survey_id):
         'survey' : survey,
     }
 
-    tex = open('/home/benjamin/Projects/sdaps/examples/example.tex').read()
-    tasks.update_questionnaire.delay(survey, tex)
-
     return render(request, 'sdaps_ctl/edit_questionnaire.html', context_dict)
 
 
@@ -114,6 +111,8 @@ class QuestionList(mixins.ListModelMixin,
 
         if serializer.is_valid():
             serializer.save()
+            tasks.queue_timed_write_and_render(survey)
+
             return response.Response(serializer.data, status=status.HTTP_201_CREATED)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -147,12 +146,18 @@ class QuestionDetail(generics.GenericAPIView):
         serializer = self.serializer_class(qobject, data=request.DATA)
         if serializer.is_valid():
             serializer.save()
+
+            tasks.queue_timed_write_and_render(qobject.survey)
+
             return response.Response(serializer.data)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk, survey_id, format=None):
         qobject = self.get_object(pk, survey_id)
         qobject.delete()
+
+        tasks.queue_timed_write_and_render(qobject.survey)
+
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -179,6 +184,8 @@ class AnswerList(mixins.ListModelMixin,
 
         if serializer.is_valid():
             serializer.save()
+            tasks.queue_timed_write_and_render(models.Survey.get(id=kwargs['survey_id']))
+
             return response.Response(serializer.data, status=status.HTTP_201_CREATED)
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -213,6 +220,7 @@ class AnswerDetail(generics.GenericAPIView):
 
         if serializer.is_valid():
             serializer.save()
+            tasks.queue_timed_write_and_render(models.Survey.objects.get(id=survey_id))
             return response.Response(serializer.data)
 
         return response.Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -221,6 +229,7 @@ class AnswerDetail(generics.GenericAPIView):
         qanswer = self.get_object(pk, survey_id)
         qanswer.delete()
 
+        tasks.queue_timed_write_and_render(models.Survey.objects.get(id=survey_id))
         return response.Response(status=status.HTTP_204_NO_CONTENT)
 
 

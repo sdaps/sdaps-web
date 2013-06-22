@@ -66,6 +66,8 @@ class ScheduledTasks(models.Model):
     #: The celery identifier of the queued task
     celeryid = models.CharField(max_length=200)
 
+    class Meta:
+        unique_together = (('survey','task'),)
 
 class QObject(models.Model):
     QOBJECT_TYPE_CHOICES = (
@@ -97,6 +99,9 @@ class QObject(models.Model):
         # Remove any bogus children
         if not self.qtype.endswith('group'):
             QObject.objects.filter(parent=self).delete()
+        else:
+            # They need to be of the corresponding "line" type.
+            QObject.objects.filter(parent=self).exclude(qtype=self.qtype[:-5]+'line').delete()
 
         # Remove any answers that should not be there
         if self.qtype in ['qhead', 'qmarkgroup', 'qchoiceline']:

@@ -1,7 +1,9 @@
 
-from django.db import transaction
+from django.conf import settings
 
 from celery.task import task
+from celery.result import AsyncResult
+from celery import states
 
 import models
 
@@ -84,23 +86,47 @@ def initialize_survey(name):
     return s
 
 @task()
-def update_questionnaire(djsurvey, texcode):
+def write_questionnaire(djsurvey):
+    from texwriter import texwriter
 
+    texwriter(djsurvey)
+
+@task()
+def render_questionnaire(djsurvey):
     # Must not yet be initialized
     assert(djsurvey.initialized == False)
 
-    path = djsurvey.path
-
-    # So, write out the new .tex file
-    texfile = open(os.path.join(djsurvey.path, 'questionnaire.tex'), 'w')
-    texfile.write(texcode)
-    texfile.close()
-
-    # And compile it
-    if utils.atomic_latex_compile(path, 'questionnaire.tex'):
+    if utils.atomic_latex_compile(djsurvey.path, 'questionnaire.tex'):
         return True
     else:
         return False
+
+@task
+def write_and_render_questionnaire(djsurvey):
+    write_questionnaire(djsurvey)
+    render_questionnaire(djsurvey)
+
+def queue_timed_write_and_render(djsurvey):
+    with models.LockedSurvey(djsurvey.id):
+        try:
+            task = models.ScheduledTasks.objects.get(survey=djsurvey, task='render')
+
+            # Will the task still run?
+            if AsyncResult(task.celeryid).state in [states.PENDING, states.RETRY]:
+                print "not queuing task!!!!"
+                return
+
+            # Seems like the task will not run, so remove the old one
+            task.delete()
+        except models.ScheduledTasks.DoesNotExist:
+            pass
+
+        print "queueing task"
+        # And queue a new task
+        result = write_and_render_questionnaire.apply_async(args=(djsurvey, ),countdown=1)
+
+        # Note in DB, that it is queued
+        models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='render').save()
 
 @task()
 def build_survey(djsurvey):
