@@ -197,24 +197,29 @@ $((function(){
       return this.model.toJSON();
     },
 
+    templateUpdated: function() {
+    },
+
     renderFromTemplate: function() {
       template = _.template($('#'+this.model.attributes.qtype+'-template').html());
 
-      /* See comment for "relations" attribute. */
       this.$el.html(template(this.templateData()));
+
+      this.textfield = this.$('.qobject_text');
+      this.templateUpdated();
 
       return this;
     },
 
     render: function() {
       if ('text' in this.model.changed)
-        this.$('.qobject_text').val(this.model.get('text'));
+        this.textfield.val(this.model.get('text'));
 
       return this;
     },
 
     updateData: function() {
-      this.model.save({text : this.$('.qobject_text').val()});
+      this.model.save({text : this.textfield.val()});
     },
 
     answerAdded: function(answer) {
@@ -232,9 +237,14 @@ $((function(){
   var QMarkMixin = {
     updateData: function() {
       if (this.model.get('answers').length == 2) {
-        this.model.get('answers').models[0].save({text : this.$('.answer0_text').val()});
-        this.model.get('answers').models[1].save({text : this.$('.answer1_text').val()});
+        this.model.get('answers').models[0].save({text : this.textfield_answer0.val()});
+        this.model.get('answers').models[1].save({text : this.textfield_answer1.val()});
       }
+    },
+
+    templateUpdated: function() {
+      this.textfield_answer0 = this.$('.answer0_text');
+      this.textfield_answer1 = this.$('.answer1_text');
     },
 
     templateData: function() {
@@ -248,9 +258,9 @@ $((function(){
     render: function() {
       if (this.model.get('answers').length == 2) {
         if ('text' in this.model.get('answers').models[0].changed)
-          this.$('.answer0_text').val(this.model.get('answers').models[0].get('text'));
+          this.textfield_answer0.val(this.model.get('answers').models[0].get('text'));
         if ('text' in this.model.get('answers').models[1].changed)
-          this.$('.answer1_text').val(this.model.get('answers').models[1].get('text'));
+          this.textfield_answer1.val(this.model.get('answers').models[1].get('text'));
       }
 
       return this;
@@ -270,12 +280,12 @@ $((function(){
 
       this.listenTo(this.model, 'add:children', this.addChild);
       this.listenTo(this.model, 'remove:children', this.removeChild);
-
-      this.addAllChildren();
     },
 
-    renderFromTemplate: function(qobject) {
+    templateUpdated: function(qobject) {
       /* Readd children if the template has been rerendered. */
+      this.children = this.$('.children');
+
       this.addAllChildren();
     },
 
@@ -283,19 +293,17 @@ $((function(){
       /* Figure out the class to use.
        * This is either the generic QObject, or one of the subclasses. */
 
-      console.log("adding child!");
-
       if (qobject.attributes.qtype in QObjectViewLookup)
         var view = new QObjectViewLookup[qobject.attributes.qtype]({model: qobject});
       else
         var view = new QObjectView({model: qobject});
 
-      console.log(this.$('.children')[0]);
-
-      this.$('.children').append(view.render().el);
+      this.children.append(view.render().el);
     },
 
     addAllChildren: function() {
+      this.children.empty();
+
       this.model.get('children').each(this.addChild, this);
     },
 
@@ -346,6 +354,8 @@ $((function(){
 
       this.qobjects.fetch();
       this.answers.fetch();
+
+      this.qobjectlist = this.$('.qobjectlist');
     },
 
     addQObject: function(qobject) {
@@ -360,7 +370,7 @@ $((function(){
       else
         var view = new QObjectView({model: qobject});
 
-      this.$('.qobjectlist').append(view.render().el);
+      this.qobjectlist.append(view.render().el);
     },
 
     addAll: function() {
