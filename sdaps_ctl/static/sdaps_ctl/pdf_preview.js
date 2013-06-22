@@ -19,7 +19,7 @@
     this.pdf = null;
     this.scale = 0.8;
     this.page = 1;
-    this.canvas = this.$('#pdfcanvas')[0];
+    this.canvas = this.$('.pdfcanvas')[0];
     this.last_modified_time = null;
     this.timeout_registered = false;
 

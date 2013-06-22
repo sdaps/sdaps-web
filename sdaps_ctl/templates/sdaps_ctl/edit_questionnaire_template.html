@@ -10,13 +10,13 @@
     <div class="qobject qmark">
       <input class="qobject_text text" type="text" value="<%- text %>" /> <br />
       <% if (answers[0]) { %>
-      <input class="answer0_text text" class="answer" type="text" value="<%- answers[0].text %>" /> <br />
+      <input class="answer0_text text" class="answer" type="text" value="<%- answers[0] %>" /> <br />
       <% } else { %>
         no left answer
       <% } %>
        – 
       <% if (answers[1]) { %>
-      <input class="answer1_text text"  class="answer" type="text" value="<%- answers[1].text %>" /> <br />
+      <input class="answer1_text text"  class="answer" type="text" value="<%- answers[1] %>" /> <br />
       <% } else { %>
         no right answer
       <% } %>
@@ -25,15 +25,28 @@
   </script>
 
   <script type="text/template" id="qmarkgroup-template">
-    <div class="qobject qhead">
-      <input class="heading" type="text" value="<%- text %>" />
+    <div class="qobject qmarkgroup">
+      <input class="qobject_text text" type="text" value="<%- text %>" />
       <a class="delete" />
+      <ul class="children">
+      </ul>
     </div>
   </script>
 
   <script type="text/template" id="qmarkline-template">
-    <div class="qobject qhead">
-      <input class="heading" type="text" value="<%- text %>" />
+    <div class="qobject qmark qmarkline">
+      <input class="qobject_text text" type="text" value="<%- text %>" /> <br />
+      <% if (answers[0]) { %>
+      <input class="answer0_text text" class="answer" type="text" value="<%- answers[0] %>" /> <br />
+      <% } else { %>
+        no left answer
+      <% } %>
+       – 
+      <% if (answers[1]) { %>
+      <input class="answer1_text text"  class="answer" type="text" value="<%- answers[1] %>" /> <br />
+      <% } else { %>
+        no right answer
+      <% } %>
       <a class="delete" />
     </div>
   </script>

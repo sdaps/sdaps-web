@@ -30,16 +30,16 @@ $((function(){
       };
     },
 
-    /* XXX: No syncing for now! */
-    sync: function() {
+    url: function() {
+      return QEditor.base_url + '/answers/' + this.get('id') + '/';
     },
   });
 
   var AnswerCollection = QEditor.AnswerCollection = Backbone.Collection.extend({
     model: Answer,
 
-    /* XXX: No syncing for now! */
-    sync: function() {
+    initialize: function() {
+      this.url = QEditor.base_url + '/answers';
     },
   });
 
@@ -49,7 +49,7 @@ $((function(){
 
   var QObject = QEditor.QObject = Backbone.RelationalModel.extend({
 
-    subModelTypeAttribute: 'type',
+    subModelTypeAttribute: 'qtype',
     subModelTypes: {
       'qhead': 'QEditor.QHead',
       'qmark': 'QEditor.QMark',
@@ -57,14 +57,12 @@ $((function(){
       'qmarkline': 'QEditor.QMarkLine',
     },
 
-    /* NOTE: We post the answers key to the server, which simply ignores it.
-     *       However, that is why using toJSON below works fine for the
-     *       templates, as the data is included in the objects. */
     relations: [{
       type: Backbone.HasMany,
       key: 'answers',
       relatedModel: "QEditor.Answer",
       collectionType: "QEditor.AnswerCollection",
+      includeInJSON: 'id',
       reverseRelation: {
         key: 'qobject',
         includeInJSON: 'id',
@@ -72,7 +70,7 @@ $((function(){
     }, {
       type: Backbone.HasMany,
       key: 'children',
-      relatedModel: "QEditor.QMarkLine",
+      relatedModel: "QEditor.QObject",
       collectionType: "QEditor.QObjectCollection",
       includeInJSON: 'id',
       reverseRelation: {
@@ -84,22 +82,30 @@ $((function(){
     defaults: function() {
       return {
         text: 'please add a text here',
-        type: 'invalid',
-        order: Questionnaire.nextOrder(),
+        qtype: 'invalid',
+        order: this.nextOrder(),
       };
     },
 
-    sync: function() {
+    nextOrder: function() {
+      if (this.collection != undefined)
+        return this.collection.nextOrder();
+      else
+        return 1;
     },
 
     local_init: function() {
+    },
+
+    url: function() {
+      return QEditor.base_url + '/qobjects/' + this.get('id') + '/';
     },
   });
 
   var QHead = QEditor.QHead = QObject.extend({
     defaults: function() {
       return _.extend(this.constructor.__super__.defaults(), {
-        type: 'qhead',
+        qtype: 'qhead',
       });
     },
    });
@@ -107,7 +113,7 @@ $((function(){
   var QMark = QEditor.QMark = QObject.extend({
     defaults: function() {
       return _.extend(this.constructor.__super__.defaults(), {
-        type: 'qmark',
+        qtype: 'qmark',
       });
     },
 
@@ -120,7 +126,7 @@ $((function(){
   var QMarkGroup = QEditor.QMarkGroup = QObject.extend({
     defaults: function() {
       return _.extend(this.constructor.__super__.defaults(), {
-        type: 'qmarkgroup',
+        qtype: 'qmarkgroup',
       });
     },
    });
@@ -128,15 +134,26 @@ $((function(){
   var QMarkLine = QEditor.QMarkLine = QObject.extend({
     defaults: function() {
       return _.extend(this.constructor.__super__.defaults(), {
-        type: 'qmarkline',
+        qtype: 'qmarkline',
       });
+    },
+
+    local_init: function() {
+      new Answer({text: 'lower', qobject: this});
+      new Answer({text: 'upper', qobject: this});
     },
    });
 
   /* The collection of the questions is a questionnaire. */
   var QObjectCollection = QEditor.QObjectCollection = Backbone.Collection.extend({
 
+    initialize: function() {
+      this.url = QEditor.base_url + '/qobjects/';
+      console.log(this.url);
+    },
+
     model: function(attrs) {
+      _.extend(attrs, {collection: this});
       return QObject.build(attrs);
     },
 
@@ -151,16 +168,7 @@ $((function(){
 
     comparator: 'order',
 
-    /* XXX: No syncing for now! */
-    sync: function() {
-    },
-
   });
-
-  /************************
-   * Questionnaire
-   ************************/
-  var Questionnaire = QEditor.Questionnaire = new QObjectCollection;
 
   /************************
    * Questionnaire View
@@ -179,17 +187,21 @@ $((function(){
       this.renderFromTemplate();
 
       /* Re-render any time this object changes. */
-      this.listenTo(this.model, 'change', this.sync);
+      this.listenTo(this.model, 'change', this.render);
 
       this.listenTo(this.model, 'add:answers', this.renderFromTemplate);
       this.listenTo(this.model, 'remove:answers', this.renderFromTemplate);
     },
 
+    templateData: function() {
+      return this.model.toJSON();
+    },
+
     renderFromTemplate: function() {
-      template = _.template($('#'+this.model.attributes.type+'-template').html());
+      template = _.template($('#'+this.model.attributes.qtype+'-template').html());
 
       /* See comment for "relations" attribute. */
-      this.$el.html(template(this.model.toJSON()));
+      this.$el.html(template(this.templateData()));
 
       return this;
     },
@@ -217,19 +229,23 @@ $((function(){
 
   });
 
-  var QMarkView = QObjectView.extend({
+  var QMarkMixin = {
     updateData: function() {
-      QMarkView.__super__.updateData.call(this, arguments);
-
       if (this.model.get('answers').length == 2) {
         this.model.get('answers').models[0].save({text : this.$('.answer0_text').val()});
         this.model.get('answers').models[1].save({text : this.$('.answer1_text').val()});
       }
     },
 
-    render: function() {
-      QMarkView.__super__.render.call(this, arguments);
+    templateData: function() {
+      data = this.model.toJSON();
+      answer_text = this.model.get('answers').pluck('text');
+      data['answers'] = answer_text;
 
+      return data;
+    },
+
+    render: function() {
       if (this.model.get('answers').length == 2) {
         if ('text' in this.model.get('answers').models[0].changed)
           this.$('.answer0_text').val(this.model.get('answers').models[0].get('text'));
@@ -239,6 +255,10 @@ $((function(){
 
       return this;
     },
+  };
+
+  var QMarkView = QObjectView.extend({
+    mixins: [QMarkMixin],
   });
 
   /* Mixin to handle multiple subquestions.
@@ -246,19 +266,37 @@ $((function(){
    * placed into. */
   var MultiQObjectMixin = {
     initialize: function() {
+      console.log("initializing mixin!");
+
       this.listenTo(this.model, 'add:children', this.addChild);
       this.listenTo(this.model, 'remove:children', this.removeChild);
+
+      this.addAllChildren();
+    },
+
+    renderFromTemplate: function(qobject) {
+      /* Readd children if the template has been rerendered. */
+      this.addAllChildren();
     },
 
     addChild: function(qobject) {
       /* Figure out the class to use.
        * This is either the generic QObject, or one of the subclasses. */
-      if (qobject.attributes.type in QObjectViewLookup)
-        var view = new QObjectViewLookup[qobject.attributes.type]({model: qobject});
+
+      console.log("adding child!");
+
+      if (qobject.attributes.qtype in QObjectViewLookup)
+        var view = new QObjectViewLookup[qobject.attributes.qtype]({model: qobject});
       else
         var view = new QObjectView({model: qobject});
 
+      console.log(this.$('.children')[0]);
+
       this.$('.children').append(view.render().el);
+    },
+
+    addAllChildren: function() {
+      this.model.get('children').each(this.addChild, this);
     },
 
     removeChild: function() {
@@ -276,9 +314,7 @@ $((function(){
   });
 
   var QMarkLineView = QObjectView.extend({
-    initialize: function() {
-      QMarkLineView.__super__.initialize.call(this, arguments);
-    },
+    mixins: [QMarkMixin],
   });
 
   /* Dictionary of view types. */
@@ -292,59 +328,66 @@ $((function(){
    * And the Editor
    ************************/
   var Editor = QEditor.Editor = Backbone.View.extend({
-    el: $('#questionnaire_edit'),
-
     /* No events yet! Oh, how boring ... */
     events: {
     },
 
-    initialize: function() {
-      this.listenTo(Questionnaire, 'add', this.addQObject);
-      this.listenTo(Questionnaire, 'reset', this.addAll);
+    initialize: function(element, url) {
+      this.setElement(element);
 
-      Questionnaire.fetch();
+      /* XXX: Hack, this means that we cannot load multiple editors on one page! */
+      QEditor.base_url = url;
+
+      this.qobjects = new QObjectCollection; //([], {url: url + '/qobjects'});
+      this.answers = new AnswerCollection; //([], {url: url + '/answers'});
+
+      this.listenTo(this.qobjects, 'add', this.addQObject);
+      this.listenTo(this.qobjects, 'reset', this.addAll);
+
+      this.qobjects.fetch();
+      this.answers.fetch();
     },
 
     addQObject: function(qobject) {
-      /* Only add questions directly if they do not have a parent. */
-      if (qobject.get('parent') !== undefined)
+      /* XXX: Only add questions directly if they do not have a parent. */
+      if (qobject.get('parent') !== null)
         return;
 
       /* Figure out the class to use.
        * This is either the generic QObject, or one of the subclasses. */
-      if (qobject.attributes.type in QObjectViewLookup)
-        var view = new QObjectViewLookup[qobject.attributes.type]({model: qobject});
+      if (qobject.attributes.qtype in QObjectViewLookup)
+        var view = new QObjectViewLookup[qobject.attributes.qtype]({model: qobject});
       else
         var view = new QObjectView({model: qobject});
 
-      this.$('#questionnaire_view').append(view.render().el);
+      this.$('.qobjectlist').append(view.render().el);
     },
 
     addAll: function() {
-      Questionnaire.each(this.addQObject, this);
+      this.qobjects.each(this.addQObject, this);
     }
   });
 
-  var myeditor = new Editor;
+//  var myeditor = new Editor;
 
-  Questionnaire.create({type : 'qhead'});
-  test = Questionnaire.create({type : 'qmark', text: 'test'});
-  test.local_init();
+//  Questionnaire.create({type : 'qhead'});
+//  test = Questionnaire.create({type : 'qmark', text: 'test'});
+//  test.local_init();
 
-  test = Questionnaire.create({type : 'qmark', text: 'test2'});
-  test.local_init();
+//  test = Questionnaire.create({type : 'qmark', text: 'test2'});
+//  test.local_init();
 
-  new Answer({text: 'blub', qobject: test});
+//  new Answer({text: 'blub', qobject: test});
 
-  console.log(JSON.stringify(test.get('answers')));
+//  console.log(JSON.stringify(test.get('answers')));
 
-  test = Questionnaire.create({type : 'qmarkgroup', text: 'markgroup'});
-  test.local_init();
+//  test = Questionnaire.create({type : 'qmarkgroup', text: 'markgroup'});
+//  test.local_init();
 
-  child1 = new QMarkLine({text: 'markline 1', parent: test});
-  child2 = new QMarkLine({text: 'markline 2', parent: test});
+//  child1 = new QMarkLine({text: 'markline 1', parent: test});
+//  child2 = new QMarkLine({text: 'markline 2', parent: test});
 
-  console.log(JSON.stringify(test.get('children')));
+//  console.log(JSON.stringify(test.get('children')));
 
 }).bind(this));
 

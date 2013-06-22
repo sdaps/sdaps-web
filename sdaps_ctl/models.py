@@ -97,13 +97,13 @@ class QAnswer(models.Model):
     )
 
     #: The question that this answer belongs to
-    qobject = models.ForeignKey(QObject, db_index=True)
+    qobject = models.ForeignKey(QObject, related_name='answers', db_index=True)
 
     #: The text for this answer
-    text = models.CharField(max_length=300, choices=ANSWER_TYPE_CHOICES)
+    text = models.CharField(max_length=300)
 
-    #: The type of this box (either box or textbox)
-    btype = models.CharField(max_length=15)
+    #: The type of this box (either check or textbox)
+    btype = models.CharField(max_length=15, choices=ANSWER_TYPE_CHOICES)
 
     #: The number of columns to use for this item.
     #: Only valid if the QObject is of type choicegroup.
