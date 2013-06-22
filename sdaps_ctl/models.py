@@ -68,6 +68,16 @@ class ScheduledTasks(models.Model):
 
 
 class QObject(models.Model):
+    QOBJECT_TYPE_CHOICES = (
+        ('qhead', 'Heading'),
+        ('qmark', 'Mark'),
+        ('qmarkgroup', 'Mark Group'),
+        ('qmarkline', 'Mark Line'),
+        ('qchoice', 'Choice'),
+        ('qchoicegroup', 'Choice Group'),
+        ('qchoiceline', 'Choice Group Line'),
+    )
+
     #: The survey that this question belongs to
     survey = models.ForeignKey(Survey, db_index=True)
 
@@ -78,17 +88,19 @@ class QObject(models.Model):
     text = models.CharField(max_length=300)
 
     #: The type of the question. This may be one of:
-    #:  - heading
-    #:  - mark
-    #:  - choice
-    #:  - markgroup
-    #:  - choicegroup
-    #:  - textbox
-    qtype = models.CharField(max_length=15)
+    qtype = models.CharField(max_length=15, choices=QOBJECT_TYPE_CHOICES)
 
     class Meta:
         order_with_respect_to = 'survey'
 
+    def clean(self):
+        # Remove any bogus children
+        if not self.qtype.endswith('group'):
+            QObject.objects.filter(parent=self).delete()
+
+        # Remove any answers that should not be there
+        if self.qtype in ['qhead', 'qmarkgroup', 'qchoiceline']:
+            QAnswer.objects.filter(qobject=self).delete()
 
 class QAnswer(models.Model):
     ANSWER_TYPE_CHOICES = (
