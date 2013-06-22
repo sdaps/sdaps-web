@@ -7,8 +7,19 @@
   </script>
 
   <script type="text/template" id="qmark-template">
-    <div class="qobject qhead">
-      <input class="heading" type="text" value="<%- text %>" />
+    <div class="qobject qmark">
+      <input class="qobject_text text" type="text" value="<%- text %>" /> <br />
+      <% if (answers[0]) { %>
+      <input class="answer0_text text" class="answer" type="text" value="<%- answers[0].text %>" /> <br />
+      <% } else { %>
+        no left answer
+      <% } %>
+       – 
+      <% if (answers[1]) { %>
+      <input class="answer1_text text"  class="answer" type="text" value="<%- answers[1].text %>" /> <br />
+      <% } else { %>
+        no right answer
+      <% } %>
       <a class="delete" />
     </div>
   </script>
