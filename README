@@ -20,3 +20,35 @@ have not yet attached a license to it (probably GPLv3+, but I am thinking
 about using some AGPL like license).
 
 Well, that is about it for now.
+
+
+----
+
+What is working (sort of):
+ * Running background tasks using celery
+ * Running recognition
+ * Building a questionnaire (LaTeX document) from the database
+ * Changing the questionnaire using a json API
+ * Client side data model is working
+ * pdf.js based preview is working
+
+What is missing:
+ * JavaScript code to add/remove questions and answers. The data model
+   exists, so this should be all possible by modifying templates.
+ * PDF Preview widget needs proper UI
+ * All pages (especially editing page) need a proper stylesheet/structure.
+ * Django templats need to be reworked
+ * User/rights management
+ * Code to upload scans (using jquery file uploader, client and server,
+   this should also support chunked transfers to be able to resume uploads)
+ * UI to correct results (especially saving the changes as that is likely
+   very inefficient)
+   * Client Side (using backbone.js)
+   * Server Side
+ * General thoughts about usability:
+   * How are surveys managed?
+   * Should they be grouped?
+   * How should they be sorted?
+   * What should be done about surveys that are finished?
+   * What kind of permission management could be interesting?
+
