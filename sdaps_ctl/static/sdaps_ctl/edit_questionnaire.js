@@ -39,7 +39,7 @@ $((function(){
     model: Answer,
 
     initialize: function() {
-      this.url = QEditor.base_url + '/answers';
+      this.url = QEditor.base_url + '/answers/';
     },
   });
 
@@ -377,27 +377,6 @@ $((function(){
       this.qobjects.each(this.addQObject, this);
     }
   });
-
-//  var myeditor = new Editor;
-
-//  Questionnaire.create({type : 'qhead'});
-//  test = Questionnaire.create({type : 'qmark', text: 'test'});
-//  test.local_init();
-
-//  test = Questionnaire.create({type : 'qmark', text: 'test2'});
-//  test.local_init();
-
-//  new Answer({text: 'blub', qobject: test});
-
-//  console.log(JSON.stringify(test.get('answers')));
-
-//  test = Questionnaire.create({type : 'qmarkgroup', text: 'markgroup'});
-//  test.local_init();
-
-//  child1 = new QMarkLine({text: 'markline 1', parent: test});
-//  child2 = new QMarkLine({text: 'markline 2', parent: test});
-
-//  console.log(JSON.stringify(test.get('children')));
 
 }).bind(this));
 
