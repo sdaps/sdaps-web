@@ -51,11 +51,7 @@ def initialize_survey(name):
     path = None
 
     try:
-        # Mangle the name to create a nice path name
-        mangled_name = name.replace(' ', '_')
-        mangled_name, count = re.subn('[^a-zA-Z0-9_]', '', mangled_name)
-
-        s.directory = "%i-%s" % (s.id, mangled_name)
+        s.directory = "%i" % (s.id)
 
         os.mkdir(s.path)
 
@@ -63,11 +59,13 @@ def initialize_survey(name):
         if paths.local_run:
             cls_file = os.path.join(paths.source_dir, 'tex', 'sdaps.cls')
             code128_file = os.path.join(paths.source_dir, 'tex', 'code128.tex')
+            qrcode_file = os.path.join(paths.source_dir, 'tex', 'qrcode.sty')
             dict_files = os.path.join(paths.build_dir, 'tex', '*.dict')
             dict_files = glob.glob(dict_files)
         else:
             cls_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'sdaps.cls')
             code128_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'code128.tex')
+            qrcode_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'qrcode.sty')
             dict_files = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', '*.dict')
             dict_files = glob.glob(dict_files)
 

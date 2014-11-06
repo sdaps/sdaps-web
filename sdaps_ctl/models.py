@@ -28,6 +28,9 @@ class Survey(models.Model):
     title = models.CharField(max_length=200, default='')
     author = models.CharField(max_length=200, default='')
 
+    questionnaire = models.TextField(default='[]')
+
+
     # Still to do:
     #  * Permission handling?
     #  * ...
@@ -69,69 +72,6 @@ class ScheduledTasks(models.Model):
     class Meta:
         unique_together = (('survey','task'),)
 
-class QObject(models.Model):
-    QOBJECT_TYPE_CHOICES = (
-        ('qhead', 'Heading'),
-        ('qmark', 'Mark'),
-        ('qmarkgroup', 'Mark Group'),
-        ('qmarkline', 'Mark Line'),
-        ('qchoice', 'Choice'),
-        ('qchoicegroup', 'Choice Group'),
-        ('qchoiceline', 'Choice Group Line'),
-    )
-
-    #: The survey that this question belongs to
-    survey = models.ForeignKey(Survey, db_index=True)
-
-    #: The parent; valid only for some of the question types
-    parent = models.ForeignKey('self', related_name='children', db_index=False, null=True, default=None)
-
-    #: The questions text
-    text = models.CharField(max_length=300)
-
-    #: The type of the question. This may be one of:
-    qtype = models.CharField(max_length=15, choices=QOBJECT_TYPE_CHOICES)
-
-    class Meta:
-        order_with_respect_to = 'survey'
-
-    def clean(self):
-        # Remove any bogus children
-        if not self.qtype.endswith('group'):
-            QObject.objects.filter(parent=self).delete()
-        else:
-            # They need to be of the corresponding "line" type.
-            QObject.objects.filter(parent=self).exclude(qtype=self.qtype[:-5]+'line').delete()
-
-        # Remove any answers that should not be there
-        if self.qtype in ['qhead', 'qmarkgroup', 'qchoiceline']:
-            QAnswer.objects.filter(qobject=self).delete()
-
-class QAnswer(models.Model):
-    ANSWER_TYPE_CHOICES = (
-        ('check', 'Checkbox'),
-        ('text', 'Textbox'),
-    )
-
-    #: The question that this answer belongs to
-    qobject = models.ForeignKey(QObject, related_name='answers', db_index=True)
-
-    #: The text for this answer
-    text = models.CharField(max_length=300)
-
-    #: The type of this box (either check or textbox)
-    btype = models.CharField(max_length=15, choices=ANSWER_TYPE_CHOICES)
-
-    #: The number of columns to use for this item.
-    #: Only valid if the QObject is of type choicegroup.
-    columns = models.IntegerField(default=1)
-
-    #: Height of the box. Only valid for textfields.
-    height = models.FloatField()
-
-    # And, we want this to be an ordered set.
-    class Meta:
-        order_with_respect_to = 'qobject'
 
 # ---------------------------------------------------------
 

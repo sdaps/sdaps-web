@@ -17,7 +17,7 @@
     this.el = element;
     this.url = url;
     this.pdf = null;
-    this.scale = 0.8;
+    this.scale = 1;
     this.page = 1;
     this.canvas = this.$('.pdfcanvas')[0];
     this.last_modified_time = null;
@@ -62,7 +62,8 @@
     render: function() {
       /* Using promise to fetch the page. */
       this.pdf.getPage(this.page).then((function(page) {
-        var viewport = page.getViewport(this.scale);
+        /* XXX: Just render at 200 dpi and scale to fit. */
+        var viewport = page.getViewport(200.0 / 72.0);
         this.canvas.height = viewport.height;
         this.canvas.width = viewport.width;
 
@@ -71,6 +72,7 @@
           canvasContext: this.ctx,
           viewport: viewport
         };
+        console.log(renderContext);
         page.render(renderContext);
 
         this.ensureTimeout();

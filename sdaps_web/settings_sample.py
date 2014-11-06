@@ -125,6 +125,8 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
      'django.contrib.admindocs',
      'sdaps_ctl',
+     # Is this correct?
+     'djangular',
 )
 
 # A sample logging configuration. The only tangible logging

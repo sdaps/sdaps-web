@@ -1,3 +1,8 @@
+{% extends "sdaps_ctl/base.html" %}
+
+{% block content %}
+<h2>Available Surveys</h2>
+
 {% if survey_list %}
     <ul>
     {% for survey in survey_list %}
@@ -7,4 +12,4 @@
 {% else %}
     <p>No surveys are available.</p>
 {% endif %}
-
+{% endblock %}

@@ -1,58 +1,84 @@
 # -*- coding: utf-8 -*-
 
 import os
-import models
 
-def render_qobject(qobject, allowed_type=None):
-    t = qobject.qtype
+import simplejson as json
 
-    assert allowed_type is None or allowed_type == t
+def get(d, attr, val):
+    try:
+        return d[attr]
+    except KeyError:
+        return val
 
-    if t == 'qhead':
-        return r'\section{%s}' % qobject.text
+def render_qobject(qobject, allowed_types=None):
+    t = get(qobject, 'type', '')
 
-    elif t == 'qmark':
-        answers = [answer.text for answer in models.QAnswer.objects.filter(qobject=qobject)]
+    assert allowed_types is None or t in allowed_types
 
-        while len(answers) < 2:
-            answers.append('invalid')
+    if t == 'section':
+        return r'\section{%s}' % get(qobject, 'title', '')
 
-        return r'\singlemark{%s}{%s}{%s}' % (qobject.text, answers[0], answers[1])
+    elif t == 'textbody':
+        return get(qobject, 'text', '') + '\n\n'
 
-    elif t == 'qmarkgroup':
-        subquestions = '\n'.join(render_qobject(obj, 'qmarkline') for obj in models.QObject.objects.filter(parent=qobject))
+    elif t == 'singlemark':
+        return r'\setcounter{markcheckboxcount}{%i}\singlemark{%s}{%s}{%s}' % (get(qobject, 'checkboxcount', 2), get(qobject, 'question', ''), get(qobject, 'lower', ''), get(qobject, 'upper', ''))
 
-        return '\\begin{markgroup}{%s}\n%s\n\\end{markgroup}' % (qobject.text, subquestions)
-
-    elif t == 'qmarkline':
-        answers = [answer.text for answer in models.QAnswer.objects.filter(qobject=qobject)]
-
-        while len(answers) < 2:
-            answers.append('invalid')
-
-        return r'\markline{%s}{%s}{%s}' % (qobject.text, answers[0], answers[1])
-
-    elif t == 'qchoice':
+    elif t == 'choicequestion':
         choices = []
 
-        for answer in models.QAnswer.objects.filter(qobject=qobject):
-            if answer.type == 'check':
-                if answer.columns <= 1:
-                    choices.append('\choiceitem{%s}' % answer.text)
+        for answer in get(qobject, 'children', []):
+            if answer['type'] == 'choiceitem':
+                if get(answer, 'colspan', 1) <= 1:
+                    choices.append('\choiceitem{%s}' % get(answer, 'answer', ''))
                 else:
-                    choices.append('\choicemulticolitem{%i}{%s}' % (answer.columns, answer.text))
+                    choices.append('\choicemulticolitem{%i}{%s}' % (answer['colspan'], get(answer, 'answer', '')))
             else:
-                choices.append('\choiceitemtext{%fmm}{%i}{%s}' % (answer.height, answer.columns, answer.text))
+                choices.append('\choiceitemtext{%fcm}{%i}{%s}' % (get(answer, 'height', 1.2), get(answer, 'colspan', 1), get(answer, 'answer', 1)))
 
-        return '\\begin{choicequestion}{%s}\n%s\n\\end{choicequestion}' % (qobject.text, choices)
+        return '\\begin{choicequestion}[%i]{%s}\n%s\n\\end{choicequestion}' % (get(qobject, 'columns', 4), get(qobject, 'question', ''), '\n'.join(choices))
 
-    elif t == 'qchoicegroup':
-        choices = '\n'.join(r'\addchoice{%s}' % answer.text for answer in models.QAnswer.objects.filter(qobject=qobject))
-        subquestions = '\n'.join(render_qobject(obj, 'qchoiceline') for obj in models.QObject.objects.filter(parent=qobject))
+    elif t == 'textbox':
 
-        return '\\begin{choicegroup}{%s}\n%s\n%s\n\\end{choicegroup}' % (qobject.text, choices, subquestions)
-    elif t == 'qchoiceline':
-        return r'\choiceline{%s}' % qobject.text
+        children = []
+
+        for child in get(qobject, 'children', []):
+            children.append(render_qobject(child))
+
+        return '\\textbox%s{%fcm}{%s}' % ('' if get(qobject, 'expand', True) else '*', get(qobject, 'height', 2.0), get(qobject, 'question', ''))
+
+    elif t == 'multicol':
+
+        children = []
+
+        for child in get(qobject, 'children', []):
+            children.append(render_qobject(child))
+
+        return '\\begin{multicols}{%i}\n%s\n\\end{multicols}' % (qobject['columns'], '\n'.join(children))
+
+    elif t == 'markgroup':
+        marklines = []
+
+        for markline in get(qobject, 'children', []):
+            assert markline['type'] == 'markline'
+
+            marklines.append('\\markline{%s}{%s}{%s}' % (get(markline, 'question', ''), get(markline, 'lower', ''), get(markline, 'upper', '')))
+
+        return '\\setcounter{markcheckboxcount}{%i}\n\\begin{markgroup}{%s}\n%s\n\\end{markgroup}' % (get(qobject, 'checkboxcount', 5), get(qobject, 'heading', ''), '\n'.join(marklines))
+
+    elif t == 'choicegroup':
+        items = []
+
+        for child in get(qobject, 'children', []):
+            if child['type'] == 'groupaddchoice':
+                items.append('\\groupaddchoice{%s}' % get(child, 'choice', ''))
+
+        for child in get(qobject, 'children', []):
+            if child['type'] == 'choiceline':
+                items.append('\\choiceline{%s}' % get(child, 'question', ''))
+
+        return '\\begin{choicegroup}{%s}\n%s\n\\end{choicegroup}' % (get(qobject, 'heading', ''), '\n'.join(items))
+
     else:
         raise AssertionError('Unknown qtype %s!' % t)
 
@@ -67,7 +93,10 @@ def texwriter(djsurvey):
 
     content = []
 
-    for qobject in models.QObject.objects.filter(survey=djsurvey, parent=None):
+    questionnaire = djsurvey.questionnaire
+    questionnaire = json.loads(questionnaire)
+
+    for qobject in questionnaire:
         content.append(render_qobject(qobject))
 
     data['content'] = '\n'.join(content)
@@ -99,6 +128,7 @@ template = r"""
   pagemark,
   stamp]{sdaps}
 \usepackage[utf8]{inputenc}
+\usepackage{multicol}
 
 \author{%(author)s}
 \title{%(title)s}
