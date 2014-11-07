@@ -32,8 +32,10 @@ def add_scan(project, image_file):
     # TODO
 
 @task()
-def recognize(djsurvey):
+def recognize(djsurvey_id):
     from sdaps.recognize.recognize import recognize
+
+    djsurvey = models.Survey.objects.get(id=djsurvey_id)
 
     survey = model.survey.Survey.load(djsurvey.directory)
 
@@ -84,13 +86,16 @@ def initialize_survey(name):
     return s
 
 @task()
-def write_questionnaire(djsurvey):
+def write_questionnaire(djsurvey_id):
     from texwriter import texwriter
 
+    djsurvey = models.Survey.objects.get(id=djsurvey_id)
     texwriter(djsurvey)
 
 @task()
-def render_questionnaire(djsurvey):
+def render_questionnaire(djsurvey_id):
+    djsurvey = models.Survey.objects.get(id=djsurvey_id)
+
     # Must not yet be initialized
     assert(djsurvey.initialized == False)
 
@@ -100,9 +105,9 @@ def render_questionnaire(djsurvey):
         return False
 
 @task
-def write_and_render_questionnaire(djsurvey):
-    write_questionnaire(djsurvey)
-    render_questionnaire(djsurvey)
+def write_and_render_questionnaire(djsurvey_id):
+    write_questionnaire(djsurvey_id)
+    render_questionnaire(djsurvey_id)
 
 def queue_timed_write_and_render(djsurvey):
     with models.LockedSurvey(djsurvey.id):
@@ -111,7 +116,6 @@ def queue_timed_write_and_render(djsurvey):
 
             # Will the task still run?
             if AsyncResult(task.celeryid).state in [states.PENDING, states.RETRY]:
-                print "not queuing task!!!!"
                 return
 
             # Seems like the task will not run, so remove the old one
@@ -119,20 +123,21 @@ def queue_timed_write_and_render(djsurvey):
         except models.ScheduledTasks.DoesNotExist:
             pass
 
-        print "queueing task"
         # And queue a new task
-        result = write_and_render_questionnaire.apply_async(args=(djsurvey, ),countdown=1)
+        result = write_and_render_questionnaire.apply_async(args=(djsurvey.id, ),countdown=1)
 
         # Note in DB, that it is queued
         models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='render').save()
 
 @task()
-def build_survey(djsurvey):
+def build_survey(djsurvey_id):
     """Creates the SDAPS project and database for the survey.
     This process should be run on an already initialized survey that
     has a questionnaire written to it."""
 
-    with models.LockedSurvey(djsurvey.id):
+    with models.LockedSurvey(djsurvey_id):
+        djsurvey = models.Survey.objects.get(id=djsurvey_id)
+
         assert(djsurvey.initialized == False)
 
         from sdaps.setuptex import setup

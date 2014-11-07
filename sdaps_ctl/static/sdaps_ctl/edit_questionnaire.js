@@ -154,8 +154,12 @@
     $scope.last_post_data = [];
 
     $scope.update_server = _.debounce(function() {
-        $http.post($scope.data_url, $scope.data).success(function(data, status, headers, config) {
-      });
+      $http.post($scope.data_url, $scope.data).success(function(data, status, headers, config) {
+          if (window.preview) {
+            /* Tell the preview that we expect an update soon (wait a maximum of 20s). */
+            window.preview.expect_update(20000);
+          }
+        });
     }, 1000);
 
     /* Add watch after first update. */

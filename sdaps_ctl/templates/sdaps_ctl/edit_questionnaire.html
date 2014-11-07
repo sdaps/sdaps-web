@@ -84,6 +84,8 @@ Author: {{survey.author}}
 
       /* Hook up the preview widget. */
       var preview = new PDFPreview.Preview($('#preview'), '{% url "questionnaire_download" survey.id %}');
+      /* And attach to window for editor. */
+      window.preview = preview;
     });
 
   </script>

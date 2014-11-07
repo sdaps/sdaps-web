@@ -22,6 +22,7 @@
     this.canvas = this.$('.pdfcanvas')[0];
     this.last_modified_time = null;
     this.timeout_registered = false;
+    this.update_expected = false;
 
     this._initialize();
   };
@@ -72,10 +73,7 @@
           canvasContext: this.ctx,
           viewport: viewport
         };
-        console.log(renderContext);
         page.render(renderContext);
-
-        this.ensureTimeout();
       }).bind(this));
 
       /* Update the page count*/
@@ -93,13 +91,11 @@
       }
 
       xhr.onload = (function() {
-          if (xhr.status == 304) {
-            this.ensureTimeout();
+          if (this.last_modified_time != null && xhr.status == 304) {
             return;
           }
 
           if (xhr.status == 404) {
-            this.ensureTimeout();
             return;
           }
 
@@ -111,6 +107,15 @@
               this.pdf = _pdfDoc;
               this.render();
           }).bind(this));
+
+      }).bind(this);
+
+      xhr.onloadend = (function() {
+          // Got the expected update, so do not fetch as often.
+          if (xhr.status == 200)
+            this.update_expected = false;
+
+          this.ensureTimeout();
       }).bind(this);
 
       xhr.send(null)
@@ -120,7 +125,13 @@
       if (this.timeout_registered)
         return;
 
-      setTimeout(this.autoreload.bind(this), 5000);
+      if (this.update_expected) {
+        interval = 500;
+      } else {
+        interval = 10000;
+      }
+
+      this.timeout = setTimeout(this.autoreload.bind(this), interval);
       this.timeout_registered = true;
     },
 
@@ -128,6 +139,19 @@
       this.timeout_registered = false;
 
       this.download();
+    },
+
+    expect_update: function(time) {
+      if (this.timeout_registered) {
+        clearTimeout(this.timeout)
+        this.timeout_registered = false;
+      }
+      this.update_expected = true;
+
+      this.ensureTimeout();
+
+      // Don't want to keep the short timeout if no new document ever arrives.
+      setTimeout((function() { this.update_expected = false; }).bind(this), time);
     },
 
   });
