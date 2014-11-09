@@ -126,7 +126,7 @@ INSTALLED_APPS = (
      'django.contrib.admindocs',
      'sdaps_ctl',
      # Is this correct?
-     'djangular',
+     #'djangular',
 )
 
 # A sample logging configuration. The only tangible logging
