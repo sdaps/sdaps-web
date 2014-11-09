@@ -11,8 +11,6 @@ used as a frontend for SDAPS. Some of the basic ideas:
  * Editing is done by dynamically building a LaTeX file for the questions.
    Questionnaires can be designed directly in django.
    Previewing is done using pdf.js.
- * backbone.js seems like a sane way for some of the data model needs
-   (questionnaire creation and correction).
  * Long running tasks are executed in the background using celery.
 
 Anyone interested in moving this forwared please drop me a line. Note that I
@@ -27,14 +25,11 @@ Well, that is about it for now.
 What is working (sort of):
  * Running background tasks using celery
  * Running recognition
- * Building a questionnaire (LaTeX document) from the database
- * Changing the questionnaire using a json API
- * Client side data model is working
+ * Building a questionnaire (LaTeX document)
+ * Changing the questionnaire ussing angular.js
  * pdf.js based preview is working
 
 What is missing:
- * JavaScript code to add/remove questions and answers. The data model
-   exists, so this should be all possible by modifying templates.
  * PDF Preview widget needs proper UI
  * All pages (especially editing page) need a proper stylesheet/structure.
  * Django templats need to be reworked
@@ -43,7 +38,7 @@ What is missing:
    this should also support chunked transfers to be able to resume uploads)
  * UI to correct results (especially saving the changes as that is likely
    very inefficient)
-   * Client Side (using backbone.js)
+   * Client Side (what framework, also angular?)
    * Server Side
  * General thoughts about usability:
    * How are surveys managed?
