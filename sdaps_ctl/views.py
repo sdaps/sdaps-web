@@ -53,8 +53,7 @@ def questionaire_download(request, survey_id):
     wrapper = FileWrapper(file(filename))
     response = HttpResponse(wrapper, content_type='application/x-pdf')
     response['Content-Length'] = os.path.getsize(filename)
-    response['Cache-Control'] = 'must-revalidate'
-    response['Expires'] = datetime.datetime.utcnow().ctime()
+    response['Cache-Control'] = 'max-age=0, must-revalidate'
 
     return response
 
