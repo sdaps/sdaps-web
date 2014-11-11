@@ -42,48 +42,33 @@ def recognize(djsurvey_id):
     recognize(survey)
 
 @task()
-def initialize_survey(name):
+def create_survey(djsurvey):
     # We simply create the directory, the database object
     # and copy the basic LaTeX files
-    s = models.Survey()
-    s.name = name
-    s.directory = ''
 
-    s.save()
-    path = None
+    path = djsurvey.path
 
-    try:
-        s.directory = "%i" % (s.id)
+    os.mkdir(path)
 
-        os.mkdir(s.path)
+    # Copy class and dictionary files
+    if paths.local_run:
+        cls_file = os.path.join(paths.source_dir, 'tex', 'sdaps.cls')
+        code128_file = os.path.join(paths.source_dir, 'tex', 'code128.tex')
+        qrcode_file = os.path.join(paths.source_dir, 'tex', 'qrcode.sty')
+        dict_files = os.path.join(paths.build_dir, 'tex', '*.dict')
+        dict_files = glob.glob(dict_files)
+    else:
+        cls_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'sdaps.cls')
+        code128_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'code128.tex')
+        qrcode_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'qrcode.sty')
+        dict_files = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', '*.dict')
+        dict_files = glob.glob(dict_files)
 
-        # Copy class and dictionary files
-        if paths.local_run:
-            cls_file = os.path.join(paths.source_dir, 'tex', 'sdaps.cls')
-            code128_file = os.path.join(paths.source_dir, 'tex', 'code128.tex')
-            qrcode_file = os.path.join(paths.source_dir, 'tex', 'qrcode.sty')
-            dict_files = os.path.join(paths.build_dir, 'tex', '*.dict')
-            dict_files = glob.glob(dict_files)
-        else:
-            cls_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'sdaps.cls')
-            code128_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'code128.tex')
-            qrcode_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'qrcode.sty')
-            dict_files = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', '*.dict')
-            dict_files = glob.glob(dict_files)
-
-        shutil.copyfile(cls_file, os.path.join(s.path, 'sdaps.cls'))
-        shutil.copyfile(code128_file, os.path.join(s.path, 'code128.tex'))
-        for dict_file in dict_files:
-            shutil.copyfile(dict_file, os.path.join(s.path, os.path.basename(dict_file)))
-
-        s.save()
-
-    except Exception, e:
-        s.delete()
-
-        raise e
-
-    return s
+    shutil.copyfile(cls_file, os.path.join(path, 'sdaps.cls'))
+    shutil.copyfile(code128_file, os.path.join(path, 'code128.tex'))
+    shutil.copyfile(qrcode_file, os.path.join(path, 'qrcode.sty'))
+    for dict_file in dict_files:
+        shutil.copyfile(dict_file, os.path.join(path, os.path.basename(dict_file)))
 
 @task()
 def write_questionnaire(djsurvey_id):

@@ -1,4 +1,4 @@
-{% extends "sdaps_ctl/base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 
@@ -21,9 +21,11 @@ Author: {{survey.author}}
   The questionnaire for this survey is still being designed. Please finish the
   questionnaire, and initialize the project.
 </p>
+{% if may_edit %}
 <p>
   <a href="{% url 'questionnaire_edit' survey.id %}">Edit the questionnaire.</a>
 </p>
+{% endif %}
 {% endif %}
 
 {% endblock %}

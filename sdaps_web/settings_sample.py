@@ -111,6 +111,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    "/home/benjamin/Projects/sdaps-web/sdaps_web/sdaps_web/templates",
 )
 
 INSTALLED_APPS = (
@@ -174,4 +175,6 @@ SDAPS_PROJECT_ROOT = '/tmp/projects'
 
 #: Render delay in seconds
 SDAPS_RENDER_DELAY = 1
+
+LOGIN_REDIRECT_URL = '/surveys'
 

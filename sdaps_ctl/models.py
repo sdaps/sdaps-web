@@ -2,15 +2,21 @@
 import os
 import time
 
+from . import tasks
+
 from django.db.models import signals
 from django.db import models
 
 from django.conf import settings
 
+from django.contrib.auth.models import User, Group
+
 class Survey(models.Model):
 
+    class Meta:
+        permissions = (("review", "Can review surveys"),)
+
     name = models.CharField(max_length=100, unique=True)
-    directory = models.CharField(max_length=110)
 
     #: Whether a process has the internal SDAPS database locked
     locked = models.BooleanField(default=False)
@@ -23,21 +29,19 @@ class Survey(models.Model):
 
     # These IDs may *not* be unique.
     surveyid = models.PositiveIntegerField(default=0)
-    globalid = models.CharField(max_length=40, default='')
+    globalid = models.CharField(max_length=40, default='', blank=True)
 
     title = models.CharField(max_length=200, default='')
     author = models.CharField(max_length=200, default='')
 
     questionnaire = models.TextField(default='[]')
 
-
-    # Still to do:
-    #  * Permission handling?
-    #  * ...
+    owner = models.ForeignKey(User)
+    group = models.ForeignKey(Group, null=True, blank=True)
 
     @property
     def path(self):
-        return os.path.join(settings.SDAPS_PROJECT_ROOT, self.directory)
+        return os.path.join(settings.SDAPS_PROJECT_ROOT, str(self.id))
 
 
 class LockedSurvey(object):
@@ -75,6 +79,12 @@ class ScheduledTasks(models.Model):
 
 # ---------------------------------------------------------
 
+def create_survey_dir(sender, instance, created, **kwargs):
+    if not created:
+        return
+
+    tasks.create_survey(instance)
+
 def move_survey_dir(sender, instance, using, **kwargs):
     u"""This signal handler moves the project directory into the "deleted"
     directory whenever a survey is removed from the database."""
@@ -92,5 +102,6 @@ def move_survey_dir(sender, instance, using, **kwargs):
         # And rename/move the old directory
         os.rename(path, os.path.join(delpath, dirname))
 
+signals.post_save.connect(create_survey_dir, sender=Survey)
 signals.post_delete.connect(move_survey_dir, sender=Survey)
 

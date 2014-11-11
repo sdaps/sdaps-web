@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, include, url
 
 import sdaps_ctl.views
+from . import views
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -16,7 +17,6 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
      url(r'^admin/', include(admin.site.urls)),
-
+    url(r'^', include(views)),
     url(r'^', include(sdaps_ctl.views)),
-
 )

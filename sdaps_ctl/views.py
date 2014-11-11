@@ -2,11 +2,15 @@
 import os
 import datetime
 
+from .admin import SurveyAdmin
+
 from django.conf.urls import patterns, include, url
 
 from django.views import generic
 from django.views.decorators import csrf
 from django.views.decorators.http import last_modified
+
+from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.servers.basehttp import FileWrapper
@@ -19,20 +23,51 @@ import models
 import tasks
 import forms
 
-class SurveyList(generic.ListView):
-    template_name = 'sdaps_ctl/list.html'
+def get_survey_or_404(request, survey_id, change=False):
+    obj = get_object_or_404(models.Survey, id=survey_id)
+
+    if change:
+        if not request.user.has_perm('sdaps_ctl.change_survey'):
+            raise Http404
+    if not SurveyAdmin.has_permissions(request, obj):
+        raise Http404
+
+    return obj
+
+class LoginRequiredMixin(object):
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(LoginRequiredMixin, cls).as_view(**initkwargs)
+        return login_required(view)
+
+
+class SurveyList(LoginRequiredMixin, generic.ListView):
+    template_name = 'list.html'
     context_object_name = 'survey_list'
 
     def get_queryset(self):
-        return models.Survey.objects.order_by('name')
+        return SurveyAdmin.filter(self.request, models.Survey.objects).order_by('name')
 
-class SurveyDetail(generic.DetailView):
+class SurveyDetail(LoginRequiredMixin, generic.DetailView):
     model = models.Survey
-    template_name = 'sdaps_ctl/overview.html'
+    template_name = 'overview.html'
+
+    def get_object(self, *args, **kwargs):
+        obj = generic.DetailView.get_object(self, *args, **kwargs)
+
+        if obj and not SurveyAdmin.has_permissions(self.request, obj):
+            raise Http404
+
+        return obj
+
+    def get_context_data(self, **kwargs):
+        context = super(SurveyDetail, self).get_context_data(**kwargs)
+        context['may_edit'] = self.request.user.has_perm('sdaps_ctl.change_survey')
+        return context
 
 # Questionnaire download last modified test
 def questionnaire_last_modification(request, survey_id):
-    survey = get_object_or_404(models.Survey, id=survey_id)
+    survey = get_survey_or_404(request, survey_id)
 
     filename = os.path.join(survey.path, 'questionnaire.pdf')
     if not os.path.isfile(filename):
@@ -43,8 +78,9 @@ def questionnaire_last_modification(request, survey_id):
 
 ## Questionnaire download
 @last_modified(questionnaire_last_modification)
+@login_required
 def questionaire_download(request, survey_id):
-    survey = get_object_or_404(models.Survey, id=survey_id)
+    survey = get_survey_or_404(request, survey_id)
 
     filename = os.path.join(survey.path, 'questionnaire.pdf')
     if not os.path.isfile(filename):
@@ -57,8 +93,9 @@ def questionaire_download(request, survey_id):
 
     return response
 
+@login_required
 def edit(request, survey_id):
-    survey = get_object_or_404(models.Survey, id=survey_id)
+    survey = get_survey_or_404(request, survey_id, change=True)
 
     # Get CSRF token, so that cookie will be included
     csrf.get_token(request)
@@ -71,10 +108,11 @@ def edit(request, survey_id):
         'survey' : survey,
     }
 
-    return render(request, 'sdaps_ctl/edit_questionnaire.html', context_dict)
+    return render(request, 'edit_questionnaire.html', context_dict)
 
+@login_required
 def questionnaire(request, survey_id):
-    survey = get_object_or_404(models.Survey, id=survey_id)
+    survey = get_survey_or_404(request, survey_id, change=True)
 
     # Get CSRF token, so that cookie will be included
     csrf.get_token(request)
