@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load bootstrap %}
+
+{% block content %}
+
+<h2>Create new Survey</h2>
+
+<p><div class="row">
+  <form action="{% url "survey_create" %}" method="post" class="col-md-4">
+  {% csrf_token %}
+  {{ main_form|bootstrap }}
+  <input type="submit" value="Create Survey" />
+  </form>
+</div></p>
+
+{% endblock %}
+
