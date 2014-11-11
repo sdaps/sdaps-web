@@ -5,12 +5,13 @@ import datetime
 from .admin import SurveyAdmin
 
 from django.conf.urls import patterns, include, url
+from django.core.urlresolvers import reverse
 
 from django.views import generic
 from django.views.decorators import csrf
 from django.views.decorators.http import last_modified
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.servers.basehttp import FileWrapper
@@ -47,6 +48,31 @@ class SurveyList(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         return SurveyAdmin.filter(self.request, models.Survey.objects).order_by('name')
+
+@permission_required('sdaps_ctl.add_survey')
+def survey_create(request):
+    if request.method == "POST":
+        # We want to update the survey from the form
+        form = forms.SurveyForm(request.POST)
+
+        if form.is_valid():
+            survey = form.save(commit=False)
+            survey.owner = request.user
+            survey.save()
+
+            # Rendering the empty document does not really hurt ...
+            tasks.queue_timed_write_and_render(survey)
+
+            return HttpResponseRedirect(reverse('questionnaire_edit', args=(survey.id,)))
+    else:
+        form = forms.SurveyForm()
+
+    context_dict = {
+        'main_form' : form,
+    }
+
+    return render(request, 'survey_create.html', context_dict)
+
 
 class SurveyDetail(LoginRequiredMixin, generic.DetailView):
     model = models.Survey
@@ -104,7 +130,18 @@ def edit(request, survey_id):
     if survey.initialized:
         raise Http404
 
+    if request.method == "POST":
+        # We want to update the survey from the form
+        form = forms.SurveyForm(request.POST, instance=survey)
+
+        if form.is_valid():
+            form.save()
+            tasks.queue_timed_write_and_render(survey)
+    else:
+        form = forms.SurveyForm(instance=survey)
+
     context_dict = {
+        'main_form' : form,
         'survey' : survey,
     }
 
@@ -132,12 +169,10 @@ def questionnaire(request, survey_id):
 urlpatterns = patterns('',
         url(r'^$', lambda x: HttpResponseRedirect('/surveys')),
         url(r'^surveys/?$', SurveyList.as_view(), name='surveys'),
+        url(r'^surveys/create/?$', survey_create, name='survey_create'),
         url(r'^surveys/(?P<pk>\d+)/?$', SurveyDetail.as_view(), name='survey_overview'),
         url(r'^surveys/(?P<survey_id>\d+)/questionnaire.pdf$', questionaire_download, name='questionnaire_download'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/?$', edit, name='questionnaire_edit'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/questionnaire?$', questionnaire, name='questionnaire_post'),
-#        url(r'^survey/(?P<survey_id>\d+)/edit/questionnaire/qobjects/(?P<pk>\d+)/$', QuestionDetail.as_view()),
-#        url(r'^survey/(?P<survey_id>\d+)/edit/questionnaire/answers/$', AnswerList.as_view()),
-#        url(r'^survey/(?P<survey_id>\d+)/edit/questionnaire/answers/(?P<pk>\d+)/$', AnswerDetail.as_view()),
     )
 

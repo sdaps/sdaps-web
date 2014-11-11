@@ -1,17 +1,19 @@
 {% extends "base.html" %}
+{% load bootstrap %}
 
 {% block content %}
 
 <h2>{{ survey.name }}</h2>
 
-<p>
-Title: {{survey.title}}
-</p>
-<p>
-Author: {{survey.author}}
-</p>
+<p><div class="row">
+  <form action="{% url "questionnaire_edit" survey.id %}" method="post" class="col-md-4">
+  {% csrf_token %}
+  {{ main_form|bootstrap }}
+  <input type="submit" value="Update Metadata" />
+  </form>
+</div></p>
 
-<div class="row">
+<p><div class="row">
   <div id="editor" class="col-md-6 ng-scope" ng-controller="questionnaireCtrl">
 
     {% verbatim %}
@@ -58,7 +60,7 @@ Author: {{survey.author}}
       <canvas class="pdfcanvas" id="preview" style="width: 100%;"/>
     </div>
   </div>
-</div>
+</div></p>
 
 {% endblock %}
 

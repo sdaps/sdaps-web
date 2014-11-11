@@ -16,7 +16,7 @@ class Survey(models.Model):
     class Meta:
         permissions = (("review", "Can review surveys"),)
 
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
 
     #: Whether a process has the internal SDAPS database locked
     locked = models.BooleanField(default=False)
