@@ -37,7 +37,7 @@ def recognize(djsurvey_id):
 
     djsurvey = models.Survey.objects.get(id=djsurvey_id)
 
-    survey = model.survey.Survey.load(djsurvey.directory)
+    survey = model.survey.Survey.load(djsurvey.path)
 
     recognize(survey)
 

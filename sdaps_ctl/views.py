@@ -24,11 +24,14 @@ import models
 import tasks
 import forms
 
-def get_survey_or_404(request, survey_id, change=False):
+def get_survey_or_404(request, survey_id, change=False, delete=False):
     obj = get_object_or_404(models.Survey, id=survey_id)
 
     if change:
         if not request.user.has_perm('sdaps_ctl.change_survey'):
+            raise Http404
+    if delete:
+        if not request.user.has_perm('sdaps_ctl.delete_survey'):
             raise Http404
     if not SurveyAdmin.has_permissions(request, obj):
         raise Http404
@@ -89,6 +92,7 @@ class SurveyDetail(LoginRequiredMixin, generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super(SurveyDetail, self).get_context_data(**kwargs)
         context['may_edit'] = self.request.user.has_perm('sdaps_ctl.change_survey')
+        context['may_delete'] = self.request.user.has_perm('sdaps_ctl.delete_survey')
         return context
 
 # Questionnaire download last modified test
@@ -148,6 +152,20 @@ def edit(request, survey_id):
     return render(request, 'edit_questionnaire.html', context_dict)
 
 @login_required
+def delete(request, survey_id):
+    survey = get_survey_or_404(request, survey_id, delete=True)
+
+    yes_missing = False
+    if request.method == "POST":
+        if 'delete' in request.POST and request.POST['delete'] == "YES":
+            survey.delete()
+            return HttpResponseRedirect(reverse('surveys'))
+        else:
+            yes_missing = True
+
+    return render(request, 'delete.html', { 'survey' : survey, 'yes_missing' : yes_missing })
+
+@login_required
 def questionnaire(request, survey_id):
     survey = get_survey_or_404(request, survey_id, change=True)
 
@@ -173,6 +191,7 @@ urlpatterns = patterns('',
         url(r'^surveys/(?P<pk>\d+)/?$', SurveyDetail.as_view(), name='survey_overview'),
         url(r'^surveys/(?P<survey_id>\d+)/questionnaire.pdf$', questionaire_download, name='questionnaire_download'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/?$', edit, name='questionnaire_edit'),
+        url(r'^surveys/(?P<survey_id>\d+)/delete/?$', delete, name='survey_delete'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/questionnaire?$', questionnaire, name='questionnaire_post'),
     )
 

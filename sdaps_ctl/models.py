@@ -89,10 +89,9 @@ def move_survey_dir(sender, instance, using, **kwargs):
     u"""This signal handler moves the project directory into the "deleted"
     directory whenever a survey is removed from the database."""
 
-    dirname = instance.directory
     path = instance.path
 
-    if dirname and os.path.isdir(path):
+    if path and os.path.isdir(path):
         delpath = os.path.join(settings.SDAPS_PROJECT_ROOT, 'deleted')
 
         # Make sure the "deleted" directory exists
@@ -100,7 +99,7 @@ def move_survey_dir(sender, instance, using, **kwargs):
             os.mkdir(delpath)
 
         # And rename/move the old directory
-        os.rename(path, os.path.join(delpath, dirname))
+        os.rename(path, os.path.join(delpath, str(instance.id)))
 
 signals.post_save.connect(create_survey_dir, sender=Survey)
 signals.post_delete.connect(move_survey_dir, sender=Survey)

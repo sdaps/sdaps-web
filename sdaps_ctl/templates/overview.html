@@ -21,11 +21,15 @@ Author: {{survey.author}}
   The questionnaire for this survey is still being designed. Please finish the
   questionnaire, and initialize the project.
 </p>
-{% if may_edit %}
-<p>
+{% endif %}
+
+{% if may_edit and not survey.initialized %}
   <a href="{% url 'questionnaire_edit' survey.id %}">Edit the questionnaire.</a>
+{% endif %}
+{% if may_delete %}
+  <a href="{% url 'survey_delete' survey.id %}">Delete this project.</a>
+{% endif %}
 </p>
-{% endif %}
-{% endif %}
+</p>
 
 {% endblock %}
