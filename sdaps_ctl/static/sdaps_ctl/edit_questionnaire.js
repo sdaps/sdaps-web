@@ -25,15 +25,40 @@
       scope.remove();
     };
 
+    $scope.newItem = function(type) {
+      /* XXX: translations? */
+      var defaults = {
+        'multicol' : { 'columns' : 2 },
+        'section' : { 'title' : 'Title', },
+        'textbody' : { 'text' : 'Text', },
+        'singlemark' : { 'checkboxcount' : 5, },
+        'choicequestion' : { 'question' : 'Question', 'columns' : 4 },
+        'markgroup' : { 'heading' : 'Headline', 'checkboxcount' : 5 },
+        'choicegroup' : { 'heading' : 'Headline' },
+        'textbox' : { 'question' : 'Question', 'height' : 4.0, 'expand' : true},
+        'choiceitem' : { 'answer' : 'Item', 'colspan' : 1 },
+        'choiceitemtext' : { 'answer' : 'Item', 'colspan' : 2, 'height' : 1.2 },
+        'markline' : { 'question' : 'Question', 'lower' : 'a', 'upper' : 'b' },
+        'groupaddchoice' : { 'choice' : 'Choice' },
+        'choiceline' : { 'Question' : 'question' },
+      };
+
+      var res = defaults[type];
+      console.log(res);
+      if (typeof res === 'undefined') {
+        res = {};
+      }
+      res['type'] = type;
+      res['$editing'] = true;
+      return res;
+    }
+
     $scope.appendNewItem = function() {
       var objtype = document.getElementById("editor-new-type").value;
       if (!objtype)
         return;
 
-      $scope.data.push({
-        type: objtype,
-        $editing: true,
-      });
+      $scope.data.push($scope.newItem(objtype));
     };
 
     $scope.prependNewItem = function() {
@@ -41,10 +66,7 @@
       if (!objtype)
         return;
 
-      $scope.data = [{
-        type: objtype,
-        $editing: true,
-      }].concat($scope.data);
+      $scope.data = [$scope.newItem(objtype)].concat($scope.data);
     };
 
     $scope.appendNewSubItem = function(obj) {
@@ -54,10 +76,8 @@
       if (typeof obj.children === 'undefined')
         obj.children = [];
 
-      obj.children.push({
-        type: obj.$newObjType,
-        $editing: true,
-      });
+      obj.children.push($scope.newItem(obj.$newObjType));
+      obj.$newObjType = undefined;
 
       obj.$adding = false;
     };
@@ -69,10 +89,8 @@
       if (typeof obj.children === 'undefined')
         obj.children = [];
 
-      obj.children = [{
-        type: obj.$newObjType,
-        $editing: true,
-      }].concat(obj.children);
+      obj.children = [$scope.newItem(obj.$newObjType)].concat(obj.children);
+      obj.$newObjType = undefined;
 
       obj.$adding = false;
     };
