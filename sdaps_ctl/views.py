@@ -1,5 +1,6 @@
 
 import os
+import os.path
 import datetime
 
 from .admin import SurveyAdmin
@@ -24,7 +25,10 @@ import models
 import tasks
 import forms
 
-def get_survey_or_404(request, survey_id, change=False, delete=False):
+from sdaps import image
+import cairo
+
+def get_survey_or_404(request, survey_id, change=False, delete=False, review=False):
     obj = get_object_or_404(models.Survey, id=survey_id)
 
     if change:
@@ -32,6 +36,9 @@ def get_survey_or_404(request, survey_id, change=False, delete=False):
             raise Http404
     if delete:
         if not request.user.has_perm('sdaps_ctl.delete_survey'):
+            raise Http404
+    if delete:
+        if not request.user.has_perm('sdaps_ctl.review_survey'):
             raise Http404
     if not SurveyAdmin.has_permissions(request, obj):
         raise Http404
@@ -183,6 +190,26 @@ def questionnaire(request, survey_id):
 
     return HttpResponse(survey.questionnaire)
 
+@login_required
+def survey_image(request, survey_id, filenum, page):
+    # This function does not open the real SDAPS survey, as unpickling the data
+    # is way to inefficient.
+    survey = get_survey_or_404(request, survey_id, review=True)
+
+    image_file = os.path.join(survey.path, "%s.tif" % (filenum,))
+
+    if not os.path.exists(os.path.join(survey.path)):
+        raise Http404
+
+    surface = image.get_rgb24_from_tiff(image_file, int(page), False)
+    if surface is None:
+        raise Http404
+
+    # Create PNG stream and return it
+    response = HttpResponse(content_type='image/png')
+    surface.write_to_png(response)
+
+    return response
 
 urlpatterns = patterns('',
         url(r'^$', lambda x: HttpResponseRedirect('/surveys')),
@@ -193,5 +220,7 @@ urlpatterns = patterns('',
         url(r'^surveys/(?P<survey_id>\d+)/edit/?$', edit, name='questionnaire_edit'),
         url(r'^surveys/(?P<survey_id>\d+)/delete/?$', delete, name='survey_delete'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/questionnaire?$', questionnaire, name='questionnaire_post'),
+
+        url(r'^surveys/(?P<survey_id>\d+)/images/(?P<filenum>\d+)/(?P<page>\d+)/?$', survey_image, name='survey_image'),
     )
 
