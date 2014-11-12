@@ -224,11 +224,16 @@ def survey_review(request, survey_id):
     if not djsurvey.initialized:
         raise Http404
 
-    context_dict = {
-        'survey' : djsurvey
-    }
+    with models.LockedSurvey(djsurvey.id):
 
-    return render(request, 'survey_review.html', context_dict)
+        survey = SDAPSSurvey.load(djsurvey.path)
+
+        context_dict = {
+            'survey' : djsurvey,
+            'sheet_count' : len(survey.sheets)
+        }
+
+        return render(request, 'survey_review.html', context_dict)
 
 @login_required
 def survey_review_sheet(request, survey_id, sheet):
@@ -239,7 +244,6 @@ def survey_review_sheet(request, survey_id, sheet):
 
     sheet = int(sheet)
 
-    # TODO: Nicer error message?
     if not djsurvey.initialized:
         raise Http404
 
@@ -264,6 +268,7 @@ def survey_review_sheet(request, survey_id, sheet):
             'images' : [
                 {
                     'image' : int(image.filename[:-4]),
+                    'image_page' : image.tiff_page,
                     'page' : image.page_number,
                     'rotated' : image.rotated,
                     'pxtomm' : tuple(image.matrix.px_to_mm()),

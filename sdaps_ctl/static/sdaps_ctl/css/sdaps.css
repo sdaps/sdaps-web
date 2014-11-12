@@ -47,3 +47,31 @@
     margin: 0;
     padding: 0;
 }
+
+.review_box {
+    display: block;
+    overflow: visible;
+}
+.review_box label {
+    cursor: pointer;
+    position: absolute;
+    opacity: 0.5;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    border: 35.3px solid rgb(145, 255, 0);
+    background: rgba(0, 0, 0, 0);
+}
+.review_box input[type=checkbox]:checked + label {
+    background: rgb(145, 255, 0);
+}
+.review_box input[type=checkbox] {
+    display: none;
+}
+
+.review_box checkbox-ellipse {
+    /* Huge border radius */
+    border-radius: 1000px;
+}
+

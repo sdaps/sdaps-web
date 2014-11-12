@@ -21,15 +21,18 @@ class Questionnaire(model.buddy.Buddy):
                 bdata = box.data
                 data[box.id_str()] = {
                     'type' : box.__class__.__name__,
-                    'state' : bdata.state,
+                    'state' : bool(bdata.state),
                     'quality' : bdata.quality,
                     'x' : bdata.x,
                     'y' : bdata.y,
                     'width' : bdata.width,
                     'height' : bdata.height,
+                    'page' : box.page_number,
                 }
                 if isinstance(bdata, model.data.Textbox):
                     data[box.id_str()]['text'] = bdata.text
+                if isinstance(bdata, model.data.Checkbox):
+                    data[box.id_str()]['form'] = box.form
 
         return data
 

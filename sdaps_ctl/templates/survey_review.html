@@ -11,16 +11,47 @@ Title: {{survey.title}}
 Author: {{survey.author}}
 </p>
 
-{% if survey.initialized %}
-<p>
-  This survey is already initialized. You may not modify it any more. You can now upload
-  scans and correct the result (once implemented).
-</p>
-{% else %}
-<p>
-  The questionnaire for this survey is still being designed. Please finish the
-  questionnaire, and initialize the project.
-</p>
-{% endif %}
+{% verbatim %}
+<div class="review_widget"  ng-app="sdaps" class="ng-scope" ng-controller="reviewCtrl">
+  <div class="review_container">
+    <button type="submit" class="btn btn-default" ng-click="setCurrentSheet(current_sheet-1)">Previous Sheet</button>
+    <button type="submit" class="btn btn-default" ng-click="prev()">Previous Image</button>
+    <button type="submit" class="btn btn-default" ng-click="next()">Next Image</button>
+    <button type="submit" class="btn btn-default" ng-click="setCurrentSheet(current_sheet+1)">Next Sheet</button>
+
+    <!-- The container that scales the review -->
+    <div class="review" style="-webkit-transform: scale(0.4); -webkit-transform-origin: 0% 0%;">
+      <!-- The background image. -->
+      <div id="review_image_container" style="position: absolute">
+        <div ng-repeat="image in this.sheets[current_sheet]['images']" ng-show="$index == current_image">
+          <img src="{{ image_base + image['image'] + '/' + image['image_page'] }}" style="-webkit-transform: rotate({{imageRotation(image)}}deg);" />
+        </div>
+      </div>
+      <div id="review_boxes_container" style="position: absolute; -webkit-transform-origin: 0% 0%; -webkit-transform: matrix({{ getCurrentMatrix() }}) scale(0.01);">
+        <div class="review_box" ng-repeat="(box_id, box) in this.sheets[current_sheet]['data']" ng-show="box.page == this.sheets[current_sheet]['images'][current_image]['page']" style="position: absolute; left: {{ box.x * 100 }}px; top: {{ box.y * 100 }}px; width: {{ box.width * 100 }}px; height: {{box.height * 100}}px;">
+          <input id="_review_box_{{box_id}}" class="checkbox-{{ box.form }}" type="checkbox" ng-model="box.state" />
+          <label for="_review_box_{{box_id}}"></label>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endverbatim %}
 
 {% endblock %}
+
+
+{% block scripts %}
+  <script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.js" /></script>
+
+  <!-- And custom scripts -->
+  <script type="text/javascript" src="{{ STATIC_URL }}/sdaps_ctl/survey_review.js"></script>
+  <script type="text/javascript">
+    /* Need to set some global vars here for survey_review.js. */
+    window.image_base = "{% url "survey_overview" survey.id %}/images/"
+    window.sheet_base = "{% url "survey_overview" survey.id %}/review/"
+    window.review_sheets = {{ sheet_count }};
+  </script>
+
+{% endblock %}
+
