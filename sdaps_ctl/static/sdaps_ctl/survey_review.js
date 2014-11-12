@@ -37,11 +37,16 @@
     $scope.current_image = 0;
     $scope.sheets = {};
 
+    $scope.genPrefixes = function(style) {
+        var prefixes = ['', '-moz-', '-webkit-', '-ms-', '-o-', ''];
+        return prefixes.join(style);
+    }
+
     $scope.imageRotation = function(img) {
         if (img && img['rotated'])
-            return '180';
+            return 'transform: rotate(180deg);';
         else
-            return '0';
+            return 'transform: rotate(0deg);';
     }
 
     $scope.imageSource = function(img) {
@@ -54,16 +59,16 @@
     $scope.getCurrentMatrix = function() {
         var sheet = this.sheets[$scope.current_sheet];
         if (!sheet || !sheet['images'])
-            return '1, 0, 0, 0, 1, 0';
+            return 'transform: matrix(1, 0, 0, 0, 1, 0);';
         var image = sheet['images'][$scope.current_image];
         if (!image)
-            return '1, 0, 0, 0, 1, 0';
+            return 'transform: matrix(1, 0, 0, 0, 1, 0);';
         var matrix = image['mmtopx'];
 
         if (_.isArray(matrix))
-            return matrix.join(', ');
+            return 'transform: matrix('+matrix.join(', ')+') scale(0.01);';
         else
-            return '1, 0, 0, 0, 1, 0';
+            return 'transform: matrix(1, 0, 0, 0, 1, 0);';
     }
 
     $scope.setCurrentSheet = function(sheet) {

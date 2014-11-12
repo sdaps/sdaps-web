@@ -20,16 +20,16 @@ Author: {{survey.author}}
     <button type="submit" class="btn btn-default" ng-click="setCurrentSheet(current_sheet+1)">Next Sheet</button>
 
     <!-- The container that scales the review -->
-    <div class="review" style="-webkit-transform: scale(0.4); -webkit-transform-origin: 0% 0%;">
+    <div class="review" style="{{genPrefixes('transform: scale(0.4);')}} {{genPrefixes('transform-origin: 0% 0%;')}}">
       <!-- The background image. -->
       <div id="review_image_container" style="position: absolute">
         <div ng-repeat="(sheet_num, sheet) in this.sheets" ng-show="!sheet.$loading">
           <div ng-repeat="image in sheet['images']" ng-show="$index == current_image && sheet_num == current_sheet">
-            <img src="{{ imageSource(image) }}" style="-webkit-transform: rotate({{imageRotation(image)}}deg);" ng-style="{display: !sheet.$loading}" />
+            <img src="{{ imageSource(image) }}" style="{{genPrefixes(imageRotation(image))}}" />
           </div>
         </div>
       </div>
-      <div id="review_boxes_container" style="position: absolute; -webkit-transform-origin: 0% 0%; -webkit-transform: matrix({{ getCurrentMatrix() }}) scale(0.01);">
+      <div id="review_boxes_container" style="position: absolute; {{genPrefixes(getCurrentMatrix())}} {{genPrefixes('transform-origin: 0% 0%;')}} ">
         <div class="review_box" ng-repeat="(box_id, box) in this.sheets[current_sheet]['data']" ng-show="box.page == this.sheets[current_sheet]['images'][current_image]['page']" style="position: absolute; left: {{ box.x * 100 }}px; top: {{ box.y * 100 }}px; width: {{ box.width * 100 }}px; height: {{box.height * 100}}px;">
           <input id="_review_box_{{box_id}}" class="checkbox-{{ box.form }}" type="checkbox" ng-model="box.state" />
           <label for="_review_box_{{box_id}}"></label>
