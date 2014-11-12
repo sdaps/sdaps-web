@@ -165,6 +165,51 @@
     }
 
 
+    /* Note that this is hacky. This lives outside of angular.js. Because
+     * of this we indirectly fire the event by triggering a click on the
+     * corresponding buttons. */
+    $(document).keydown(function(event){
+        var keyCode = {
+          BACKSPACE: 8,
+          CAPS_LOCK: 20,
+          COMMA: 188,
+          CONTROL: 17,
+          DELETE: 46,
+          DOWN: 40,
+          END: 35,
+          ENTER: 13,
+          ESCAPE: 27,
+          HOME: 36,
+          INSERT: 45,
+          LEFT: 37,
+          NUMPAD_ADD: 107,
+          NUMPAD_DECIMAL: 110,
+          NUMPAD_DIVIDE: 111,
+          NUMPAD_ENTER: 108,
+          NUMPAD_MULTIPLY: 106,
+          NUMPAD_SUBTRACT: 109,
+          PAGE_DOWN: 34,
+          PAGE_UP: 33,
+          PERIOD: 190,
+          RIGHT: 39,
+          SHIFT: 16,
+          SPACE: 32,
+          TAB: 9,
+          UP: 38  };
+
+        var key = event.keyCode || event.which;
+
+        if (typeof event.target.type === 'undefined') {
+            if (key == keyCode.ENTER) {
+                if (event.shiftKey) {
+                    $('#review-prev').trigger('click');
+                } else {
+                    $('#review-next').trigger('click');
+                }
+            }
+        }
+    });
+
 //    $scope.last_post_data = [];
 
 //    $scope.update_server = _.debounce(function() {

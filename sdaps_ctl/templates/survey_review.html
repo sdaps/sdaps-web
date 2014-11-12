@@ -15,8 +15,8 @@ Author: {{survey.author}}
 <div class="review_widget"  ng-app="sdaps" class="ng-scope" ng-controller="reviewCtrl">
   <div class="review_container">
     <button type="submit" class="btn btn-default" ng-click="setCurrentSheet(current_sheet-1)">Previous Sheet</button>
-    <button type="submit" class="btn btn-default" ng-click="prev()">Previous Image</button>
-    <button type="submit" class="btn btn-default" ng-click="next()">Next Image</button>
+    <button type="submit" class="btn btn-default" id="review-prev" ng-click="prev()">Previous Image</button>
+    <button type="submit" class="btn btn-default" id="review-next" ng-click="next()">Next Image</button>
     <button type="submit" class="btn btn-default" ng-click="setCurrentSheet(current_sheet+1)">Next Sheet</button>
 
     <!-- The container that scales the review -->
