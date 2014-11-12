@@ -23,8 +23,10 @@ Author: {{survey.author}}
     <div class="review" style="-webkit-transform: scale(0.4); -webkit-transform-origin: 0% 0%;">
       <!-- The background image. -->
       <div id="review_image_container" style="position: absolute">
-        <div ng-repeat="image in this.sheets[current_sheet]['images']" ng-show="$index == current_image">
-          <img src="{{ image_base + image['image'] + '/' + image['image_page'] }}" style="-webkit-transform: rotate({{imageRotation(image)}}deg);" />
+        <div ng-repeat="(sheet_num, sheet) in this.sheets" ng-show="!sheet.$loading">
+          <div ng-repeat="image in sheet['images']" ng-show="$index == current_image && sheet_num == current_sheet">
+            <img src="{{ imageSource(image) }}" style="-webkit-transform: rotate({{imageRotation(image)}}deg);" ng-style="{display: !sheet.$loading}" />
+          </div>
         </div>
       </div>
       <div id="review_boxes_container" style="position: absolute; -webkit-transform-origin: 0% 0%; -webkit-transform: matrix({{ getCurrentMatrix() }}) scale(0.01);">

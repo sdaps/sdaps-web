@@ -269,7 +269,7 @@ def survey_review_sheet(request, survey_id, sheet):
                 {
                     'image' : int(image.filename[:-4]),
                     'image_page' : image.tiff_page,
-                    'page' : image.page_number,
+                    'page' : image.page_number if image.survey_id == survey.survey_id else -1,
                     'rotated' : image.rotated,
                     'pxtomm' : tuple(image.matrix.px_to_mm()),
                     'mmtopx' : tuple(image.matrix.mm_to_px()),

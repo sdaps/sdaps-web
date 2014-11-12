@@ -20,7 +20,7 @@
 
   .controller('reviewCtrl', ['$scope', '$http', function($scope, $http) {
 
-    $scope.preload_sheets = 1;
+    $scope.preload_sheets = 2;
 
     $scope.image_base = window.image_base;
     $scope.sheet_base = window.sheet_base;
@@ -38,10 +38,17 @@
     $scope.sheets = {};
 
     $scope.imageRotation = function(img) {
-        if (img['rotated'])
+        if (img && img['rotated'])
             return '180';
         else
             return '0';
+    }
+
+    $scope.imageSource = function(img) {
+        if (img && img['image'])
+            return $scope.image_base + img['image'] + '/' + img['image_page'];
+        else
+            return '';
     }
 
     $scope.getCurrentMatrix = function() {
@@ -49,6 +56,8 @@
         if (!sheet || !sheet['images'])
             return '1, 0, 0, 0, 1, 0';
         var image = sheet['images'][$scope.current_image];
+        if (!image)
+            return '1, 0, 0, 0, 1, 0';
         var matrix = image['mmtopx'];
 
         if (_.isArray(matrix))
@@ -56,8 +65,6 @@
         else
             return '1, 0, 0, 0, 1, 0';
     }
-
-
 
     $scope.setCurrentSheet = function(sheet) {
         var sheets = []
@@ -86,32 +93,36 @@
           sheets.push(i);
         }
 
-        for (var sheet in $scope.sheets) {
-          if (_.contains(sheets, sheet))
-            continue;
+        _.each($scope.sheets, function(sheet, key, data) {
+          if (_.contains(sheets, parseInt(key, 10)))
+            return;
 
           /* Delete any really old sheets. */
           /* XXX: Ensure data is posted! */
-          delete $scope.sheets[sheet];
-        }
-
+          delete $scope.sheets[key];
+        });
 
         var existing_sheets = _.keys($scope.sheets);
-        _.each(sheets, function(sheet, index, sheets) {
+        _.each(sheets, function(sheet, index, list) {
           /* Nothing to do if everything is already queued anyways. */
-          if (_.contains(sheets, existing_sheets))
+          if (_.contains(existing_sheets, sheet.toString()))
             return;
 
-          $scope.sheets[sheet] = { '$loading' : true };
+          $scope.sheets[sheet] = { '$loading' : true, 'images' : [], 'data' : {} };
 
-          $http.get($scope.sheet_base + sheet, {'sheet' : sheet }).success(function(data, status, headers, config) {
-            $scope.sheets[config['sheet']] = data;
-            if (config['sheet'] == $scope.current_sheet) {
-                if ($scope.current_image == -1) {
-                    $scope.current_image = data['images'].length - 1;
+          var delay = 0;
+          if ($scope.current_sheet != sheet)
+              delay = 250;
+
+          _.delay(function (config) {
+              $http.get($scope.sheet_base + sheet, config).success(function(data, status, headers, config) {
+                $scope.sheets[config['sheet']] = data;
+                if (config['sheet'] == $scope.current_sheet) {
+                    if ($scope.current_image == -1) {
+                        $scope.current_image = data['images'].length - 1;
+                    }
                 }
-            }
-          });
+          })}, delay, {'sheet' : sheet });
         });
     }
 
