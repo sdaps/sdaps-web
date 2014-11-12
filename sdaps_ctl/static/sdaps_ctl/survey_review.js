@@ -165,9 +165,6 @@
     }
 
 
-    /* Note that this is hacky. This lives outside of angular.js. Because
-     * of this we indirectly fire the event by triggering a click on the
-     * corresponding buttons. */
     $(document).keydown(function(event){
         var keyCode = {
           BACKSPACE: 8,
@@ -202,10 +199,12 @@
         if (typeof event.target.type === 'undefined') {
             if (key == keyCode.ENTER) {
                 if (event.shiftKey) {
-                    $('#review-prev').trigger('click');
+                    $scope.prev();
                 } else {
-                    $('#review-next').trigger('click');
+                    $scope.next();
                 }
+                /* We have to $apply manually, as this is done using jQuery. */
+                $scope.$apply();
             }
         }
     });
