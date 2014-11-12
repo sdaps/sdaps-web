@@ -110,19 +110,14 @@
 
           $scope.sheets[sheet] = { '$loading' : true, 'images' : [], 'data' : {} };
 
-          var delay = 0;
-          if ($scope.current_sheet != sheet)
-              delay = 250;
-
-          _.delay(function (config) {
-              $http.get($scope.sheet_base + sheet, config).success(function(data, status, headers, config) {
-                $scope.sheets[config['sheet']] = data;
-                if (config['sheet'] == $scope.current_sheet) {
-                    if ($scope.current_image == -1) {
-                        $scope.current_image = data['images'].length - 1;
-                    }
+          $http.get($scope.sheet_base + sheet, {'sheet' : sheet }).success(function(data, status, headers, config) {
+            $scope.sheets[config['sheet']] = data;
+            if (config['sheet'] == $scope.current_sheet) {
+                if ($scope.current_image == -1) {
+                    $scope.current_image = data['images'].length - 1;
                 }
-          })}, delay, {'sheet' : sheet });
+            }
+          });
         });
     }
 
