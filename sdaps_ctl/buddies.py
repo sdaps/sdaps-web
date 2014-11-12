@@ -71,7 +71,6 @@ class Questionnaire(model.buddy.Buddy):
                         pass
 
                 for k, v in values.items():
-                    print("setting %s, %s" % (k, str(v)))
                     setattr(bdata, k, v)
 
 

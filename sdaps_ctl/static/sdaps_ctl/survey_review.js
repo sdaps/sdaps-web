@@ -81,6 +81,9 @@
             return;
         }
 
+        /* submit the current sheet. */
+        $scope.submitSheet($scope.current_sheet);
+
         $scope.current_sheet = sheet;
 
         if (start < 0)
@@ -117,9 +120,52 @@
                     $scope.current_image = data['images'].length - 1;
                 }
             }
+
+            data['$dirty'] = false;
           });
         });
     }
+
+    $scope.submitSheet = function(sheet_number) {
+        if (typeof $scope.sheets[sheet_number] === 'undefined')
+            return;
+
+        /* Not dirty? */
+        if (!$scope.sheets[sheet_number]['$dirty'])
+            return;
+
+        var submitData = $scope.sheets[sheet_number]['data'];
+
+        $scope.sheets[sheet_number]['$dirty'] = false;
+
+        $http.post($scope.sheet_base + sheet_number, { 'data' : submitData })
+            .error(function(data, status, headers, config) {
+                alert("There was a data loss! The server responded with an error while submitting the data!");
+            });
+    }
+
+    $scope.delayedSubmitSheet = _.throttle($scope.submitSheet, 2000, {leading: false});
+
+    $scope.last_watch_sheet = $scope.current_sheet;
+    $scope.$watch('sheets[current_sheet]', function(newSheet, oldSheet) {
+        if ($scope.last_watch_sheet != $scope.current_sheet) {
+            /* The expression changed because we switche sheets, ignore the
+             * change. */
+            $scope.last_watch_sheet = $scope.current_sheet;
+            return;
+        }
+
+        /* There was no real change if the oldSheet was just the placeholder. */
+        if (oldSheet['$loading'])
+            return;
+
+        /* Mark the current sheet as diry. */
+        $scope.sheets[$scope.current_sheet]['$dirty'] = true;
+        /* And trigger delayed submission. */
+        $scope.delayedSubmitSheet($scope.current_sheet);
+    }, true);
+
+
 
     $scope.next = function() {
         var sheet = $scope.sheets[$scope.current_sheet];

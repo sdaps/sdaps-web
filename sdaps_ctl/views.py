@@ -258,10 +258,12 @@ def survey_review_sheet(request, survey_id, sheet):
             raise Http404
 
         if request.method == 'POST':
-            post_data = json.loads(res)
+            post_data = json.loads(request.read())
             data = post_data['data']
 
             survey.questionnaire.sdaps_ctl.set_data(data)
+
+            survey.save()
 
         # Assume image is NUMBER.tif
         res = {
