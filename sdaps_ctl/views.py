@@ -25,7 +25,12 @@ import models
 import tasks
 import forms
 
+import simplejson as json
+
+from sdaps.model.survey import Survey as SDAPSSurvey
 from sdaps import image
+from sdaps import matrix
+from . import buddies
 import cairo
 
 def get_survey_or_404(request, survey_id, change=False, delete=False, review=False):
@@ -207,9 +212,68 @@ def survey_image(request, survey_id, filenum, page):
 
     # Create PNG stream and return it
     response = HttpResponse(content_type='image/png')
+    response['Cache-Control'] = 'private, max-age=3600'
     surface.write_to_png(response)
 
     return response
+
+@login_required
+def survey_review(request, survey_id):
+    djsurvey = get_survey_or_404(request, survey_id, review=True)
+
+    if not djsurvey.initialized:
+        raise Http404
+
+    context_dict = {
+        'survey' : djsurvey
+    }
+
+    return render(request, 'survey_review.html', context_dict)
+
+@login_required
+def survey_review_sheet(request, survey_id, sheet):
+    djsurvey = get_survey_or_404(request, survey_id, review=True)
+
+    # Get CSRF token, so that cookie will be included
+    csrf.get_token(request)
+
+    sheet = int(sheet)
+
+    # TODO: Nicer error message?
+    if not djsurvey.initialized:
+        raise Http404
+
+    # Now this is getting hairy, we need to unpickle the data :-(
+    with models.LockedSurvey(djsurvey.id):
+
+        survey = SDAPSSurvey.load(djsurvey.path)
+
+        try:
+            survey.index = sheet
+        except KeyError:
+            raise Http404
+
+        if request.method == 'POST':
+            post_data = json.loads(res)
+            data = post_data['data']
+
+            survey.questionnaire.sdaps_ctl.set_data(data)
+
+        # Assume image is NUMBER.tif
+        res = {
+            'images' : [
+                {
+                    'image' : int(image.filename[:-4]),
+                    'page' : image.page_number,
+                    'rotated' : image.rotated,
+                    'pxtomm' : tuple(image.matrix.px_to_mm()),
+                    'mmtopx' : tuple(image.matrix.mm_to_px()),
+                } for image in survey.sheet.images if not image.ignored
+            ],
+            'data' : survey.questionnaire.sdaps_ctl.get_data()
+        }
+
+        return HttpResponse(json.dumps(res))
 
 urlpatterns = patterns('',
         url(r'^$', lambda x: HttpResponseRedirect('/surveys')),
@@ -219,8 +283,10 @@ urlpatterns = patterns('',
         url(r'^surveys/(?P<survey_id>\d+)/questionnaire.pdf$', questionaire_download, name='questionnaire_download'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/?$', edit, name='questionnaire_edit'),
         url(r'^surveys/(?P<survey_id>\d+)/delete/?$', delete, name='survey_delete'),
-        url(r'^surveys/(?P<survey_id>\d+)/edit/questionnaire?$', questionnaire, name='questionnaire_post'),
+        url(r'^surveys/(?P<survey_id>\d+)/edit/questionnaire/?$', questionnaire, name='questionnaire_post'),
 
+        url(r'^surveys/(?P<survey_id>\d+)/review/?$', survey_review, name='survey_review'),
+        url(r'^surveys/(?P<survey_id>\d+)/review/(?P<sheet>\d+)/?$', survey_review_sheet, name='survey_review_sheet'),
         url(r'^surveys/(?P<survey_id>\d+)/images/(?P<filenum>\d+)/(?P<page>\d+)/?$', survey_image, name='survey_image'),
     )
 

@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h2>{{ survey.name }}</h2>
+<h2>Review {{ survey.name }}</h2>
 
 <p>
 Title: {{survey.title}}
@@ -22,17 +22,5 @@ Author: {{survey.author}}
   questionnaire, and initialize the project.
 </p>
 {% endif %}
-
-{% if may_edit and not survey.initialized %}
-  <a href="{% url 'questionnaire_edit' survey.id %}">Edit the questionnaire.</a>
-{% endif %}
-{% if may_review and survey.initialized %}
-  <a href="{% url 'survey_review' survey.id %}">Review the results.</a>
-{% endif %}
-{% if may_delete %}
-  <a href="{% url 'survey_delete' survey.id %}">Delete this project.</a>
-{% endif %}
-</p>
-</p>
 
 {% endblock %}
