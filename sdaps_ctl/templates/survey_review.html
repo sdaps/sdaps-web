@@ -23,10 +23,8 @@ Author: {{survey.author}}
     <div class="review" style="{{genPrefixes('transform: scale(0.4);')}} {{genPrefixes('transform-origin: 0% 0%;')}}">
       <!-- The background image. -->
       <div id="review_image_container" style="position: absolute">
-        <div ng-repeat="(sheet_num, sheet) in this.sheets" ng-show="!sheet.$loading">
-          <div ng-repeat="image in sheet['images']" ng-show="$index == current_image && sheet_num == current_sheet">
-            <img src="{{ imageSource(image) }}" style="{{genPrefixes(imageRotation(image))}}" />
-          </div>
+        <div ng-repeat="(sheet_num, sheet) in this.sheets" ng-show="!sheet.$loading" style="position: absolute">
+          <img ng-repeat="image in sheet['images']" src="{{ imageSource(image) }}" style="{{genPrefixes(imageRotation(image))}} position: absolute; z-index: {{ {false : -2, true: -1 }[$index == current_image && sheet_num == current_sheet] }};" />
         </div>
       </div>
       <div id="review_boxes_container" style="position: absolute; {{genPrefixes(getCurrentMatrix())}} {{genPrefixes('transform-origin: 0% 0%;')}} ">
