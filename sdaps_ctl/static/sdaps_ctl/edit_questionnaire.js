@@ -44,7 +44,6 @@
       };
 
       var res = defaults[type];
-      console.log(res);
       if (typeof res === 'undefined') {
         res = {};
       }
