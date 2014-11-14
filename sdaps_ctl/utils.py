@@ -8,12 +8,28 @@ import subprocess
 import resource
 import os
 
+class SecureEnv:
+    def __init__(self, timeout):
+        self.timeout = timeout
+
+    def __call__(self):
+        # Clean up environ a bit
+        for k in os.environ.keys():
+            if k.startswith('TEX'):
+                del os.environ[k]
+
+        # Use a hard limit one second above soft limit
+        resource.setrlimit(resource.RLIMIT_CPU, (self.timeout, self.timeout+1))
+
+        # And prevent certain attacks trough LaTeX.
+        os.environ['openin_any'] = 'p'
+        os.environ['openout_any'] = 'p'
+        os.environ['shell_escape'] = 'f'
+
 @task
 def atomic_latex_compile(path, target, timeout=10, need_sdaps=False):
 
-    def set_ulimits():
-        # Use a hard limit one second above soft limit
-        resource.setrlimit(resource.RLIMIT_CPU, (timeout, timeout+1))
+    setup_env = SecureEnv(timeout)
 
     tmpdir = tempfile.mkdtemp(prefix='sdaps-web-')
 
@@ -25,11 +41,11 @@ def atomic_latex_compile(path, target, timeout=10, need_sdaps=False):
         print "Running %s now twice to generate the questionnaire." % defs.latex_engine
         subprocess.call([defs.latex_engine, '-halt-on-error', '-output-directory', tmpdir,
                          '-interaction', 'batchmode', 'questionnaire.tex'],
-                        cwd=path, preexec_fn=set_ulimits)
+                        cwd=path, preexec_fn=setup_env)
         # And again, without the draft mode
         subprocess.call([defs.latex_engine, '-halt-on-error', '-output-directory', tmpdir,
                          '-interaction', 'batchmode', 'questionnaire.tex'],
-                        cwd=path, preexec_fn=set_ulimits)
+                        cwd=path, preexec_fn=setup_env)
 
         if not os.path.exists(os.path.join(tmpdir, output_pdf)):
             return None
