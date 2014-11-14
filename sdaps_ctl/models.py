@@ -10,6 +10,7 @@ from django.db import models
 from django.conf import settings
 
 from django.contrib.auth.models import User, Group
+from django.utils.text import get_valid_filename
 
 class Survey(models.Model):
 
@@ -77,6 +78,63 @@ class ScheduledTasks(models.Model):
         unique_together = (('survey','task'),)
 
 
+UPLOADING = 0
+FINISHED = 1
+ERROR = 1
+UPLOAD_STATUS = (
+    (UPLOADING, "Uploading"),
+    (FINISHED, "Finished"),
+    (ERROR, "Error"),
+)
+
+class UploadedFile(models.Model):
+
+    #: The survey that this file belongs to
+    survey = models.ForeignKey(Survey, db_index=True, related_name="files")
+
+    def generate_filename(instance, filename):
+        filename = get_valid_filename(instance.filename)
+        return os.path.join(instance.survey.path, 'uploads', '%i-%s' % (instance.id, filename))
+
+    file = models.FileField(max_length=255, editable=False, upload_to=generate_filename, storage=settings.SDAPS_UPLOAD_STORAGE)
+    del generate_filename
+
+    filename = models.CharField(max_length=255)
+    filesize = models.PositiveIntegerField()
+
+    created = models.DateTimeField(auto_now_add=True)
+
+    status = models.PositiveSmallIntegerField(choices=UPLOAD_STATUS,
+                                              default=UPLOADING)
+
+    def get_description(self):
+        return {
+            'name' : self.filename,
+            'offset' : self.file.size,
+            'size' : self.filesize,
+        }
+
+    def append_chunk(self, data, offset, length):
+        assert offset == self.file.size
+
+        data = data.read()
+        assert length is None or len(data) == length
+
+        f = open(self.file.name, mode='ab')
+        #self.file.open(mode='ab')
+        #self.file.write(data)
+        #self.file.close()
+        f.write(data)
+        f.close()
+
+        size = self.file.size
+        if self.file.size >= self.filesize:
+            if self.filesize != size:
+                self.status = ERROR
+            else:
+                self.status = FINISHED
+
+
 # ---------------------------------------------------------
 
 def create_survey_dir(sender, instance, created, **kwargs):
@@ -103,4 +161,9 @@ def move_survey_dir(sender, instance, using, **kwargs):
 
 signals.post_save.connect(create_survey_dir, sender=Survey)
 signals.post_delete.connect(move_survey_dir, sender=Survey)
+
+def delete_uploaded_file(sender, instance, using, **kwargs):
+    instance.file.delete(save=False)
+
+signals.post_delete.connect(delete_uploaded_file, sender=UploadedFile)
 

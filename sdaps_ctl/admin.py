@@ -4,7 +4,7 @@ from django.contrib.auth.models import User, Group
 from django.db.models import Q
 from django import forms
 from django.contrib import admin
-from .models import Survey
+from .models import Survey, UploadedFile
 
 class SurveyAdmin(admin.ModelAdmin):
     list_display = ('name', 'title', 'author')
@@ -58,4 +58,10 @@ class SurveyAdmin(admin.ModelAdmin):
         return queryset.filter(Q(owner=user) | Q(group__in=groups))
 
 admin.site.register(Survey, SurveyAdmin)
+
+
+class UploadedFileAdmin(admin.ModelAdmin):
+    pass
+admin.site.register(UploadedFile, UploadedFileAdmin)
+
 

@@ -3,6 +3,8 @@ import os
 import os.path
 import datetime
 
+import re
+
 from .admin import SurveyAdmin
 
 from django.conf.urls import patterns, include, url
@@ -15,6 +17,7 @@ from django.views.decorators.http import last_modified
 from django.contrib.auth.decorators import login_required, permission_required
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.core.files.base import ContentFile
 from django.core.servers.basehttp import FileWrapper
 
 from django.shortcuts import render, get_object_or_404
@@ -33,7 +36,7 @@ from sdaps import matrix
 from . import buddies
 import cairo
 
-def get_survey_or_404(request, survey_id, change=False, delete=False, review=False):
+def get_survey_or_404(request, survey_id, change=False, delete=False, review=False, upload=False):
     obj = get_object_or_404(models.Survey, id=survey_id)
 
     if change:
@@ -44,6 +47,9 @@ def get_survey_or_404(request, survey_id, change=False, delete=False, review=Fal
             raise Http404
     if delete:
         if not request.user.has_perm('sdaps_ctl.review_survey'):
+            raise Http404
+    if upload:
+        if not request.user.has_perm('sdaps_ctl.change_uploaded_file'):
             raise Http404
     if not SurveyAdmin.has_permissions(request, obj):
         raise Http404
@@ -301,11 +307,90 @@ def survey_upload(request, survey_id):
 
 
 
-@login_required
-def survey_upload_post(request, survey_id):
-    survey = get_survey_or_404(request, survey_id, review=True)
+class SurveyUploadPost(LoginRequiredMixin, generic.View):
 
-    return HttpResponse(json.dumps(list()), content_type="application/json")
+    content_range_pattern = re.compile(r'^bytes (?P<start>\d+)-(?P<end>\d+)/(?P<size>\d+)')
+
+    def ensure_valid_upload(self, upload):
+        if upload.status != models.UPLOADING:
+            return False
+        return True
+
+    def post(self, request, survey_id):
+        survey = get_survey_or_404(self.request, survey_id, upload=True)
+
+        #upload_id = request.POST.get('upload_id')
+
+        result = list()
+        for chunk in request.FILES.getlist('files[]'):
+            # Get the details about the chunk/upload
+            content_range = request.META.get('HTTP_CONTENT_RANGE', '')
+            if content_range:
+                match = self.content_range_pattern.match(content_range)
+                if not match:
+                    raise  HttpResponse("{ 'detail' : 'Broken or wrong content range.' }", status=400)
+
+                start = int(match.group('start'))
+                end = int(match.group('end'))
+                length = int(match.group('size'))
+
+                size = end - start + 1
+            else:
+                start = 0
+                size = None
+
+                length = chunk.size
+
+            # TODO: Figure out a way that name collisions work!
+            upload = models.UploadedFile.objects.filter(survey=survey, filename=chunk.name).first()
+
+            if upload is not None:
+                #upload = models.UploadedFile.get(pk=upload_id)
+
+                if not self.ensure_valid_upload(upload):
+                    return HttpResponse("{ 'detail' : 'File already uploaded or in an error state.' }", status=400)
+
+                # Prevent writing to the wrong survey
+                if survey != upload.survey:
+                    raise Http404
+
+            else:
+                # Create a new upload
+                upload = models.UploadedFile(survey=survey, filename=chunk.name, filesize=length)
+                # Ensure PK is created
+                upload.save()
+                upload.file.save(name='', content=ContentFile(''), save=True)
+
+            upload.append_chunk(chunk, offset=start, length=size)
+
+            upload.save()
+
+            result.append(upload.get_description())
+
+        # only include the uploaded files in response
+        result = {
+            'files' : result,
+        }
+
+        return HttpResponse(json.dumps(result), content_type="application/json")
+
+    def generate_response(self, survey):
+        files = list(survey.files.all())
+        result = []
+        for f in files:
+            result.append(f.get_description())
+
+        result = {
+            'files' : result,
+        }
+
+        return HttpResponse(json.dumps(result), content_type="application/json")
+
+
+    def get(self, request, survey_id):
+        survey = get_survey_or_404(self.request, survey_id, upload=True)
+
+        return self.generate_response(survey)
 
 
 urlpatterns = patterns('',
@@ -323,6 +408,6 @@ urlpatterns = patterns('',
         url(r'^surveys/(?P<survey_id>\d+)/images/(?P<filenum>\d+)/(?P<page>\d+)/?$', survey_image, name='survey_image'),
 
         url(r'^surveys/(?P<survey_id>\d+)/upload/?$', survey_upload, name='survey_upload'),
-        url(r'^surveys/(?P<survey_id>\d+)/upload/post/?$', survey_upload_post, name='survey_upload_post'),
+        url(r'^surveys/(?P<survey_id>\d+)/upload/post/?$', SurveyUploadPost.as_view(), name='survey_upload_post'),
     )
 

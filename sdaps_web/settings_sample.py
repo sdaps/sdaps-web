@@ -179,3 +179,7 @@ SDAPS_RENDER_DELAY = 1
 
 LOGIN_REDIRECT_URL = '/surveys'
 
+from django.core.files.storage import FileSystemStorage
+
+SDAPS_UPLOAD_STORAGE=FileSystemStorage(SDAPS_PROJECT_ROOT, base_url=None)
+
