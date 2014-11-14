@@ -193,7 +193,7 @@ def questionnaire(request, survey_id):
         survey.save()
         tasks.queue_timed_write_and_render(survey)
 
-    return HttpResponse(survey.questionnaire)
+    return HttpResponse(survey.questionnaire, content_type="application/json")
 
 @login_required
 def survey_image(request, survey_id, filenum, page):
@@ -280,7 +280,33 @@ def survey_review_sheet(request, survey_id, sheet):
             'data' : survey.questionnaire.sdaps_ctl.get_data()
         }
 
-        return HttpResponse(json.dumps(res))
+        return HttpResponse(json.dumps(res), content_type="application/json")
+
+
+
+@login_required
+def survey_upload(request, survey_id):
+    survey = get_survey_or_404(request, survey_id, review=True)
+
+    csrf.get_token(request)
+
+    if not survey.initialized:
+        raise Http404
+
+    context_dict = {
+        'survey' : survey,
+    }
+
+    return render(request, 'survey_upload.html', context_dict)
+
+
+
+@login_required
+def survey_upload_post(request, survey_id):
+    survey = get_survey_or_404(request, survey_id, review=True)
+
+    return HttpResponse(json.dumps(list()), content_type="application/json")
+
 
 urlpatterns = patterns('',
         url(r'^$', lambda x: HttpResponseRedirect('/surveys')),
@@ -295,5 +321,8 @@ urlpatterns = patterns('',
         url(r'^surveys/(?P<survey_id>\d+)/review/?$', survey_review, name='survey_review'),
         url(r'^surveys/(?P<survey_id>\d+)/review/(?P<sheet>\d+)/?$', survey_review_sheet, name='survey_review_sheet'),
         url(r'^surveys/(?P<survey_id>\d+)/images/(?P<filenum>\d+)/(?P<page>\d+)/?$', survey_image, name='survey_image'),
+
+        url(r'^surveys/(?P<survey_id>\d+)/upload/?$', survey_upload, name='survey_upload'),
+        url(r'^surveys/(?P<survey_id>\d+)/upload/post/?$', survey_upload_post, name='survey_upload_post'),
     )
 

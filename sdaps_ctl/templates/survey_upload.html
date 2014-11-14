@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ STATIC_URL }}sdaps_ctl/css/jquery.fileupload.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}sdaps_ctl/css/jquery.fileupload-ui.css">
+<style>
+/* Hide Angular JS elements before initializing */
+.ng-cloak {
+    display: none;
+}
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+<h2>Upload Scans for {{ survey.name }}</h2>
+
+<p>
+Title: {{survey.title}}
+</p>
+<p>
+Author: {{survey.author}}
+</p>
+
+
+{% include "file_upload_ui.html" %}
+
+{% endblock %}
+
+
+{% block scripts %}
+
+<!-- And custom scripts -->
+
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.js" /></script>
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.ui.widget.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.iframe-transport.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.fileupload.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.fileupload-process.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.fileupload-validate.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/load-image.all.min.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.fileupload-image.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/angular.min.js" /></script>
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery.fileupload-angular.js"></script>
+
+<script type="text/javascript">
+    /* Need to set some global vars here for survey_upload.js. */
+    window.url = "{% url "survey_upload_post" survey.id %}";
+</script>
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/survey_upload.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/jquery_fix_csrf.js"></script>
+
+
+{% endblock %}
+
