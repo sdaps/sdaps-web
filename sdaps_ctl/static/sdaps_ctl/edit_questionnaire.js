@@ -45,7 +45,7 @@
 
       var res = defaults[type];
       if (typeof res === 'undefined') {
-        res = {};
+        throw "Invalid object type or no type selected."
       }
       res['type'] = type;
       res['$editing'] = true;
