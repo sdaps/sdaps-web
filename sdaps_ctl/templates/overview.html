@@ -29,6 +29,9 @@ Author: {{survey.author}}
 {% if may_review and survey.initialized %}
   <a href="{% url 'survey_review' survey.id %}">Review the results.</a>
 {% endif %}
+{% if may_upload and survey.initialized %}
+  <a href="{% url 'survey_upload' survey.id %}">Upload images for this survey</a>
+{% endif %}
 {% if may_delete %}
   <a href="{% url 'survey_delete' survey.id %}">Delete this project.</a>
 {% endif %}

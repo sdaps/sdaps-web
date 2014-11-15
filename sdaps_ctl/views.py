@@ -94,6 +94,22 @@ def survey_create(request):
 
     return render(request, 'survey_create.html', context_dict)
 
+@login_required
+def survey_add_images(request, survey_id):
+    if request.method == "POST":
+        survey = get_survey_or_404(request, survey_id, change=True)
+
+        if survey.busy:
+            raise Http404
+
+        # Queue file addition
+        tasks.queue_add_and_recognize(survey)
+
+        return HttpResponseRedirect(reverse('survey_overview', args=(survey.id,)))
+
+    # XXX: Everything else is not allowed
+    raise Http404
+
 
 class SurveyDetail(LoginRequiredMixin, generic.DetailView):
     model = models.Survey
@@ -109,6 +125,7 @@ class SurveyDetail(LoginRequiredMixin, generic.DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(SurveyDetail, self).get_context_data(**kwargs)
+        context['may_upload'] = self.request.user.has_perm('sdaps_ctl.change_uploaded_file')
         context['may_edit'] = self.request.user.has_perm('sdaps_ctl.change_survey')
         context['may_delete'] = self.request.user.has_perm('sdaps_ctl.delete_survey')
         return context
@@ -230,7 +247,11 @@ def survey_review(request, survey_id):
     if not djsurvey.initialized:
         raise Http404
 
-    with models.LockedSurvey(djsurvey.id):
+    # XXX: Throw sane error in this case!
+    if djsurvey.busy:
+        raise Http404
+
+    with models.LockedSurvey(djsurvey.id, 5):
 
         survey = SDAPSSurvey.load(djsurvey.path)
 
@@ -250,11 +271,15 @@ def survey_review_sheet(request, survey_id, sheet):
 
     sheet = int(sheet)
 
+    # XXX: Throw sane error in this case!
+    if djsurvey.busy:
+        raise Http404
+
     if not djsurvey.initialized:
         raise Http404
 
     # Now this is getting hairy, we need to unpickle the data :-(
-    with models.LockedSurvey(djsurvey.id):
+    with models.LockedSurvey(djsurvey.id, 5):
 
         survey = SDAPSSurvey.load(djsurvey.path)
 
@@ -294,6 +319,10 @@ def survey_review_sheet(request, survey_id, sheet):
 def survey_upload(request, survey_id):
     survey = get_survey_or_404(request, survey_id, review=True)
 
+    # XXX: Throw sane error in this case!
+    if survey.busy:
+        raise Http404
+
     csrf.get_token(request)
 
     if not survey.initialized:
@@ -318,6 +347,10 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
 
     def post(self, request, survey_id):
         survey = get_survey_or_404(self.request, survey_id, upload=True)
+
+        # XXX: Throw sane error in this case!
+        if survey.busy:
+            raise Http404
 
         #upload_id = request.POST.get('upload_id')
 
@@ -381,7 +414,7 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
         return response
 
     def generate_response(self, survey):
-        files = list(survey.files.all())
+        files = list(survey.uploads.all())
         result = []
         for f in files:
             result.append(f.get_description())
@@ -403,6 +436,10 @@ class SurveyUploadFile(LoginRequiredMixin, generic.View):
 
     def delete(self, request, survey_id, filename):
         survey = get_survey_or_404(self.request, survey_id, upload=True)
+
+        # XXX: Throw sane error in this case!
+        if survey.busy:
+            raise Http404
 
         upload = models.UploadedFile.objects.filter(survey=survey, filename=filename).first()
         upload.delete()
@@ -435,6 +472,7 @@ urlpatterns = patterns('',
         url(r'^surveys/(?P<survey_id>\d+)/review/(?P<sheet>\d+)/?$', survey_review_sheet, name='survey_review_sheet'),
         url(r'^surveys/(?P<survey_id>\d+)/images/(?P<filenum>\d+)/(?P<page>\d+)/?$', survey_image, name='survey_image'),
 
+        url(r'^surveys/(?P<survey_id>\d+)/add_images/?$', survey_add_images, name='survey_add_images'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/?$', survey_upload, name='survey_upload'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/post/?$', SurveyUploadPost.as_view(), name='survey_upload_post'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/post/(?P<filename>.+)$', SurveyUploadFile.as_view(), name='survey_upload_file'),

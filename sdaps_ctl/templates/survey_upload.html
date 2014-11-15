@@ -23,6 +23,11 @@ Title: {{survey.title}}
 Author: {{survey.author}}
 </p>
 
+<form method="POST" action="{% url 'survey_add_images' survey.id %}">
+  {% csrf_token %}
+  <input type="submit" value="Add uploaded files to project."></input>
+</form>
+
 
 {% include "file_upload_ui.html" %}
 

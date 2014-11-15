@@ -14,6 +14,8 @@ from django.utils.text import get_valid_filename
 
 from django.core.urlresolvers import reverse
 
+from celery.result import AsyncResult
+
 
 class Survey(models.Model):
 
@@ -47,12 +49,31 @@ class Survey(models.Model):
     def path(self):
         return os.path.join(settings.SDAPS_PROJECT_ROOT, str(self.id))
 
+    @property
+    def busy(self):
+        try:
+            return self._busy
+        except AttributeError:
+            if self.locked:
+                self._busy = True
+                return True
+
+            tlist = tasks.get_tasks(self)
+            if tlist:
+                self._busy = True
+                return True
+
+            self._busy = False
+            return False
 
 class LockedSurvey(object):
-    def __init__(self, surveyid):
+    def __init__(self, surveyid, timeout=None):
         self.surveyid = surveyid
+        self.timeout = timeout
 
     def __enter__(self):
+        timeout = self.timeout
+
         locked = False
         while not locked:
             count = Survey.objects.filter(id=self.surveyid, locked=False).update(locked=True)
@@ -61,6 +82,11 @@ class LockedSurvey(object):
             else:
                 # Sleep ...
                 time.sleep(0.1)
+                if timeout is not None:
+                    timeout -= 0.1
+
+                    if timeout <= 0:
+                        raise AssertionError()
 
     def __exit__(self, type, value, traceback):
         s = Survey.objects.filter(id=self.surveyid).update(locked=False)
@@ -93,7 +119,7 @@ UPLOAD_STATUS = (
 class UploadedFile(models.Model):
 
     #: The survey that this file belongs to
-    survey = models.ForeignKey(Survey, db_index=True, related_name="files")
+    survey = models.ForeignKey(Survey, db_index=True, related_name="uploads")
 
     def generate_filename(instance, filename):
         filename = get_valid_filename(instance.filename)
@@ -124,7 +150,6 @@ class UploadedFile(models.Model):
             'deleteType' : 'DELETE',
         }
 
-        print(self.status)
         if self.status == ERROR:
             res['error'] = 'Upload was not successful.'
 

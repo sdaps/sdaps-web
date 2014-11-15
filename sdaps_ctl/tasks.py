@@ -16,30 +16,92 @@ import shutil
 import glob
 
 import sdaps
+from sdaps import log
 from sdaps import model
 from sdaps import defs
 from sdaps import paths
+# The cheap way of getting the conversion code ...
+from sdaps.cmdline import add
 
 sdaps.init()
 
-@task()
-def add(x, y):
-    return x + y
 
 @task()
-def add_scan(project, image_file):
-    from sdaps import add
-    # TODO
+def add_images(survey_id):
+    survey = models.Survey.objects.get(id=survey_id)
+
+    with models.LockedSurvey(survey.id):
+        images = list(survey.uploads.all())
+        filenames = []
+        for image in images:
+            if image.status != models.FINISHED:
+                continue
+
+            filenames.append(image.file.name)
+
+        # Nothing to do ...
+        if not filenames:
+            return
+
+        cmdline = {
+            'images' : filenames,
+            'convert' : True,
+            'transform' : False, # XXX
+            'force' : False,
+            'copy' : True,
+            'duplex' : False, # XXX
+            'project' : survey.path
+        }
+
+        # TODO: Need error reporting (exception)!
+        try:
+            error = add.add(cmdline)
+        finally:
+            log.logfile.close()
+
+        if not error:
+            # Remove the added files from the database
+            for image in images:
+                image.delete()
+
+        else:
+            # TODO: Need error reporting!
+            raise AssertionError("Error adding files!")
 
 @task()
 def recognize(djsurvey_id):
-    from sdaps.recognize.recognize import recognize
+    from sdaps.recognize import recognize
 
     djsurvey = models.Survey.objects.get(id=djsurvey_id)
 
-    survey = model.survey.Survey.load(djsurvey.path)
+    with models.LockedSurvey(djsurvey.id):
+        try:
+            survey = model.survey.Survey.load(djsurvey.path)
 
-    recognize(survey)
+            filter = lambda : not (survey.sheet.verified or survey.sheet.recognized)
+
+            recognize(survey, filter)
+        finally:
+            log.logfile.close()
+
+
+@task()
+def add_and_recognize(survey_id):
+    add_images(survey_id)
+    recognize(survey_id)
+
+def queue_add_and_recognize(djsurvey):
+    # XXX: Race condition here :-/
+    assert not djsurvey.busy
+
+    with models.LockedSurvey(djsurvey.id):
+        # And queue a new task
+        result = add_and_recognize.apply_async(args=(djsurvey.id, ), queue="background")
+
+        # Note in DB, that it is queued
+        models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='addrecognize').save()
+
+
 
 @task()
 def create_survey(djsurvey):
@@ -109,7 +171,7 @@ def queue_timed_write_and_render(djsurvey):
             pass
 
         # And queue a new task
-        result = write_and_render_questionnaire.apply_async(args=(djsurvey.id, ),countdown=1)
+        result = write_and_render_questionnaire.apply_async(args=(djsurvey.id, ), countdown=1)
 
         # Note in DB, that it is queued
         models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='render').save()
@@ -170,4 +232,20 @@ def build_survey(djsurvey_id):
         if 'Author' in survey.info:
             djsurvey.author = survey.info['Author']
         djsurvey.save()
+
+
+def get_tasks(djsurvey):
+    result = list()
+    try:
+        for task in models.ScheduledTasks.objects.filter(survey=djsurvey).all():
+            # Prune any tasks that are done or resulted in an error.
+            if not AsyncResult(task.celeryid).state in [states.PENDING, states.RETRY]:
+                task.delete()
+            else:
+                result.append(task)
+
+        return result
+
+    except models.ScheduledTasks.DoesNotExist:
+        return []
 
