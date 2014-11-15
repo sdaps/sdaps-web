@@ -45,7 +45,7 @@ def get_survey_or_404(request, survey_id, change=False, delete=False, review=Fal
     if delete:
         if not request.user.has_perm('sdaps_ctl.delete_survey'):
             raise Http404
-    if delete:
+    if review:
         if not request.user.has_perm('sdaps_ctl.review_survey'):
             raise Http404
     if upload:
