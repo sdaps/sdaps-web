@@ -49,7 +49,7 @@ def get_survey_or_404(request, survey_id, change=False, delete=False, review=Fal
         if not request.user.has_perm('sdaps_ctl.review_survey'):
             raise Http404
     if upload:
-        if not request.user.has_perm('sdaps_ctl.change_uploaded_file'):
+        if not request.user.has_perm('sdaps_ctl.change_uploadedfile'):
             raise Http404
     if not SurveyAdmin.has_permissions(request, obj):
         raise Http404
@@ -143,7 +143,7 @@ class SurveyDetail(LoginRequiredMixin, generic.DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(SurveyDetail, self).get_context_data(**kwargs)
-        context['may_upload'] = self.request.user.has_perm('sdaps_ctl.change_uploaded_file')
+        context['may_upload'] = self.request.user.has_perm('sdaps_ctl.change_uploadedfile')
         context['may_review'] = self.request.user.has_perm('sdaps_ctl.review_survey')
         context['may_change'] = self.request.user.has_perm('sdaps_ctl.change_survey')
         context['may_edit'] = self.request.user.has_perm('sdaps_ctl.change_survey')
@@ -337,7 +337,7 @@ def survey_review_sheet(request, survey_id, sheet):
 
 @login_required
 def survey_upload(request, survey_id):
-    survey = get_survey_or_404(request, survey_id, review=True)
+    survey = get_survey_or_404(request, survey_id, upload=True)
 
     # XXX: Throw sane error in this case!
     if survey.busy:
