@@ -110,6 +110,24 @@ def survey_add_images(request, survey_id):
     # XXX: Everything else is not allowed
     raise Http404
 
+@login_required
+def survey_build(request, survey_id):
+    if request.method == "POST":
+        survey = get_survey_or_404(request, survey_id, change=True)
+
+        if survey.initialized:
+            raise Http404
+
+        if survey.busy:
+            raise Http404
+
+        # Queue project creation
+        tasks.queue_build_survey(survey)
+
+        return HttpResponseRedirect(reverse('survey_overview', args=(survey.id,)))
+
+    # XXX: Everything else is not allowed
+    raise Http404
 
 class SurveyDetail(LoginRequiredMixin, generic.DetailView):
     model = models.Survey
@@ -126,6 +144,8 @@ class SurveyDetail(LoginRequiredMixin, generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super(SurveyDetail, self).get_context_data(**kwargs)
         context['may_upload'] = self.request.user.has_perm('sdaps_ctl.change_uploaded_file')
+        context['may_review'] = self.request.user.has_perm('sdaps_ctl.review_survey')
+        context['may_change'] = self.request.user.has_perm('sdaps_ctl.change_survey')
         context['may_edit'] = self.request.user.has_perm('sdaps_ctl.change_survey')
         context['may_delete'] = self.request.user.has_perm('sdaps_ctl.delete_survey')
         return context
@@ -144,7 +164,7 @@ def questionnaire_last_modification(request, survey_id):
 ## Questionnaire download
 @last_modified(questionnaire_last_modification)
 @login_required
-def questionaire_download(request, survey_id):
+def questionnaire_download(request, survey_id):
     survey = get_survey_or_404(request, survey_id)
 
     filename = os.path.join(survey.path, 'questionnaire.pdf')
@@ -463,7 +483,7 @@ urlpatterns = patterns('',
         url(r'^surveys/?$', SurveyList.as_view(), name='surveys'),
         url(r'^surveys/create/?$', survey_create, name='survey_create'),
         url(r'^surveys/(?P<pk>\d+)/?$', SurveyDetail.as_view(), name='survey_overview'),
-        url(r'^surveys/(?P<survey_id>\d+)/questionnaire.pdf$', questionaire_download, name='questionnaire_download'),
+        url(r'^surveys/(?P<survey_id>\d+)/questionnaire.pdf$', questionnaire_download, name='questionnaire_download'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/?$', edit, name='questionnaire_edit'),
         url(r'^surveys/(?P<survey_id>\d+)/delete/?$', delete, name='survey_delete'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/questionnaire/?$', questionnaire, name='questionnaire_post'),
@@ -472,6 +492,7 @@ urlpatterns = patterns('',
         url(r'^surveys/(?P<survey_id>\d+)/review/(?P<sheet>\d+)/?$', survey_review_sheet, name='survey_review_sheet'),
         url(r'^surveys/(?P<survey_id>\d+)/images/(?P<filenum>\d+)/(?P<page>\d+)/?$', survey_image, name='survey_image'),
 
+        url(r'^surveys/(?P<survey_id>\d+)/build/?$', survey_build, name='survey_build'),
         url(r'^surveys/(?P<survey_id>\d+)/add_images/?$', survey_add_images, name='survey_add_images'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/?$', survey_upload, name='survey_upload'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/post/?$', SurveyUploadPost.as_view(), name='survey_upload_post'),

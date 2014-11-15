@@ -23,18 +23,31 @@ Author: {{survey.author}}
 </p>
 {% endif %}
 
+<ul>
 {% if may_edit and not survey.initialized %}
-  <a href="{% url 'questionnaire_edit' survey.id %}">Edit the questionnaire.</a>
+  <li><a href="{% url 'questionnaire_edit' survey.id %}">Edit the questionnaire</a></li>
+{% endif %}
+{% if may_change and not survey.initialized %}
+  <li>
+    <form method="POST" action="{% url 'survey_build' survey.id %}">
+      {% csrf_token %}
+      <input type="submit" value="Setup survey"></input> (you cannot modify the questionnaire after this step!)
+    </form>
+  </li>
 {% endif %}
 {% if may_review and survey.initialized %}
-  <a href="{% url 'survey_review' survey.id %}">Review the results.</a>
+  <li><a href="{% url 'survey_review' survey.id %}">Review the results.</a></li>
+{% endif %}
+{% if survey.initialized %}
+  <li><a href="{% url 'questionnaire_download' survey.id %}">Download printable questionnaire.</a></li>
 {% endif %}
 {% if may_upload and survey.initialized %}
-  <a href="{% url 'survey_upload' survey.id %}">Upload images for this survey</a>
+  <li><a href="{% url 'survey_upload' survey.id %}">Upload images for this survey</a></li>
 {% endif %}
 {% if may_delete %}
-  <a href="{% url 'survey_delete' survey.id %}">Delete this project.</a>
+  <li><a href="{% url 'survey_delete' survey.id %}">Delete this project.</a></li>
 {% endif %}
+</ul>
 </p>
 </p>
 

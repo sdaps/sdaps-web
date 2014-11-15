@@ -187,7 +187,7 @@ def build_survey(djsurvey_id):
 
         assert(djsurvey.initialized == False)
 
-        from sdaps.setuptex import setup
+        import sdaps.setuptex as setup
         from sdaps.setuptex import sdapsfileparser
         survey = model.survey.Survey.new(djsurvey.path)
 
@@ -220,7 +220,7 @@ def build_survey(djsurvey_id):
             shutil.rmtree(survey.path())
             return 1
 
-        setup.write_latex_override_file(survey, draft=True)
+        setup.write_latex_override_file(survey)
 
         if not utils.atomic_latex_compile(djsurvey.path, 'questionnaire.tex', need_sdaps=True):
             return False
@@ -232,6 +232,19 @@ def build_survey(djsurvey_id):
         if 'Author' in survey.info:
             djsurvey.author = survey.info['Author']
         djsurvey.save()
+
+        log.logfile.close()
+
+def queue_build_survey(djsurvey):
+    # XXX: Race condition here :-/
+    assert not djsurvey.busy
+
+    with models.LockedSurvey(djsurvey.id):
+        # And queue a new task
+        result = build_survey.apply_async(args=(djsurvey.id, ), queue="background")
+
+        # Note in DB, that it is queued
+        models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='build').save()
 
 
 def get_tasks(djsurvey):
