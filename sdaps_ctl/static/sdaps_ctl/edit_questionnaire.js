@@ -31,7 +31,7 @@
         'multicol' : { 'columns' : 2 },
         'section' : { 'title' : 'Title', },
         'textbody' : { 'text' : 'Text', },
-        'singlemark' : { 'checkboxcount' : 5, },
+        'singlemark' : { 'question' : 'question', 'checkboxcount' : 5, 'lower' : 'a', 'upper' : 'b'},
         'choicequestion' : { 'question' : 'Question', 'columns' : 4 },
         'markgroup' : { 'heading' : 'Headline', 'checkboxcount' : 5 },
         'choicegroup' : { 'heading' : 'Headline' },
