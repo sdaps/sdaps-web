@@ -25,6 +25,7 @@ from sdaps.cmdline import add
 
 sdaps.init()
 
+defs.latex_preexec_hook = utils.SecureEnv(10)
 
 @task()
 def add_images(survey_id):
