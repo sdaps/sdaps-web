@@ -118,16 +118,21 @@
 
           $scope.sheets[sheet] = { '$loading' : true, 'images' : [], 'data' : {} };
 
-          $http.get($scope.sheet_base + sheet, {'sheet' : sheet }).success(function(data, status, headers, config) {
-            $scope.sheets[config['sheet']] = data;
-            if (config['sheet'] == $scope.current_sheet) {
-                if ($scope.current_image == -1) {
-                    $scope.current_image = data['images'].length - 1;
-                }
-            }
+          $http.get($scope.sheet_base + sheet, {'sheet' : sheet })
+            .success(function(data, status, headers, config) {
+              $scope.sheets[config['sheet']] = data;
+              if (config['sheet'] == $scope.current_sheet) {
+                  if ($scope.current_image == -1) {
+                      $scope.current_image = data['images'].length - 1;
+                  }
+              }
 
-            data['$dirty'] = false;
-          });
+              data['$dirty'] = false;
+            })
+            .error(function(data, status, headers, config) {
+              $scope.sheets[sheet] = { '$loading' : false };
+              alert("Server did not respond to request. Cannot review this sheet for now!");
+            });
         });
     }
 
