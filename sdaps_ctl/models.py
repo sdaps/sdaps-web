@@ -20,7 +20,7 @@ from celery.result import AsyncResult
 class Survey(models.Model):
 
     class Meta:
-        permissions = (("review", "Can review surveys"),)
+        permissions = (("review_survey", "Can review surveys"),)
 
     name = models.CharField(max_length=100)
 
