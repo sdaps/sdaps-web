@@ -11,6 +11,11 @@ Title: {{survey.title}}
 Author: {{survey.author}}
 </p>
 
+{% if survey.busy %}
+<p style="font-weight: bold">
+  There are pending tasks for this survey. Please wait a while and reload this page at a later point (press F5 manually for now).
+</p>
+{% else %}
 {% if survey.initialized %}
 <p>
   This survey is already initialized. You may not modify it any more. You can now upload
@@ -50,5 +55,6 @@ Author: {{survey.author}}
 </ul>
 </p>
 </p>
+{% endif %}
 
 {% endblock %}
