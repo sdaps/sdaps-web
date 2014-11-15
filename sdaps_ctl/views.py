@@ -384,20 +384,6 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
 
         return response
 
-    def delete(self, request, survey_id):
-        survey = get_survey_or_404(self.request, survey_id, upload=True)
-
-        if 'f' not in request.GET:
-            return HttpResponse("No filename to delete was provided.", status=400)
-
-        filename = request.GET['f']
-
-        upload = models.UploadedFile.objects.filter(survey=survey, filename=filename).first()
-        upload.delete()
-
-        return HttpResponse(json.dumps({ 'files' : [ { filename : True }] }), content_type="application/json")
-
-
     def generate_response(self, survey):
         files = list(survey.files.all())
         result = []
@@ -417,7 +403,17 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
         return self.generate_response(survey)
 
 
-class SurveyUploadDownload(LoginRequiredMixin, generic.View):
+class SurveyUploadFile(LoginRequiredMixin, generic.View):
+
+    def delete(self, request, survey_id, filename):
+        survey = get_survey_or_404(self.request, survey_id, upload=True)
+
+        upload = models.UploadedFile.objects.filter(survey=survey, filename=filename).first()
+        upload.delete()
+
+        return HttpResponse(json.dumps({ 'files' : [ { filename : True }] }), content_type="application/json")
+
+
     def get(self, request, survey_id, filename):
         survey = get_survey_or_404(self.request, survey_id, upload=True)
 
@@ -445,6 +441,6 @@ urlpatterns = patterns('',
 
         url(r'^surveys/(?P<survey_id>\d+)/upload/?$', survey_upload, name='survey_upload'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/post/?$', SurveyUploadPost.as_view(), name='survey_upload_post'),
-        url(r'^surveys/(?P<survey_id>\d+)/upload/post/(?P<filename>.+)$', SurveyUploadDownload.as_view(), name='survey_upload_download'),
+        url(r'^surveys/(?P<survey_id>\d+)/upload/post/(?P<filename>.+)$', SurveyUploadFile.as_view(), name='survey_upload_file'),
     )
 

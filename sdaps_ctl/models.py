@@ -113,15 +113,16 @@ class UploadedFile(models.Model):
     def get_description(self):
         size = self.file.size
 
+        url = reverse('survey_upload_file', args=(self.survey.id, self.filename))
+
         res = {
             'name' : self.filename,
             'offset' : size,
             'size' : self.filesize,
-            'deleteUrl' : reverse('survey_upload_post', args=(self.survey.id,)) + '?f=%s' % self.filename,
+            'url' : url,
+            'deleteUrl' : url,
             'deleteType' : 'DELETE',
         }
-        if size == self.filesize:
-            res['url'] = reverse('survey_upload_download', args=(self.survey.id, self.filename))
 
         return res
 
