@@ -330,7 +330,8 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
             if content_range:
                 match = self.content_range_pattern.match(content_range)
                 if not match:
-                    raise  HttpResponse("{ 'detail' : 'Broken or wrong content range.' }", status=400)
+                    result.append({ 'name' : chunk.name, 'error' : 'Broken or wrong content range.' })
+                    continue
 
                 start = int(match.group('start'))
                 end = int(match.group('end'))
@@ -347,14 +348,9 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
             upload = models.UploadedFile.objects.filter(survey=survey, filename=chunk.name).first()
 
             if upload is not None:
-                #upload = models.UploadedFile.get(pk=upload_id)
-
                 if not self.ensure_valid_upload(upload):
-                    return HttpResponse("{ 'detail' : 'File already uploaded or in an error state.' }", status=400)
-
-                # Prevent writing to the wrong survey
-                if survey != upload.survey:
-                    raise Http404
+                    result.append({ 'name' : chunk.name, 'error' : 'File already uploaded or in an error state.' })
+                    continue
 
             else:
                 # Create a new upload

@@ -83,7 +83,7 @@ class ScheduledTasks(models.Model):
 
 UPLOADING = 0
 FINISHED = 1
-ERROR = 1
+ERROR = 2
 UPLOAD_STATUS = (
     (UPLOADING, "Uploading"),
     (FINISHED, "Finished"),
@@ -124,6 +124,10 @@ class UploadedFile(models.Model):
             'deleteType' : 'DELETE',
         }
 
+        print(self.status)
+        if self.status == ERROR:
+            res['error'] = 'Upload was not successful.'
+
         return res
 
     def append_chunk(self, data, offset, length):
@@ -140,12 +144,13 @@ class UploadedFile(models.Model):
         f.close()
 
         size = self.file.size
-        if self.file.size >= self.filesize:
+        if size >= self.filesize:
             if self.filesize != size:
                 self.status = ERROR
             else:
                 self.status = FINISHED
 
+        self.save()
 
 # ---------------------------------------------------------
 
