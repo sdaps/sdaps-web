@@ -21,7 +21,10 @@
 			</div>
 			<nav class="collapse navbar-collapse bs-navbar-collapse" role="navigation">
 				<ul class="nav navbar-nav">
-
+					<li><a href="{% url "surveys" %}">Survey List</a></li>
+					{% if survey %}
+					<li><a href="{% url "survey_overview" survey.id %}">Current Survey</a></li>
+					{% endif %}
 				</ul>
 			</nav>
 		</div>
