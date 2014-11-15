@@ -321,7 +321,9 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
 
         #upload_id = request.POST.get('upload_id')
 
+        single_file = len(request.FILES.getlist('files[]')) == 1
         result = list()
+        range_header = None
         for chunk in request.FILES.getlist('files[]'):
             # Get the details about the chunk/upload
             content_range = request.META.get('HTTP_CONTENT_RANGE', '')
@@ -367,12 +369,34 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
 
             result.append(upload.get_description())
 
+            if single_file:
+                # Send back the range that is already uploaded
+                range_header = 'bytes %i-%i' % (0, upload.file.size-1)
+
         # only include the uploaded files in response
         result = {
             'files' : result,
         }
 
-        return HttpResponse(json.dumps(result), content_type="application/json")
+        response = HttpResponse(json.dumps(result), content_type="application/json")
+        if range_header is not None:
+            response['Range'] = range_header
+
+        return response
+
+    def delete(self, request, survey_id):
+        survey = get_survey_or_404(self.request, survey_id, upload=True)
+
+        if 'f' not in request.GET:
+            return HttpResponse("No filename to delete was provided.", status=400)
+
+        filename = request.GET['f']
+
+        upload = models.UploadedFile.objects.filter(survey=survey, filename=filename).first()
+        upload.delete()
+
+        return HttpResponse(json.dumps({ 'files' : [ { filename : True }] }), content_type="application/json")
+
 
     def generate_response(self, survey):
         files = list(survey.files.all())
@@ -393,6 +417,18 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
         return self.generate_response(survey)
 
 
+class SurveyUploadDownload(LoginRequiredMixin, generic.View):
+    def get(self, request, survey_id, filename):
+        survey = get_survey_or_404(self.request, survey_id, upload=True)
+
+        upload = models.UploadedFile.objects.filter(survey=survey, filename=filename).first()
+
+        if upload is None:
+            raise Http404
+
+        # XXX: Store mimetype and return correct one here!
+        return HttpResponse(upload.file, content_type="application/binary")
+
 urlpatterns = patterns('',
         url(r'^$', lambda x: HttpResponseRedirect('/surveys')),
         url(r'^surveys/?$', SurveyList.as_view(), name='surveys'),
@@ -409,5 +445,6 @@ urlpatterns = patterns('',
 
         url(r'^surveys/(?P<survey_id>\d+)/upload/?$', survey_upload, name='survey_upload'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/post/?$', SurveyUploadPost.as_view(), name='survey_upload_post'),
+        url(r'^surveys/(?P<survey_id>\d+)/upload/post/(?P<filename>.+)$', SurveyUploadDownload.as_view(), name='survey_upload_download'),
     )
 

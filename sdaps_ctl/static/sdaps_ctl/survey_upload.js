@@ -24,6 +24,8 @@
             '$httpProvider', 'fileUploadProvider',
             function ($httpProvider, fileUploadProvider) {
                 delete $httpProvider.defaults.headers.common['X-Requested-With'];
+                $httpProvider.defaults.xsrfCookieName = 'csrftoken';
+                $httpProvider.defaults.xsrfHeaderName = 'X-CSRFToken';
 
                 angular.extend(fileUploadProvider.defaults, {
                     maxFileSize: 500000000,
@@ -37,7 +39,7 @@
             '$scope', '$http', '$filter', '$window',
             function ($scope, $http) {
                 $scope.options = {
-                    url: url
+                    url: url,
                 };
                 $scope.loadingFiles = true;
 

@@ -12,6 +12,9 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.utils.text import get_valid_filename
 
+from django.core.urlresolvers import reverse
+
+
 class Survey(models.Model):
 
     class Meta:
@@ -108,11 +111,19 @@ class UploadedFile(models.Model):
                                               default=UPLOADING)
 
     def get_description(self):
-        return {
+        size = self.file.size
+
+        res = {
             'name' : self.filename,
-            'offset' : self.file.size,
+            'offset' : size,
             'size' : self.filesize,
+            'deleteUrl' : reverse('survey_upload_post', args=(self.survey.id,)) + '?f=%s' % self.filename,
+            'deleteType' : 'DELETE',
         }
+        if size == self.filesize:
+            res['url'] = reverse('survey_upload_download', args=(self.survey.id, self.filename))
+
+        return res
 
     def append_chunk(self, data, offset, length):
         assert offset == self.file.size
