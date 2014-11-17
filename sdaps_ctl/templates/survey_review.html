@@ -24,7 +24,7 @@ Author: {{survey.author}}
       <!-- The background image. -->
       <div id="review_image_container" style="position: absolute">
         <div ng-repeat="(sheet_num, sheet) in this.sheets" ng-show="!sheet.$loading" style="position: absolute">
-          <img ng-repeat="image in sheet['images']" src="{{ imageSource(image) }}" style="{{genPrefixes(imageRotation(image))}} position: absolute; z-index: {{ {false : -2, true: -1 }[$index == current_image && sheet_num == current_sheet] }};" />
+          <img ng-repeat="image in sheet['images']" ng-src="{{ imageSource(image) }}" style="{{genPrefixes(imageRotation(image))}} position: absolute; z-index: {{ {false : -2, true: -1 }[$index == current_image && sheet_num == current_sheet] }};" />
         </div>
       </div>
       <div id="review_boxes_container" style="position: absolute; {{genPrefixes(getCurrentMatrix())}} {{genPrefixes('transform-origin: 0% 0%;')}} ">
