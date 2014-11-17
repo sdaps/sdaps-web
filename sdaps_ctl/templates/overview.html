@@ -29,6 +29,7 @@ Author: {{survey.author}}
 {% endif %}
 
 <ul>
+  <li><a href="{% url 'questionnaire_tex_download' survey.id %}">Download LaTeX questionnaire</a></li>
 {% if may_edit and not survey.initialized %}
   <li><a href="{% url 'questionnaire_edit' survey.id %}">Edit the questionnaire</a></li>
 {% endif %}
@@ -37,6 +38,14 @@ Author: {{survey.author}}
     <form method="POST" action="{% url 'survey_build' survey.id %}">
       {% csrf_token %}
       <input type="submit" value="Setup survey"></input> (you cannot modify the questionnaire after this step!)
+    </form>
+  </li>
+{% endif %}
+{% if may_change and survey.initialized %}
+  <li>
+    <form method="POST" action="{% url 'survey_report' survey.id %}">
+      {% csrf_token %}
+      <input type="submit" value="Generate Report"></input> Once it is generated, download <a href="{% url 'report_download' survey.id %}">the report</a>.
     </form>
   </li>
 {% endif %}

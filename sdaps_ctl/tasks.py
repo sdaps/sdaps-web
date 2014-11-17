@@ -20,6 +20,7 @@ from sdaps import log
 from sdaps import model
 from sdaps import defs
 from sdaps import paths
+from sdaps import reporttex
 # The cheap way of getting the conversion code ...
 from sdaps.cmdline import add
 
@@ -91,18 +92,6 @@ def add_and_recognize(survey_id):
     add_images(survey_id)
     recognize(survey_id)
 
-def queue_add_and_recognize(djsurvey):
-    # XXX: Race condition here :-/
-    assert not djsurvey.busy
-
-    with models.LockedSurvey(djsurvey.id):
-        # And queue a new task
-        result = add_and_recognize.apply_async(args=(djsurvey.id, ), queue="background")
-
-        # Note in DB, that it is queued
-        models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='addrecognize').save()
-
-
 
 @task()
 def create_survey(djsurvey):
@@ -156,26 +145,6 @@ def render_questionnaire(djsurvey_id):
 def write_and_render_questionnaire(djsurvey_id):
     write_questionnaire(djsurvey_id)
     render_questionnaire(djsurvey_id)
-
-def queue_timed_write_and_render(djsurvey):
-    with models.LockedSurvey(djsurvey.id):
-        try:
-            task = models.ScheduledTasks.objects.get(survey=djsurvey, task='render')
-
-            # Will the task still run?
-            if AsyncResult(task.celeryid).state in [states.PENDING, states.RETRY]:
-                return
-
-            # Seems like the task will not run, so remove the old one
-            task.delete()
-        except models.ScheduledTasks.DoesNotExist:
-            pass
-
-        # And queue a new task
-        result = write_and_render_questionnaire.apply_async(args=(djsurvey.id, ), countdown=1)
-
-        # Note in DB, that it is queued
-        models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='render').save()
 
 @task()
 def build_survey(djsurvey_id):
@@ -236,6 +205,63 @@ def build_survey(djsurvey_id):
 
         log.logfile.close()
 
+@task
+def generate_report(survey_id):
+    djsurvey = models.Survey.objects.get(id=survey_id)
+
+    with models.LockedSurvey(djsurvey.id):
+        try:
+            survey = model.survey.Survey.load(djsurvey.path)
+
+            filename = survey.path('report.pdf')
+
+            # XXX: Don't hardcode to A4, figure out something saner
+            reporttex.report(survey, None, filename=filename, papersize="A4")
+        finally:
+            log.logfile.close()
+
+def queue_generate_report(djsurvey):
+    # XXX: Race condition here :-/
+    assert not djsurvey.busy
+
+    with models.LockedSurvey(djsurvey.id):
+        # And queue a new task
+        result = generate_report.apply_async(args=(djsurvey.id, ), queue="background")
+
+        # Note in DB, that it is queued
+        models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='report').save()
+
+def queue_add_and_recognize(djsurvey):
+    # XXX: Race condition here :-/
+    assert not djsurvey.busy
+
+    with models.LockedSurvey(djsurvey.id):
+        # And queue a new task
+        result = add_and_recognize.apply_async(args=(djsurvey.id, ), queue="background")
+
+        # Note in DB, that it is queued
+        models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='addrecognize').save()
+
+def queue_timed_write_and_render(djsurvey):
+    with models.LockedSurvey(djsurvey.id):
+        try:
+            task = models.ScheduledTasks.objects.get(survey=djsurvey, task='render')
+
+            # Will the task still run?
+            if AsyncResult(task.celeryid).state in [states.PENDING, states.RETRY]:
+                return
+
+            # Seems like the task will not run, so remove the old one
+            task.delete()
+        except models.ScheduledTasks.DoesNotExist:
+            pass
+
+        # And queue a new task
+        result = write_and_render_questionnaire.apply_async(args=(djsurvey.id, ), countdown=1)
+
+        # Note in DB, that it is queued
+        models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='render').save()
+
 def queue_build_survey(djsurvey):
     # XXX: Race condition here :-/
     assert not djsurvey.busy
@@ -253,6 +279,7 @@ def get_tasks(djsurvey):
     try:
         for task in models.ScheduledTasks.objects.filter(survey=djsurvey).all():
             # Prune any tasks that are done or resulted in an error.
+            print(AsyncResult(task.celeryid).state)
             if not AsyncResult(task.celeryid).state in [states.PENDING, states.RETRY]:
                 task.delete()
             else:
