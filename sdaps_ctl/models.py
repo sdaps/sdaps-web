@@ -58,12 +58,20 @@ class Survey(models.Model):
                 self._busy = True
                 return True
 
+            self._busy = self.active_task
+            return self._busy
+
+    @property
+    def active_task(self):
+        try:
+            return self._active_task
+        except AttributeError:
             tlist = tasks.get_tasks(self)
             if tlist:
-                self._busy = True
+                self._active_task = True
                 return True
 
-            self._busy = False
+            self._active_task = False
             return False
 
 class LockedSurvey(object):

@@ -99,7 +99,7 @@ def survey_add_images(request, survey_id):
     if request.method == "POST":
         survey = get_survey_or_404(request, survey_id, change=True)
 
-        if survey.busy:
+        if survey.active_task:
             raise Http404
 
         # Queue file addition
@@ -118,7 +118,7 @@ def survey_build(request, survey_id):
         if survey.initialized:
             raise Http404
 
-        if survey.busy:
+        if survey.active_task:
             raise Http404
 
         # Queue project creation
@@ -268,7 +268,7 @@ def survey_review(request, survey_id):
         raise Http404
 
     # XXX: Throw sane error in this case!
-    if djsurvey.busy:
+    if djsurvey.active_task:
         raise Http404
 
     with models.LockedSurvey(djsurvey.id, 5):
@@ -292,7 +292,7 @@ def survey_review_sheet(request, survey_id, sheet):
     sheet = int(sheet)
 
     # XXX: Throw sane error in this case!
-    if djsurvey.busy:
+    if djsurvey.active_task:
         raise Http404
 
     if not djsurvey.initialized:
@@ -340,7 +340,7 @@ def survey_upload(request, survey_id):
     survey = get_survey_or_404(request, survey_id, upload=True)
 
     # XXX: Throw sane error in this case!
-    if survey.busy:
+    if survey.active_task:
         raise Http404
 
     csrf.get_token(request)
@@ -369,7 +369,7 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
         survey = get_survey_or_404(self.request, survey_id, upload=True)
 
         # XXX: Throw sane error in this case!
-        if survey.busy:
+        if survey.active_task:
             raise Http404
 
         #upload_id = request.POST.get('upload_id')
@@ -458,7 +458,7 @@ class SurveyUploadFile(LoginRequiredMixin, generic.View):
         survey = get_survey_or_404(self.request, survey_id, upload=True)
 
         # XXX: Throw sane error in this case!
-        if survey.busy:
+        if survey.active_task:
             raise Http404
 
         upload = models.UploadedFile.objects.filter(survey=survey, filename=filename).first()
