@@ -181,7 +181,7 @@ def survey_file_last_modification(request, survey_id, filename):
 
 
 ## Questionnaire download
-@last_modified(lambda *args: survey_file_last_modification(*args, filename='questionnaire.pdf', **kwargs))
+@last_modified(lambda *args, **kwargs: survey_file_last_modification(*args, filename='questionnaire.pdf', **kwargs))
 @login_required
 def questionnaire_download(request, survey_id):
     survey = get_survey_or_404(request, survey_id)
