@@ -26,6 +26,8 @@
     $scope.sheet_base = window.sheet_base;
     $scope.review_sheets = window.review_sheets;
 
+    $scope.zoom_step = -4;
+    $scope.zoom = Math.pow(1.2, $scope.zoom_step);
 
     $scope.options = {
       // XXX: Debouncer is not working!
@@ -165,6 +167,10 @@
         }
     }, false);
 
+    $scope.$watch('zoom_step', function(new_val, old_val) {
+        $scope.zoom = Math.pow(1.2, $scope.zoom_step);
+    }, false);
+
 
     $scope.submitSheet = function(sheet_number) {
         if (typeof $scope.sheets[sheet_number] === 'undefined')
@@ -250,6 +256,13 @@
         $scope.setCurrentSheet(next_sheet);
     }
 
+    $scope.zoomOut = function() {
+        $scope.zoom_step -= 1;
+    }
+
+    $scope.zoomIn = function() {
+        $scope.zoom_step += 1;
+    }
 
     $(document).keydown(function(event){
         var keyCode = {

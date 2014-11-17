@@ -14,17 +14,20 @@ Author: {{survey.author}}
 {% verbatim %}
 <div class="review_widget" ng-controller="reviewCtrl">
   <div class="review_container">
-    <button type="submit" class="btn btn-default" ng-click="setCurrentSheet(current_sheet-1)">Previous Sheet</button>
-    <button type="submit" class="btn btn-default" ng-click="prev()">Previous Image</button>
+    <button type="submit" class="btn" ng-click="setCurrentSheet(current_sheet-1)">Previous Sheet</button>
+    <button type="submit" class="btn" ng-click="prev()">Previous Image</button>
 
     <label>Sheet: <input type="number" ng-min="1" ng-max="{{ review_sheets }}" ng-model="current_sheet_num"></input></label>
     <label>Page: <input type="number" ng-min="1" ng-model="current_image_num"></input></label>
 
-    <button type="submit" class="btn btn-default" ng-click="next()">Next Image</button>
-    <button type="submit" class="btn btn-default" ng-click="setCurrentSheet(current_sheet+1)">Next Sheet</button>
+    <button type="submit" class="btn" ng-click="next()">Next Image</button>
+    <button type="submit" class="btn" ng-click="setCurrentSheet(current_sheet+1)">Next Sheet</button>
+
+    <button type="submit" class="btn" ng-click="zoomIn()">Zoom In</button>
+    <button type="submit" class="btn" ng-click="zoomOut()">Zoom Out</button>
 
     <!-- The container that scales the review -->
-    <div class="review" style="{{genPrefixes('transform: scale(0.4);')}} {{genPrefixes('transform-origin: 0% 0%;')}}">
+    <div class="review" style="{{genPrefixes('transform: scale(' + zoom + ');')}} {{genPrefixes('transform-origin: 0% 0%;')}}">
       <!-- The background image. -->
       <div id="review_image_container" style="position: absolute">
         <div ng-repeat="(sheet_num, sheet) in this.sheets" ng-show="!sheet.$loading" style="position: absolute">
