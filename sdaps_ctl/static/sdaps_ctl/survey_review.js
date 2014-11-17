@@ -33,8 +33,10 @@
       debounce: {'default': 500, 'blur': 0},
     };
 
+    $scope.current_sheet_num = 0;
     $scope.current_sheet = -1;
     $scope.current_image = 0;
+    $scope.current_image_num = 1;
     $scope.sheets = {};
 
     $scope.genPrefixes = function(style) {
@@ -90,6 +92,7 @@
         $scope.submitSheet($scope.current_sheet);
 
         $scope.current_sheet = sheet;
+        $scope.current_sheet_num = $scope.current_sheet + 1;
 
         if (start < 0)
           start = 0;
@@ -135,6 +138,33 @@
             });
         });
     }
+
+    $scope.$watch('current_sheet_num', function(newSheet, oldSheet) {
+        if (newSheet != oldSheet) {
+            $scope.setCurrentSheet($scope.current_sheet_num - 1);
+            $scope.current_sheet_num = $scope.current_sheet + 1;
+        }
+    }, false);
+
+    $scope.$watch('current_image_num', function(newPage, oldPage) {
+        if (newPage != oldPage) {
+            $scope.current_image = $scope.current_image_num - 1;
+        }
+    }, false);
+
+    $scope.$watch('current_image', function(newPage, oldPage) {
+        if (newPage != oldPage) {
+            if (typeof $scope.sheets[$scope.current_sheet]['images'] !== "undefined") {
+                if ($scope.current_image >= $scope.sheets[$scope.current_sheet]['images'].length)
+                    $scope.current_image = $scope.sheets[$scope.current_sheet]['images'].length - 1;
+                if ($scope.current_image < 0)
+                    $scope.current_image = 0;
+            }
+
+            $scope.current_image_num = $scope.current_image + 1;
+        }
+    }, false);
+
 
     $scope.submitSheet = function(sheet_number) {
         if (typeof $scope.sheets[sheet_number] === 'undefined')
