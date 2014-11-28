@@ -54,7 +54,7 @@ def render_qobject(qobject, allowed_types=None):
         for child in get(qobject, 'children', []):
             children.append(render_qobject(child))
 
-        return '\\begin{multicols}{%i}\n%s\n\\end{multicols}' % (qobject['columns'], '\n'.join(children))
+        return '\\begin{multicols}{%i}\n%s\n\\end{multicols}' % (get(qobject, 'columns', 2), '\n'.join(children))
 
     elif t == 'markgroup':
         marklines = []
