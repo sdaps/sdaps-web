@@ -27,12 +27,14 @@ from django.template import Context, loader
 import models
 import tasks
 import forms
+import StringIO
 
 import simplejson as json
 
 from sdaps.model.survey import Survey as SDAPSSurvey
 from sdaps import image
 from sdaps import matrix
+from sdaps import csvdata
 from . import buddies
 import cairo
 
@@ -384,6 +386,28 @@ def survey_review_sheet(request, survey_id, sheet):
         return HttpResponse(json.dumps(res), content_type="application/json")
 
 
+@login_required
+def csv_download(request, survey_id):
+    djsurvey = get_survey_or_404(request, survey_id, change=True)
+
+    # XXX: Throw sane error in this case!
+    if djsurvey.active_task:
+        raise Http404
+
+    if not djsurvey.initialized:
+        raise Http404
+
+    # Now this is getting hairy, we need to unpickle the data :-(
+    with models.LockedSurvey(djsurvey.id, 5):
+
+        survey = SDAPSSurvey.load(djsurvey.path)
+
+        outdata = StringIO.StringIO()
+        csvdata.csvdata_export(survey, outdata, None, False, {})
+
+        return HttpResponse(outdata.getvalue(), content_type="text/csv; charset=utf-8")
+
+
 
 @login_required
 def survey_upload(request, survey_id):
@@ -533,6 +557,7 @@ urlpatterns = patterns('',
         url(r'^surveys/?$', SurveyList.as_view(), name='surveys'),
         url(r'^surveys/create/?$', survey_create, name='survey_create'),
         url(r'^surveys/(?P<pk>\d+)/?$', SurveyDetail.as_view(), name='survey_overview'),
+        url(r'^surveys/(?P<survey_id>\d+)/data.csv$', csv_download, name='csv_download'),
         url(r'^surveys/(?P<survey_id>\d+)/questionnaire.pdf$', questionnaire_download, name='questionnaire_download'),
         url(r'^surveys/(?P<survey_id>\d+)/questionnaire.tex$', questionnaire_tex_download, name='questionnaire_tex_download'),
         url(r'^surveys/(?P<survey_id>\d+)/report.pdf$', report_download, name='report_download'),

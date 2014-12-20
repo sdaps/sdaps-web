@@ -48,6 +48,7 @@ Author: {{survey.author}}
       <input type="submit" value="Generate Report"></input> Once it is generated, download <a href="{% url 'report_download' survey.id %}">the report</a>.
     </form>
   </li>
+  <li><a href="{% url 'csv_download' survey.id %}">Download CSV with the result.</a></li>
 {% endif %}
 {% if may_review and survey.initialized %}
   <li><a href="{% url 'survey_review' survey.id %}">Review the results.</a></li>
