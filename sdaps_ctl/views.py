@@ -117,7 +117,7 @@ def survey_build(request, survey_id):
     if request.method == "POST":
         survey = get_survey_or_404(request, survey_id, change=True)
 
-        if not survey.initialized:
+        if survey.initialized:
             raise Http404
 
         if survey.active_task:
