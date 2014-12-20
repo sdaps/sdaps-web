@@ -279,7 +279,6 @@ def get_tasks(djsurvey):
     try:
         for task in models.ScheduledTasks.objects.filter(survey=djsurvey).all():
             # Prune any tasks that are done or resulted in an error.
-            print(AsyncResult(task.celeryid).state)
             if not AsyncResult(task.celeryid).state in [states.PENDING, states.RETRY]:
                 task.delete()
             else:
