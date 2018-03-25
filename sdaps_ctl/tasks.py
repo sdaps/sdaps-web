@@ -134,6 +134,10 @@ def write_questionnaire(djsurvey_id):
     from .texwriter import texwriter
 
     djsurvey = models.Survey.objects.get(id=djsurvey_id)
+
+    # Must not yet be initialized
+    assert(djsurvey.initialized == False)
+
     texwriter(djsurvey)
 
 @shared_task
