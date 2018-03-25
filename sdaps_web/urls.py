@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 
 import sdaps_ctl.views
 from . import views
@@ -7,7 +7,7 @@ from . import views
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
+urlpatterns = [
     # Examples:
     # url(r'^$', 'sdaps_web.views.home', name='home'),
     # url(r'^sdaps_web/', include('sdaps_web.foo.urls')),
@@ -19,4 +19,4 @@ urlpatterns = patterns('',
      url(r'^admin/', include(admin.site.urls)),
     url(r'^', include(views)),
     url(r'^', include(sdaps_ctl.views)),
-)
+]

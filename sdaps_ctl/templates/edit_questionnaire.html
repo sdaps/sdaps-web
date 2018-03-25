@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% load bootstrap %}
+{% load static %}
+{% load bootstrap4 %}
 
 {% block content %}
 
@@ -8,8 +9,10 @@
 <p><div class="row">
   <form action="{% url "questionnaire_edit" survey.id %}" method="post" class="col-md-4">
   {% csrf_token %}
-  {{ main_form|bootstrap }}
-  <input type="submit" value="Update Metadata" />
+  {% bootstrap_form main_form %}
+  {% buttons %}
+    <input type="submit" value="Update Metadata" />
+  {% endbuttons %}
   </form>
 </div></p>
 
@@ -65,23 +68,23 @@
 {% endblock %}
 
 {% block styles %}
-  <link href="{{ STATIC_URL }}sdaps_ctl/css/angular-ui-tree.min.css" rel="stylesheet" />
+  <link href="{% static "sdaps_ctl/css/angular-ui-tree.min.css" %}" rel="stylesheet" />
   {% include "edit_questionnaire_template.html" %}
 {% endblock %}
 
 
 {% block scripts %}
-  <script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/angular.min.js" /></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/angular-ui-tree.min.js" /></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/pdf.js"></script>
+  <script type="text/javascript" src="{% static "sdaps_ctl/angular.min.js" %}" /></script>
+  <script type="text/javascript" src="{% static "sdaps_ctl/angular-ui-tree.min.js" %}" /></script>
+  <script type="text/javascript" src="{% static "sdaps_ctl/pdf.js" %}"></script>
 
   <!-- And custom scripts -->
-  <script type="text/javascript" src="{{ STATIC_URL }}/sdaps_ctl/edit_questionnaire.js"></script>
-  <script type="text/javascript" src="{{ STATIC_URL }}sdaps_ctl/pdf_preview.js"></script>
+  <script type="text/javascript" src="{% static "sdaps_ctl/edit_questionnaire.js" %}"></script>
+  <script type="text/javascript" src="{% static "sdaps_ctl/pdf_preview.js" %}"></script>
   <script type="text/javascript">
     $(function(){
       /* For the PDFJS worker (isn't there a nicer way to do this? */
-      PDFJS.workerSrc = '{{ STATIC_URL }}sdaps_ctl/pdf.worker.js';
+      PDFJS.workerSrc = '{% static "sdaps_ctl/pdf.worker.js" %}';
 
       /* Hook up the preview widget. */
       var preview = new PDFPreview.Preview($('#preview'), '{% url "questionnaire_download" survey.id %}');

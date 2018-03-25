@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load bootstrap %}
+{% load bootstrap4 %}
 
 {% block content %}
 
@@ -8,8 +8,10 @@
 <p><div class="row">
   <form action="{% url "survey_create" %}" method="post" class="col-md-4">
   {% csrf_token %}
-  {{ main_form|bootstrap }}
+  {% bootstrap_form main_form %}
+  {% buttons %}
   <input type="submit" value="Create Survey" />
+  {% endbuttons %}
   </form>
 </div></p>
 

@@ -4,10 +4,10 @@
 
   <script type="text/ng-template" id="questionnaire.html">
     <div class="angular-ui-tree-handle" ng-show="!qobject.$editing">
-      <a href="" class="btn btn-danger btn-xs pull-right" data-nodrag ng-click="removeObj(this)"><i class="glyphicon glyphicon-remove"></i></a>
-      <a href="" class="btn btn-primary btn-xs pull-right" data-nodrag  ng-show="canAdd(qobject.type)" ng-click="addChild(qobject)"><i ng-show="!qobject.$adding" class="glyphicon glyphicon-plus"></i><i ng-show="qobject.$adding" class="glyphicon glyphicon-minus"></i></a>
-      <a href="" class="btn btn-primary btn-xs pull-right" data-nodrag ng-click="editObj(qobject)"><i class="glyphicon glyphicon-pencil"></i></a>
-      <div class="pull-right">&nbsp;</div>
+      <a href="" class="btn btn-danger btn-sm float-right" data-nodrag ng-click="removeObj(this)"><i class="fas fa-minus"></i></a>
+      <a href="" class="btn btn-primary btn-sm float-right" data-nodrag ng-show="canAdd(qobject.type)" ng-click="addChild(qobject)"><i ng-show="!qobject.$adding" class="fas fa-plus"></i><i ng-show="qobject.$adding" class="fas fa-plus"></i></a>
+      <a href="" class="btn btn-primary btn-sm float-right" data-nodrag ng-click="editObj(qobject)"><i class="fas fa-pencil-alt"></i></a>
+      <div class="float-right">&nbsp;</div>
 
       <div ng-show="qobject.type == 'section'"><div class="qobjectheader">Section: {{qobject.title}}</div></div>
 
@@ -30,12 +30,12 @@
 
       <div ng-show="qobject.type == 'choicegroup'"><div class="qobjectheader">{{qobject.heading}}</div></div>
 
-      <div ng-show="qobject.type == 'choicequestion'"><div class="qobjectheader">{{qobject.question}}</div><div class="pull-right">{{qobject.columns}} Columns</div></div>
+      <div ng-show="qobject.type == 'choicequestion'"><div class="qobjectheader">{{qobject.question}}</div><div class="float-right">{{qobject.columns}} Columns</div></div>
 
       <!-- choicequestion children -->
 
-      <div ng-show="qobject.type == 'choiceitem'"><input type="checkbox" disabled /> {{qobject.answer}}<div class="pull-right">Spans {{qobject.colspan}}</div></div>
-      <div ng-show="qobject.type == 'choiceitemtext'">{{qobject.answer}} <input type="text" disabled /><div class="pull-right">Spans {{qobject.colspan}}</div></div>
+      <div ng-show="qobject.type == 'choiceitem'"><input type="checkbox" disabled /> {{qobject.answer}}<div class="float-right">Spans {{qobject.colspan}}</div></div>
+      <div ng-show="qobject.type == 'choiceitemtext'">{{qobject.answer}} <input type="text" disabled /><div class="float-right">Spans {{qobject.colspan}}</div></div>
 
       <!-- markgroup children -->
 

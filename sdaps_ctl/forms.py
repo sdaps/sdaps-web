@@ -1,5 +1,5 @@
 from django.forms import ModelForm, CharField
-import models
+from . import models
 
 class SurveyForm(ModelForm):
     class Meta:

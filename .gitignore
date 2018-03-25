@@ -1,4 +1,4 @@
 sdaps_web/settings.py
 *.pyc
 *~
-*.db
+*.sqlite3

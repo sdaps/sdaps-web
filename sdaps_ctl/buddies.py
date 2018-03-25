@@ -5,9 +5,8 @@ from sdaps import surface
 from sdaps import image
 
 
-class Questionnaire(model.buddy.Buddy):
+class Questionnaire(model.buddy.Buddy, metaclass=model.buddy.Register):
 
-    __metaclass__ = model.buddy.Register
     name = 'sdaps_ctl'
     obj_class = model.questionnaire.Questionnaire
 
@@ -70,7 +69,7 @@ class Questionnaire(model.buddy.Buddy):
                     except ValueError:
                         pass
 
-                for k, v in values.items():
+                for k, v in list(values.items()):
                     setattr(bdata, k, v)
 
 

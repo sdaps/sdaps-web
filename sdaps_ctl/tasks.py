@@ -1,13 +1,14 @@
 
+from __future__ import absolute_import
 from django.conf import settings
 
-from celery.task import task
+from celery import shared_task
 from celery.result import AsyncResult
 from celery import states
 
-import models
+from . import models
 
-import utils
+from . import utils
 
 import sys
 import os
@@ -28,7 +29,7 @@ sdaps.init()
 
 defs.latex_preexec_hook = utils.SecureEnv(10)
 
-@task()
+@shared_task
 def add_images(survey_id):
     survey = models.Survey.objects.get(id=survey_id)
 
@@ -70,7 +71,7 @@ def add_images(survey_id):
             # TODO: Need error reporting!
             raise AssertionError("Error adding files!")
 
-@task()
+@shared_task
 def recognize(djsurvey_id):
     from sdaps.recognize import recognize
 
@@ -87,13 +88,13 @@ def recognize(djsurvey_id):
             log.logfile.close()
 
 
-@task()
+@shared_task
 def add_and_recognize(survey_id):
     add_images(survey_id)
     recognize(survey_id)
 
 
-@task()
+@shared_task
 def create_survey(djsurvey):
     # We simply create the directory, the database object
     # and copy the basic LaTeX files
@@ -104,32 +105,38 @@ def create_survey(djsurvey):
 
     # Copy class and dictionary files
     if paths.local_run:
-        cls_file = os.path.join(paths.source_dir, 'tex', 'sdaps.cls')
-        code128_file = os.path.join(paths.source_dir, 'tex', 'code128.tex')
-        qrcode_file = os.path.join(paths.source_dir, 'tex', 'qrcode.sty')
+        cls_extra_files = os.path.join(paths.source_dir, 'tex', '*.cls')
+        cls_files = os.path.join(paths.source_dir, 'tex', 'class', 'build', 'local', '*.cls')
+        tex_files = os.path.join(paths.source_dir, 'tex', 'class', 'build', 'local', '*.tex')
+        sty_files = os.path.join(paths.source_dir, 'tex', 'class', 'build', 'local', '*.sty')
         dict_files = os.path.join(paths.build_dir, 'tex', '*.dict')
-        dict_files = glob.glob(dict_files)
     else:
-        cls_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'sdaps.cls')
-        code128_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'code128.tex')
-        qrcode_file = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', 'qrcode.sty')
+        cls_extra_files = None
+        cls_files = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', '*.cls')
+        tex_files = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', '*.tex')
+        sty_files = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', '*.sty')
         dict_files = os.path.join(paths.prefix, 'share', 'sdaps', 'tex', '*.dict')
-        dict_files = glob.glob(dict_files)
 
-    shutil.copyfile(cls_file, os.path.join(path, 'sdaps.cls'))
-    shutil.copyfile(code128_file, os.path.join(path, 'code128.tex'))
-    shutil.copyfile(qrcode_file, os.path.join(path, 'qrcode.sty'))
-    for dict_file in dict_files:
-        shutil.copyfile(dict_file, os.path.join(path, os.path.basename(dict_file)))
+    def copy_to_survey(files_glob):
+        files = glob.glob(files_glob)
+        for file in files:
+            shutil.copyfile(file, os.path.join(path, os.path.basename(file)))
 
-@task()
+    if cls_extra_files is not None:
+        copy_to_survey(cls_extra_files)
+    copy_to_survey(cls_files)
+    copy_to_survey(tex_files)
+    copy_to_survey(sty_files)
+    copy_to_survey(dict_files)
+
+@shared_task
 def write_questionnaire(djsurvey_id):
-    from texwriter import texwriter
+    from .texwriter import texwriter
 
     djsurvey = models.Survey.objects.get(id=djsurvey_id)
     texwriter(djsurvey)
 
-@task()
+@shared_task
 def render_questionnaire(djsurvey_id):
     djsurvey = models.Survey.objects.get(id=djsurvey_id)
 
@@ -141,12 +148,12 @@ def render_questionnaire(djsurvey_id):
     else:
         return False
 
-@task
+@shared_task
 def write_and_render_questionnaire(djsurvey_id):
     write_questionnaire(djsurvey_id)
     render_questionnaire(djsurvey_id)
 
-@task()
+@shared_task
 def build_survey(djsurvey_id):
     """Creates the SDAPS project and database for the survey.
     This process should be run on an already initialized survey that
@@ -158,11 +165,14 @@ def build_survey(djsurvey_id):
         assert(djsurvey.initialized == False)
 
         import sdaps.setuptex as setup
+        from sdaps.utils import latex
         from sdaps.setuptex import sdapsfileparser
         survey = model.survey.Survey.new(djsurvey.path)
 
-        setup.write_latex_override_file(survey, draft=True)
+        latex.write_override(survey, survey.path('sdaps.opt'), draft=True)
         if not utils.atomic_latex_compile(djsurvey.path, 'questionnaire.tex', need_sdaps=True):
+            # XXX: The sqlite file should not be created immediately!
+            os.unlink(survey.path('survey.sqlite'))
             return False
 
         # We now have the .sdaps file that can be parsed
@@ -175,24 +185,30 @@ def build_survey(djsurvey_id):
         # Parse qobjects
         try:
             sdapsfileparser.parse(survey)
-        except Exception, e:
-            sys.stderr.write("Caught an Exception while parsing the SDAPS file. The current state is:")
-            sys.stderr.write(unicode(survey.questionnaire))
-            sys.stderr.write("\n------------------------------------\n")
 
-            raise e
+            for qobject in survey.questionnaire.qobjects:
+                qobject.setup.setup()
+                qobject.setup.validate()
+
+        except:
+            log.error(_("Caught an Exception while parsing the SDAPS file. The current state is:"))
+            print(str(survey.questionnaire), file=sys.stderr)
+            print("------------------------------------", file=sys.stderr)
+
+            raise
 
         # Last but not least calculate the survey id
         survey.calculate_survey_id()
 
         if not survey.check_settings():
-            sys.stderr.write(_("Some combination of options and project properties do not work. Aborted Setup."))
-            shutil.rmtree(survey.path())
-            return 1
+            log.error(_("Some combination of options and project properties do not work. Aborted Setup."))
+            os.unlink(survey.path('survey.sqlite'))
+            return False
 
-        setup.write_latex_override_file(survey)
+        latex.write_override(survey, survey.path('sdaps.opt'), draft=False)
 
         if not utils.atomic_latex_compile(djsurvey.path, 'questionnaire.tex', need_sdaps=True):
+            os.unlink(survey.path('survey.sqlite'))
             return False
 
         survey.save()
@@ -205,7 +221,7 @@ def build_survey(djsurvey_id):
 
         log.logfile.close()
 
-@task
+@shared_task
 def generate_report(survey_id):
     djsurvey = models.Survey.objects.get(id=survey_id)
 
@@ -226,7 +242,7 @@ def queue_generate_report(djsurvey):
 
     with models.LockedSurvey(djsurvey.id):
         # And queue a new task
-        result = generate_report.apply_async(args=(djsurvey.id, ), queue="background")
+        result = generate_report.apply_async(args=(djsurvey.id, ))
 
         # Note in DB, that it is queued
         models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='report').save()
@@ -237,7 +253,7 @@ def queue_add_and_recognize(djsurvey):
 
     with models.LockedSurvey(djsurvey.id):
         # And queue a new task
-        result = add_and_recognize.apply_async(args=(djsurvey.id, ), queue="background")
+        result = add_and_recognize.apply_async(args=(djsurvey.id, ))
 
         # Note in DB, that it is queued
         models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='addrecognize').save()
@@ -268,7 +284,7 @@ def queue_build_survey(djsurvey):
 
     with models.LockedSurvey(djsurvey.id):
         # And queue a new task
-        result = build_survey.apply_async(args=(djsurvey.id, ), queue="background")
+        result = build_survey.apply_async(args=(djsurvey.id, ))
 
         # Note in DB, that it is queued
         models.ScheduledTasks(celeryid=result.task_id, survey=djsurvey, task='build').save()

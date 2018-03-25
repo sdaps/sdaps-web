@@ -134,7 +134,7 @@ class UploadedFile(models.Model):
         return os.path.join(instance.survey.path, 'uploads', '%i-%s' % (instance.id, filename))
 
     file = models.FileField(max_length=255, editable=False, upload_to=generate_filename, storage=settings.SDAPS_UPLOAD_STORAGE)
-    del generate_filename
+    #del generate_filename
 
     filename = models.CharField(max_length=255)
     filesize = models.PositiveIntegerField()
@@ -194,7 +194,7 @@ def create_survey_dir(sender, instance, created, **kwargs):
     tasks.create_survey(instance)
 
 def move_survey_dir(sender, instance, using, **kwargs):
-    u"""This signal handler moves the project directory into the "deleted"
+    """This signal handler moves the project directory into the "deleted"
     directory whenever a survey is removed from the database."""
 
     path = instance.path

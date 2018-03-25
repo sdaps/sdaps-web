@@ -7,7 +7,7 @@ import re
 
 from .admin import SurveyAdmin
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import include, url
 from django.core.urlresolvers import reverse
 
 from django.views import generic
@@ -18,16 +18,16 @@ from django.contrib.auth.decorators import login_required, permission_required
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.files.base import ContentFile
-from django.core.servers.basehttp import FileWrapper
+from wsgiref.util import FileWrapper
 
 from django.shortcuts import render, get_object_or_404
 
 from django.template import Context, loader
 
-import models
-import tasks
-import forms
-import StringIO
+from . import models
+from . import tasks
+from . import forms
+import io
 
 import simplejson as json
 
@@ -192,7 +192,7 @@ def questionnaire_download(request, survey_id):
     if not os.path.isfile(filename):
         raise Http404
 
-    wrapper = FileWrapper(file(filename))
+    wrapper = FileWrapper(open(filename, 'rb'))
     response = HttpResponse(wrapper, content_type='application/x-pdf')
     response['Content-Length'] = os.path.getsize(filename)
     response['Cache-Control'] = 'max-age=0, must-revalidate'
@@ -208,7 +208,7 @@ def report_download(request, survey_id):
     if not os.path.isfile(filename):
         raise Http404
 
-    wrapper = FileWrapper(file(filename))
+    wrapper = FileWrapper(open(filename, 'rb'))
     response = HttpResponse(wrapper, content_type='application/x-pdf')
     response['Content-Length'] = os.path.getsize(filename)
 
@@ -223,7 +223,7 @@ def questionnaire_tex_download(request, survey_id):
     if not os.path.isfile(filename):
         raise Http404
 
-    wrapper = FileWrapper(file(filename))
+    wrapper = FileWrapper(open(filename, 'rb'))
     response = HttpResponse(wrapper, content_type='text/x-tex')
     response['Content-Length'] = os.path.getsize(filename)
 
@@ -329,7 +329,7 @@ def survey_review(request, survey_id):
 
         context_dict = {
             'survey' : djsurvey,
-            'sheet_count' : len(survey.sheets)
+            'sheet_count' : survey.sheet_count
         }
 
         return render(request, 'survey_review.html', context_dict)
@@ -356,8 +356,8 @@ def survey_review_sheet(request, survey_id, sheet):
         survey = SDAPSSurvey.load(djsurvey.path)
 
         try:
-            survey.index = sheet
-        except KeyError:
+            survey.goto_nth_sheet(sheet)
+        except:
             raise Http404
 
         if request.method == 'POST':
@@ -402,8 +402,8 @@ def csv_download(request, survey_id):
 
         survey = SDAPSSurvey.load(djsurvey.path)
 
-        outdata = StringIO.StringIO()
-        csvdata.csvdata_export(survey, outdata, None, False, {})
+        outdata = io.StringIO()
+        csvdata.csvdata_export(survey, outdata, None)
 
         return HttpResponse(outdata.getvalue(), content_type="text/csv; charset=utf-8")
 
@@ -552,7 +552,7 @@ class SurveyUploadFile(LoginRequiredMixin, generic.View):
         # XXX: Store mimetype and return correct one here!
         return HttpResponse(upload.file, content_type="application/binary")
 
-urlpatterns = patterns('',
+urlpatterns = [
         url(r'^$', lambda x: HttpResponseRedirect('/surveys')),
         url(r'^surveys/?$', SurveyList.as_view(), name='surveys'),
         url(r'^surveys/create/?$', survey_create, name='survey_create'),
@@ -575,5 +575,5 @@ urlpatterns = patterns('',
         url(r'^surveys/(?P<survey_id>\d+)/upload/?$', survey_upload, name='survey_upload'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/post/?$', SurveyUploadPost.as_view(), name='survey_upload_post'),
         url(r'^surveys/(?P<survey_id>\d+)/upload/post/(?P<filename>.+)$', SurveyUploadFile.as_view(), name='survey_upload_file'),
-    )
+    ]
 

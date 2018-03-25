@@ -14,7 +14,7 @@ class SecureEnv:
 
     def __call__(self):
         # Clean up environ a bit
-        for k in os.environ.keys():
+        for k in list(os.environ.keys()):
             if k.startswith('TEX'):
                 del os.environ[k]
 
@@ -38,7 +38,7 @@ def atomic_latex_compile(path, target, timeout=10, need_sdaps=False):
     output_sdaps = target[:-4] + '.sdaps'
 
     try:
-        print "Running %s now twice to generate the questionnaire." % defs.latex_engine
+        print("Running %s now twice to generate the questionnaire." % defs.latex_engine)
         subprocess.call([defs.latex_engine, '-halt-on-error', '-output-directory', tmpdir,
                          '-interaction', 'batchmode', 'questionnaire.tex'],
                         cwd=path, preexec_fn=setup_env)

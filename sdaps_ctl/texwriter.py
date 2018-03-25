@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 import os
 
@@ -36,7 +35,7 @@ def render_qobject(qobject, allowed_types=None):
             else:
                 choices.append('\choiceitemtext{%fcm}{%i}{%s}' % (get(answer, 'height', 1.2), get(answer, 'colspan', 1), get(answer, 'answer', 1)))
 
-        return '\\begin{choicequestion}[%i]{%s}\n%s\n\\end{choicequestion}' % (get(qobject, 'columns', 4), get(qobject, 'question', ''), '\n'.join(choices))
+        return '\\begin{choicequestion}[cols=%i]{%s}\n%s\n\\end{choicequestion}' % (get(qobject, 'columns', 4), get(qobject, 'question', ''), '\n'.join(choices))
 
     elif t == 'textbox':
 
@@ -104,7 +103,7 @@ def texwriter(djsurvey):
     document = template % data
 
     f = open(os.path.join(djsurvey.path, 'questionnaire.tex'), 'w')
-    f.write(document.encode('utf-8'))
+    f.write(document)
 
     return
 
@@ -126,7 +125,7 @@ template = r"""
   %% The following options make sense so that we can get a better feel for the
   %% final look.
   pagemark,
-  stamp]{sdaps}
+  stamp]{sdapsclassic}
 \usepackage[utf8]{inputenc}
 \usepackage{multicol}
 
