@@ -2,16 +2,11 @@ This is absolutely experimental code. It is just public in case someone
 is interested in development.
 
 This repository contains the beginning of a django application that can be
-used as a frontend for SDAPS. Some of the basic ideas:
- * Leave the current SDAPS codebase pretty much unchanged for now.
-   This primarily means we do not touch the data model for now, and
-   stay with the pickled data storage.
-   This probably means that storing corrections will be very inefficient
-   for now.
- * Editing is done by dynamically building a LaTeX file for the questions.
-   Questionnaires can be designed directly in django.
-   Previewing is done using pdf.js.
- * Long running tasks are executed in the background using celery.
+used as a frontend for SDAPS.
+
+There is a public instance of this code running on https://demo.sdaps.org.
+You can log in using the username "demo" and the password "sdapsdemo". Please
+do not rely on this service for any production use.
 
 Anyone interested in moving this forwared please drop me a line. Note that I
 have not yet attached a license to it (probably GPLv3+, but I am thinking
@@ -24,22 +19,20 @@ Well, that is about it for now.
 
 What is working (sort of):
  * Running background tasks using celery
+ * Uploading scans and importing them into projects
  * Running recognition
  * Building a questionnaire (LaTeX document)
  * Changing the questionnaire ussing angular.js
  * pdf.js based preview is working
+ * Basic UI for reviewing the recognition
+ * Downloading results as CSV and reports
 
 What is missing:
  * PDF Preview widget needs proper UI
  * All pages (especially editing page) need a proper stylesheet/structure.
  * Django templats need to be reworked
+ * Slow tasks should get a less important queue
  * User/rights management
- * Code to upload scans (using jquery file uploader, client and server,
-   this should also support chunked transfers to be able to resume uploads)
- * UI to correct results (especially saving the changes as that is likely
-   very inefficient)
-   * Client Side (what framework, also angular?)
-   * Server Side
  * General thoughts about usability:
    * How are surveys managed?
    * Should they be grouped?
