@@ -29,7 +29,7 @@ sdaps.init()
 
 defs.latex_preexec_hook = utils.SecureEnv(10)
 
-@shared_task
+@shared_task(track_started=True)
 def add_images(survey_id):
     survey = models.Survey.objects.get(id=survey_id)
 
@@ -71,7 +71,7 @@ def add_images(survey_id):
             # TODO: Need error reporting!
             raise AssertionError("Error adding files!")
 
-@shared_task
+@shared_task(track_started=True)
 def recognize(djsurvey_id):
     from sdaps.recognize import recognize
 
@@ -88,7 +88,7 @@ def recognize(djsurvey_id):
             log.logfile.close()
 
 
-@shared_task
+@shared_task(track_started=True)
 def add_and_recognize(survey_id):
     add_images(survey_id)
     recognize(survey_id)
@@ -129,7 +129,7 @@ def create_survey(djsurvey):
     copy_to_survey(sty_files)
     copy_to_survey(dict_files)
 
-@shared_task
+@shared_task(track_started=True)
 def write_questionnaire(djsurvey_id):
     from .texwriter import texwriter
 
@@ -140,7 +140,7 @@ def write_questionnaire(djsurvey_id):
 
     texwriter(djsurvey)
 
-@shared_task
+@shared_task(track_started=True)
 def render_questionnaire(djsurvey_id):
     djsurvey = models.Survey.objects.get(id=djsurvey_id)
 
@@ -152,7 +152,7 @@ def render_questionnaire(djsurvey_id):
     else:
         return False
 
-@shared_task
+@shared_task(track_started=True)
 def write_and_render_questionnaire(djsurvey_id):
     write_questionnaire(djsurvey_id)
     render_questionnaire(djsurvey_id)

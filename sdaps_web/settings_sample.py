@@ -140,9 +140,6 @@ STATIC_URL = '/static/'
 # Celery setup
 CELERY_RESULT_BACKEND = 'django-db'
 
-# sdaps_ctl requires the STARTED state to be tracked correctly
-CELERY_TRACK_STARTED = True
-
 # SDAPS
 SDAPS_PROJECT_ROOT = '/tmp/projects'
 
