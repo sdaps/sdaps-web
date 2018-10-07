@@ -131,6 +131,7 @@
     };
 
 
+
     $scope.options = {
       // XXX: Debouncer is not working!
       updateOn: 'default blur',
@@ -164,19 +165,31 @@
 
     $scope.data = [];
 
+    function IsJsonStr(str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            console.log("JSON not valid: ", e, str);
+            return false;
+        }
+        return true;
+    };
+
     $http.get($scope.data_url).success(function(data, status, headers, config) {
-      $scope.data = data;
+        $scope.data = data;
     });
 
     $scope.last_post_data = [];
 
     $scope.update_server = _.debounce(function() {
+      if (IsJsonStr(JSON.stringify($scope.data))) {
       $http.post($scope.data_url, $scope.data).success(function(data, status, headers, config) {
           if (window.preview) {
             /* Tell the preview that we expect an update soon (wait a maximum of 20s). */
             window.preview.expect_update(20000);
           }
         });
+      }
     }, 1000);
 
     /* Add watch after first update. */

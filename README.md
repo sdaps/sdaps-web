@@ -40,3 +40,22 @@ What is missing:
    * What should be done about surveys that are finished?
    * What kind of permission management could be interesting?
 
+Clone this repo:
+`git clone https://github.com/sdaps/sdaps_web`
+`virtualenv .venv`
+`source bin/activate`
+`pip install -r`requirements.txt`
+
+Enter it `cd sdaps_web` and clone sdaps:
+`git clone https://github.com/sdaps/sdaps`
+`ln -s /usr/lib/python3.7/site-packages/DistUtilsExtra .venv/lib/python3.7/site-package/DistUtilsExtra`
+`cd sdaps`
+`python setup.py`
+`export PYTHONPATH="${PYTHONPATH}:/path_of_whatever/sdaps_web/sdaps"` path to sdaps repo
+
+Install 'rabbitmq' and start it:
+ArchLinux: `pacman -S rabbitmq` `systemctl start rabbitmq`
+`cp sdaps_web/settings.sample.py sdaps_web/settings.py`
+`python manage.py runserver 0.0.0.0:8080`
+`python -m celery -A sdaps_web worker -Q background,default`
+

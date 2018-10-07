@@ -8,7 +8,8 @@ import re
 from .admin import SurveyAdmin
 
 from django.conf.urls import include, url
-from django.core.urlresolvers import reverse
+from django.urls import reverse
+
 
 from django.views import generic
 from django.views.decorators import csrf

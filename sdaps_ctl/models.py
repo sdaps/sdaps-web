@@ -12,7 +12,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.utils.text import get_valid_filename
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from celery.result import AsyncResult
 
@@ -40,10 +40,13 @@ class Survey(models.Model):
     title = models.CharField(max_length=200, default='')
     author = models.CharField(max_length=200, default='')
 
-    questionnaire = models.TextField(default='[]')
+    questionnaire = models.BinaryField(default=b'[]')
 
-    owner = models.ForeignKey(User)
-    group = models.ForeignKey(Group, null=True, blank=True)
+    owner = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.SET_NULL)
+
+    _busy = None
+    _active_task = None
 
     @property
     def path(self):
@@ -103,7 +106,7 @@ class LockedSurvey(object):
 class ScheduledTasks(models.Model):
 
     #: The survey that this task belongs to
-    survey = models.ForeignKey(Survey, db_index=True, related_name="tasks")
+    survey = models.ForeignKey(Survey, db_index=True, related_name="tasks", null=True, on_delete=models.SET_NULL)
 
     #: The type of the task
     task = models.CharField(max_length=10, db_index=True)
@@ -127,7 +130,7 @@ UPLOAD_STATUS = (
 class UploadedFile(models.Model):
 
     #: The survey that this file belongs to
-    survey = models.ForeignKey(Survey, db_index=True, related_name="uploads")
+    survey = models.ForeignKey(Survey, db_index=True, related_name="uploads", null=True, on_delete=models.SET_NULL)
 
     def generate_filename(instance, filename):
         filename = get_valid_filename(instance.filename)

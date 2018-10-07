@@ -1,0 +1,5 @@
+django==2.1.2
+celery==4.2.1
+django-celery-results==1.0.1
+simplejson==3.16
+django-bootstrap4==0.0.7

@@ -25,7 +25,7 @@ from sdaps import reporttex
 # The cheap way of getting the conversion code ...
 from sdaps.cmdline import add
 
-sdaps.init()
+sdaps.init(local_run=True)
 
 defs.latex_preexec_hook = utils.SecureEnv(10)
 
