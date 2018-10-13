@@ -85,7 +85,8 @@ def survey_create(request):
             survey.save()
 
             # Rendering the empty document does not really hurt ...
-            tasks.queue_timed_write_and_render(survey)
+            if tasks.write_questionnaire(survey):
+                tasks.render_questionnaire(survey)
 
             return HttpResponseRedirect(reverse('questionnaire_edit', args=(survey.id,)))
     else:
@@ -102,11 +103,9 @@ def survey_add_images(request, survey_id):
     if request.method == "POST":
         survey = get_survey_or_404(request, survey_id, change=True)
 
-        if survey.active_task:
-            raise Http404
-
         # Queue file addition
-        tasks.queue_add_and_recognize(survey)
+        if tasks.add_images(survey):
+            tasks.recognize_scan(survey)
 
         return HttpResponseRedirect(reverse('survey_overview', args=(survey.id,)))
 
@@ -121,11 +120,8 @@ def survey_build(request, survey_id):
         if survey.initialized:
             raise Http404
 
-        if survey.active_task:
-            raise Http404
-
         # Queue project creation
-        tasks.queue_build_survey(survey)
+        tasks.build_survey(survey)
 
         return HttpResponseRedirect(reverse('survey_overview', args=(survey.id,)))
 
@@ -140,11 +136,8 @@ def survey_report(request, survey_id):
         if not survey.initialized:
             raise Http404
 
-        if survey.active_task:
-            raise Http404
-
         # Queue project creation
-        tasks.queue_generate_report(survey)
+        tasks.generate_report(survey)
 
         return HttpResponseRedirect(reverse('survey_overview', args=(survey.id,)))
 
@@ -248,7 +241,8 @@ def edit(request, survey_id):
 
         if form.is_valid():
             form.save()
-            tasks.queue_timed_write_and_render(survey)
+            if tasks.write_questionnaire(survey):
+                tasks.render_questionnaire(survey)
     else:
         form = forms.SurveyForm(instance=survey)
 
@@ -287,7 +281,8 @@ def questionnaire(request, survey_id):
     if request.method == 'POST':
         survey.questionnaire = request.read()
         survey.save()
-        tasks.queue_timed_write_and_render(survey)
+        if tasks.write_questionnaire(survey):
+            tasks.render_questionnaire(survey)
 
     return HttpResponse(survey.questionnaire, content_type="application/json")
 
@@ -320,20 +315,16 @@ def survey_review(request, survey_id):
     if not djsurvey.initialized:
         raise Http404
 
-    # XXX: Throw sane error in this case!
-    if djsurvey.active_task:
-        raise Http404
+    #with models.LockedSurvey(djsurvey.id, 5):
 
-    with models.LockedSurvey(djsurvey.id, 5):
+    survey = SDAPSSurvey.load(djsurvey.path)
 
-        survey = SDAPSSurvey.load(djsurvey.path)
+    context_dict = {
+        'survey' : djsurvey,
+        'sheet_count' : survey.sheet_count
+    }
 
-        context_dict = {
-            'survey' : djsurvey,
-            'sheet_count' : survey.sheet_count
-        }
-
-        return render(request, 'survey_review.html', context_dict)
+    return render(request, 'survey_review.html', context_dict)
 
 @login_required
 def survey_review_sheet(request, survey_id, sheet):
@@ -345,78 +336,70 @@ def survey_review_sheet(request, survey_id, sheet):
     sheet = int(sheet)
 
     # XXX: Throw sane error in this case!
-    if djsurvey.active_task:
-        raise Http404
+    #if djsurvey.active_task:
+    #    raise Http404
 
     if not djsurvey.initialized:
         raise Http404
 
     # Now this is getting hairy, we need to unpickle the data :-(
-    with models.LockedSurvey(djsurvey.id, 5):
+    #with models.LockedSurvey(djsurvey.id, 5):
 
-        survey = SDAPSSurvey.load(djsurvey.path)
+    survey = SDAPSSurvey.load(djsurvey.path)
 
-        try:
-            survey.goto_nth_sheet(sheet)
-        except:
-            raise Http404
+    try:
+        survey.goto_nth_sheet(sheet)
+    except:
+        raise Http404
 
-        if request.method == 'POST':
-            post_data = json.loads(request.read())
-            data = post_data['data']
+    if request.method == 'POST':
+        post_data = json.loads(request.read())
+        data = post_data['data']
 
-            survey.questionnaire.sdaps_ctl.set_data(data)
+        survey.questionnaire.sdaps_ctl.set_data(data)
 
-            survey.save()
+        survey.save()
 
-        # Assume image is NUMBER.tif
-        res = {
-            'images' : [
-                {
-                    'image' : int(image.filename[:-4]),
-                    'image_page' : image.tiff_page,
-                    'page' : image.page_number if image.survey_id == survey.survey_id else -1,
-                    'rotated' : image.rotated,
-                    'pxtomm' : tuple(image.matrix.px_to_mm()),
-                    'mmtopx' : tuple(image.matrix.mm_to_px()),
-                } for image in survey.sheet.images if not image.ignored
-            ],
-            'data' : survey.questionnaire.sdaps_ctl.get_data()
-        }
+    # Assume image is NUMBER.tif
+    res = {
+        'images' : [
+            {
+                'image' : int(image.filename[:-4]),
+                'image_page' : image.tiff_page,
+                'page' : image.page_number if image.survey_id == survey.survey_id else -1,
+                'rotated' : image.rotated,
+                'pxtomm' : tuple(image.matrix.px_to_mm()),
+                'mmtopx' : tuple(image.matrix.mm_to_px()),
+            } for image in survey.sheet.images if not image.ignored
+        ],
+        'data' : survey.questionnaire.sdaps_ctl.get_data()
+    }
 
-        return HttpResponse(json.dumps(res), content_type="application/json")
+    return HttpResponse(json.dumps(res), content_type="application/json")
 
 
 @login_required
 def csv_download(request, survey_id):
     djsurvey = get_survey_or_404(request, survey_id, change=True)
 
-    # XXX: Throw sane error in this case!
-    if djsurvey.active_task:
-        raise Http404
-
     if not djsurvey.initialized:
         raise Http404
 
     # Now this is getting hairy, we need to unpickle the data :-(
-    with models.LockedSurvey(djsurvey.id, 5):
+    #with models.LockedSurvey(djsurvey.id, 5):
 
-        survey = SDAPSSurvey.load(djsurvey.path)
+    survey = SDAPSSurvey.load(djsurvey.path)
 
-        outdata = io.StringIO()
-        csvdata.csvdata_export(survey, outdata, None)
+    outdata = io.StringIO()
+    csvdata.csvdata_export(survey, outdata, None)
 
-        return HttpResponse(outdata.getvalue(), content_type="text/csv; charset=utf-8")
+    return HttpResponse(outdata.getvalue(), content_type="text/csv; charset=utf-8")
 
 
 
 @login_required
 def survey_upload(request, survey_id):
     survey = get_survey_or_404(request, survey_id, upload=True)
-
-    # XXX: Throw sane error in this case!
-    if survey.active_task:
-        raise Http404
 
     csrf.get_token(request)
 
@@ -442,10 +425,6 @@ class SurveyUploadPost(LoginRequiredMixin, generic.View):
 
     def post(self, request, survey_id):
         survey = get_survey_or_404(self.request, survey_id, upload=True)
-
-        # XXX: Throw sane error in this case!
-        if survey.active_task:
-            raise Http404
 
         #upload_id = request.POST.get('upload_id')
 
@@ -531,10 +510,6 @@ class SurveyUploadFile(LoginRequiredMixin, generic.View):
 
     def delete(self, request, survey_id, filename):
         survey = get_survey_or_404(self.request, survey_id, upload=True)
-
-        # XXX: Throw sane error in this case!
-        if survey.active_task:
-            raise Http404
 
         upload = models.UploadedFile.objects.filter(survey=survey, filename=filename).first()
         upload.delete()
