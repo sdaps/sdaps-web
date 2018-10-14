@@ -58,7 +58,7 @@ Clone sdaps (core) in sdaps\_web repo:
 
 `git clone https://github.com/sdaps/sdaps --recursive`
 
-`ln -s /usr/lib/python3.7/site-packages/DistUtilsExtra .venv/lib/python3.7/site-package/DistUtilsExtra`
+`ln -s /usr/lib/python3.7/site-packages/DistUtilsExtra .venv/lib/python3.7/site-packages/DistUtilsExtra`
 
 `cd sdaps`
 
@@ -66,7 +66,7 @@ Clone sdaps (core) in sdaps\_web repo:
 
 `python setup.py install`
 
-`export PYTHONPATH="${PYTHONPATH}:/absolute_path_to_repo_of/sdaps_web/sdaps"` path to sdaps repo
+`export PYTHONPATH="${PYTHONPATH}:/absolute_path_to_repo_of/sdaps_web/.venv/lib/python3.7/site-packages/sdaps"` path to sdaps repo
 
 `cd ..`
 
