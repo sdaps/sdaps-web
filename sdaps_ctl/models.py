@@ -1,6 +1,7 @@
 
 import os
 import time
+import datetime
 
 from . import tasks
 
@@ -23,9 +24,6 @@ class Survey(models.Model):
         permissions = (("review_survey", "Can review surveys"),)
 
     name = models.CharField(max_length=100)
-
-    #: Whether a process has the internal SDAPS database locked
-    locked = models.BooleanField(default=False)
 
     #: Whether the project is initilized (and the questionnaire cannot be
     #: modified anymore).
@@ -141,7 +139,7 @@ def move_survey_dir(sender, instance, using, **kwargs):
             os.mkdir(delpath)
 
         # And rename/move the old directory
-        os.rename(path, os.path.join(delpath, str(instance.id)))
+        os.rename(path, os.path.join(delpath, datetime.datetime.now().strftime('%Y%m%d-%H%M') + '-' + str(instance.id)))
 
 signals.post_save.connect(create_survey_dir, sender=Survey)
 signals.post_delete.connect(move_survey_dir, sender=Survey)
