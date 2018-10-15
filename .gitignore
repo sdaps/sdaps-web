@@ -2,3 +2,6 @@ sdaps_web/settings.py
 *.pyc
 *~
 *.sqlite3
+.venv/
+sdaps/
+proj/

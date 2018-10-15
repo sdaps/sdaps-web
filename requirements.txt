@@ -1,0 +1,8 @@
+django==2.1.2
+celery==4.2.1
+django-celery-results==1.0.1
+simplejson==3.16
+django-bootstrap4==0.0.7
+opencv-python==3.4.3.18
+PyGObject==3.30.1
+reportlab==3.5.9

@@ -139,8 +139,9 @@ STATIC_URL = '/static/'
 
 # Celery setup
 CELERY_RESULT_BACKEND = 'django-db'
+CELERY_BROKER_URL = 'amqp://localhost//'
 
-# SDAPS
+# path to sdaps-created projects
 SDAPS_PROJECT_ROOT = '/tmp/projects'
 
 #: Render delay in seconds

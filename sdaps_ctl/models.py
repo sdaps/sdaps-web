@@ -1,6 +1,7 @@
 
 import os
 import time
+import datetime
 
 from . import tasks
 
@@ -12,7 +13,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.utils.text import get_valid_filename
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from celery.result import AsyncResult
 
@@ -23,9 +24,6 @@ class Survey(models.Model):
         permissions = (("review_survey", "Can review surveys"),)
 
     name = models.CharField(max_length=100)
-
-    #: Whether a process has the internal SDAPS database locked
-    locked = models.BooleanField(default=False)
 
     #: Whether the project is initilized (and the questionnaire cannot be
     #: modified anymore).
@@ -40,80 +38,14 @@ class Survey(models.Model):
     title = models.CharField(max_length=200, default='')
     author = models.CharField(max_length=200, default='')
 
-    questionnaire = models.TextField(default='[]')
+    questionnaire = models.BinaryField(default=b'[]')
 
-    owner = models.ForeignKey(User)
-    group = models.ForeignKey(Group, null=True, blank=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.CASCADE)
 
     @property
     def path(self):
         return os.path.join(settings.SDAPS_PROJECT_ROOT, str(self.id))
-
-    @property
-    def busy(self):
-        try:
-            return self._busy
-        except AttributeError:
-            if self.locked:
-                self._busy = True
-                return True
-
-            self._busy = self.active_task
-            return self._busy
-
-    @property
-    def active_task(self):
-        try:
-            return self._active_task
-        except AttributeError:
-            tlist = tasks.get_tasks(self)
-            if tlist:
-                self._active_task = True
-                return True
-
-            self._active_task = False
-            return False
-
-class LockedSurvey(object):
-    def __init__(self, surveyid, timeout=None):
-        self.surveyid = surveyid
-        self.timeout = timeout
-
-    def __enter__(self):
-        timeout = self.timeout
-
-        locked = False
-        while not locked:
-            count = Survey.objects.filter(id=self.surveyid, locked=False).update(locked=True)
-            if count == 1:
-                locked = True
-            else:
-                # Sleep ...
-                time.sleep(0.1)
-                if timeout is not None:
-                    timeout -= 0.1
-
-                    if timeout <= 0:
-                        raise AssertionError()
-
-    def __exit__(self, type, value, traceback):
-        s = Survey.objects.filter(id=self.surveyid).update(locked=False)
-
-
-class ScheduledTasks(models.Model):
-
-    #: The survey that this task belongs to
-    survey = models.ForeignKey(Survey, db_index=True, related_name="tasks")
-
-    #: The type of the task
-    task = models.CharField(max_length=10, db_index=True)
-
-    #: The celery identifier of the queued task
-    celeryid = models.CharField(max_length=200)
-
-    class Meta:
-        unique_together = (('survey','task'),)
-
 
 UPLOADING = 0
 FINISHED = 1
@@ -127,7 +59,7 @@ UPLOAD_STATUS = (
 class UploadedFile(models.Model):
 
     #: The survey that this file belongs to
-    survey = models.ForeignKey(Survey, db_index=True, related_name="uploads")
+    survey = models.ForeignKey(Survey, db_index=True, related_name="uploads", on_delete=models.CASCADE)
 
     def generate_filename(instance, filename):
         filename = get_valid_filename(instance.filename)
@@ -207,7 +139,7 @@ def move_survey_dir(sender, instance, using, **kwargs):
             os.mkdir(delpath)
 
         # And rename/move the old directory
-        os.rename(path, os.path.join(delpath, str(instance.id)))
+        os.rename(path, os.path.join(delpath, datetime.datetime.now().strftime('%Y%m%d-%H%M') + '-' + str(instance.id)))
 
 signals.post_save.connect(create_survey_dir, sender=Survey)
 signals.post_delete.connect(move_survey_dir, sender=Survey)
