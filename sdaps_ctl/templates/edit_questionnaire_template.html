@@ -4,9 +4,9 @@
 
   <script type="text/ng-template" id="questionnaire.html">
     <div class="angular-ui-tree-handle" ng-show="!qobject.$editing">
-      <a href="" class="btn btn-danger btn-sm float-right" data-nodrag ng-click="removeObj(this)"><i class="fas fa-minus"></i></a>
-      <a href="" class="btn btn-primary btn-sm float-right" data-nodrag ng-show="canAdd(qobject.type)" ng-click="addChild(qobject)"><i ng-show="!qobject.$adding" class="fas fa-plus"></i><i ng-show="qobject.$adding" class="fas fa-plus"></i></a>
-      <a href="" class="btn btn-primary btn-sm float-right" data-nodrag ng-click="editObj(qobject)"><i class="fas fa-pencil-alt"></i></a>
+      <a href="" class="btn btn-danger btn-sm float-right" data-nodrag ng-click="removeObj(this)"><i class="la la-minus"></i></a>
+      <a href="" class="btn btn-primary btn-sm float-right" data-nodrag ng-show="canAdd(qobject.type)" ng-click="addChild(qobject)"><i ng-show="!qobject.$adding" class="la la-plus"></i><i ng-show="qobject.$adding" class="las la-plus"></i></a>
+      <a href="" class="btn btn-primary btn-sm float-right" data-nodrag ng-click="editObj(qobject)"><i class="la la-pencil"></i></a>
       <div class="float-right">&nbsp;</div>
 
       <div ng-show="qobject.type == 'section'"><div class="qobjectheader">Section: {{qobject.title}}</div></div>
@@ -216,24 +216,23 @@
         <form class="form-inline ng-pristine ng-valid" role="form">
           <div class="form-group">
             <label>Object type</label>
-              <select class="form-control ng-pristine ng-valid" ng-model="qobject.$newObjType">
-                <option ng-if="qobject.type == 'multicol'" value="section">Section</option>
-                <option ng-if="qobject.type == 'multicol'" value="textbody">Textbody</option>
-                <option ng-if="qobject.type == 'multicol'" value="singlemark">Single Mark Question</option>
-                <option ng-if="qobject.type == 'multicol'" value="choicequestion">Choice Question</option>
-                <option ng-if="qobject.type == 'multicol'" value="textbox">Textbox</option>
-                <option ng-if="qobject.type == 'multicol'" value="markgroup">Mark Group</option>
-                <option ng-if="qobject.type == 'multicol'" value="choicegroup">Choice Group</option>
-                <option ng-if="qobject.type == 'choicequestion'" value="choiceitem">Checkbox Choice</option>
-                <option ng-if="qobject.type == 'choicequestion'" value="choiceitemtext">Textfield Choice</option>
-                <option ng-if="qobject.type == 'markgroup'" value="markline">Mark Line</option>
-                <option ng-if="qobject.type == 'choicegroup'" value="groupaddchoice">Choice</option>
-                <option ng-if="qobject.type == 'choicegroup'" value="choiceline">Choice Question</option>
-              </select>
-            </label>
-          </div>
+            <select class="form-control ng-pristine ng-valid" ng-model="qobject.$newObjType">
+              <option ng-if="qobject.type == 'multicol'" value="section">Section</option>
+              <option ng-if="qobject.type == 'multicol'" value="textbody">Textbody</option>
+              <option ng-if="qobject.type == 'multicol'" value="singlemark">Single Mark Question</option>
+              <option ng-if="qobject.type == 'multicol'" value="choicequestion">Choice Question</option>
+              <option ng-if="qobject.type == 'multicol'" value="textbox">Textbox</option>
+              <option ng-if="qobject.type == 'multicol'" value="markgroup">Mark Group</option>
+              <option ng-if="qobject.type == 'multicol'" value="choicegroup">Choice Group</option>
+              <option ng-if="qobject.type == 'choicequestion'" value="choiceitem">Checkbox Choice</option>
+              <option ng-if="qobject.type == 'choicequestion'" value="choiceitemtext">Textfield Choice</option>
+              <option ng-if="qobject.type == 'markgroup'" value="markline">Mark Line</option>
+              <option ng-if="qobject.type == 'choicegroup'" value="groupaddchoice">Choice</option>
+              <option ng-if="qobject.type == 'choicegroup'" value="choiceline">Choice Question</option>
+            </select>
           <button type="submit" class="btn btn-default" ng-click="prependNewSubItem(qobject)">Prepend Object</button>
           <button type="submit" class="btn btn-default" ng-click="appendNewSubItem(qobject)">Append Object</button>
+          </div>
         </form>
       </li>
 
