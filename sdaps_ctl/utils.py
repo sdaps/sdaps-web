@@ -34,6 +34,7 @@ def atomic_latex_compile(path, target, timeout=10, need_sdaps=False):
     tmpdir = tempfile.mkdtemp(prefix='sdaps-web-')
 
     output_pdf = target[:-4] + '.pdf'
+    output_log = target[:-4] + '.log'
     # We sometimes create an SDAPS file that we need
     output_sdaps = target[:-4] + '.sdaps'
 
@@ -44,6 +45,8 @@ def atomic_latex_compile(path, target, timeout=10, need_sdaps=False):
                              '-interaction', 'batchmode', target],
                             cwd=path, preexec_fn=setup_env)
 
+        # Move the created log file right away
+        shutil.move(os.path.join(tmpdir, output_log), os.path.join(path, output_log))
 
         if not os.path.exists(os.path.join(tmpdir, output_pdf)):
             return None
