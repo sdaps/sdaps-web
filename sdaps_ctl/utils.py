@@ -38,14 +38,12 @@ def atomic_latex_compile(path, target, timeout=10, need_sdaps=False):
     output_sdaps = target[:-4] + '.sdaps'
 
     try:
-        print("Running %s now twice to generate the questionnaire." % defs.latex_engine)
-        subprocess.call([defs.latex_engine, '-halt-on-error', '-output-directory', tmpdir,
-                         '-interaction', 'batchmode', 'questionnaire.tex'],
-                        cwd=path, preexec_fn=setup_env)
-        # And again, without the draft mode
-        subprocess.call([defs.latex_engine, '-halt-on-error', '-output-directory', tmpdir,
-                         '-interaction', 'batchmode', 'questionnaire.tex'],
-                        cwd=path, preexec_fn=setup_env)
+        print("Running %s now three times to generate the questionnaire." % defs.latex_engine)
+        for i in range(0, 3):
+            subprocess.call([defs.latex_engine, '-halt-on-error', '-output-directory', tmpdir,
+                             '-interaction', 'batchmode', target],
+                            cwd=path, preexec_fn=setup_env)
+
 
         if not os.path.exists(os.path.join(tmpdir, output_pdf)):
             return None
