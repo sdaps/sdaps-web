@@ -33,7 +33,7 @@ logger = get_task_logger(__name__)
 
 LOCK_EXPIRE = 60 * 20
 
-sdaps.init(local_run=True)
+sdaps.init()
 
 defs.latex_preexec_hook = utils.SecureEnv(10)
 
@@ -164,8 +164,10 @@ def write_questionnaire(self, djsurvey):
 
     lock_id = ('%s_write_questionnaire' % djsurvey.id)
     logger.debug('Write questionnaire (with id %s)', djsurvey.id)
+
     # Must not yet be initialized
-    assert(djsurvey.initialized == False)
+    if djsurvey.initialized:
+        return False
 
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:

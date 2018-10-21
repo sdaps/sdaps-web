@@ -1,21 +1,39 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Available Surveys</h2>
-
+<div class="row mb-5">
+    <div class="col-12">
+        <h2>Available Surveys</h2>
+        <lead>Select one of the existing surveys, or <a href="{% url "survey_create" %}"><button class="btn btn-success btn-sm" ><i class="la la-plus"></i>create a new survey</button></a>.</lead>
+    </div>
+</div>
 <div class="row">
-  <div class="col-md-6">
-    <p>
-      Select one of the existing surveys, or <a href="{% url "survey_create" %}">create a new survey</a>.
-    </p>
-
-{% if survey_list %}
-    <ul>
-    {% for survey in survey_list %}
-        <li><a href="{% url 'survey_overview' survey.id %}">{{ survey.name }} -- {{ survey.title }}, {{ survey.author }}</a> (initialized: {{ survey.initialized }})</li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No surveys are available.</p>
-{% endif %}
+    <div class="col-12">
+        <table class="table table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Title</th>
+                    <th scope="col">Author(s)</th>
+                    <th scope="col">Initialized?</th>
+                </tr>
+            </thead>
+        {% if survey_list %}
+            <tbody>
+                {% for survey in survey_list %}
+                <tr>
+                    <td><b><a href="{% url 'survey_overview' survey.id %}">{{ survey.name }}</a></b></td>
+                    <td>{{ survey.title }}</td>
+                    <td>{{ survey.author }}</td>
+                    <td>{% if survey.initialized %}<i class="la la-check-circle"></i>{% else %}<i class="la la-circle"></i>{% endif %} </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        </table>
+        <p>No surveys are available.</p>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

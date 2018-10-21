@@ -21,18 +21,18 @@
     <div class="row fileupload-buttonbar">
         <div class="col-lg-7">
             <!-- The fileinput-button span is used to style the file input field as button -->
-            <span class="btn btn-success fileinput-button" ng-class="{disabled: disabled}">
+            <span class="btn btn-primary btn-sm fileinput-button" ng-class="{disabled: disabled}">
                 <i class="la la-plus"></i>
-                <span>Add files...</span>
+                <span>Add scans</span>
                 <input type="file" name="files[]" multiple ng-disabled="disabled">
             </span>
-            <button type="button" class="btn btn-primary start" data-ng-click="submit()">
+            <button type="button" class="btn btn-sm btn-secondary start" data-ng-click="submit()">
                 <i class="la la-upload"></i>
-                <span>Start upload</span>
+                <span>Upload all</span>
             </button>
-            <button type="button" class="btn btn-warning cancel" data-ng-click="cancel()">
+            <button type="button" class="btn btn-sm btn-warning cancel" data-ng-click="cancel()">
                 <i class="la la-ban"></i>
-                <span>Cancel upload</span>
+                <span>Cancel all uploads</span>
             </button>
             <!-- The global file processing state -->
             <span class="fileupload-process"></span>
@@ -46,7 +46,13 @@
         </div>
     </div>
     <!-- The table listing the files available for upload/download -->
-    <table class="table table-striped files ng-cloak">
+    <table class="table table-striped table-bordered files ng-cloak">
+        <thead class="thead-dark">
+            <th><i class="la la-file-image-o"></i> Preview</th>
+            <th><i class="la la-paragraph"></i> Filename</th>
+            <th><i class="la la-file-archive-o"></i> Size</th>
+            <th><i class="la la-bolt"></i> Actions</th>
+        </thead>
         <tr data-ng-repeat="file in queue" data-ng-class="{'processing': file.$processing()}">
             <td data-ng-switch data-on="!!file.thumbnailUrl">
                 <div class="preview" data-ng-switch-when="true">
@@ -69,15 +75,15 @@
                 <div class="progress progress-striped active fade" data-ng-class="{pending: 'in'}[file.$state()]" data-file-upload-progress="file.$progress()"><div class="progress-bar progress-bar-success" data-ng-style="{width: num + '%'}"></div></div>
             </td>
             <td>
-                <button type="button" class="btn btn-primary start" data-ng-click="file.$submit()" data-ng-hide="!file.$submit || options.autoUpload" data-ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected'">
+                <button type="button" class="btn btn-primary btn-sm start" data-ng-click="file.$submit()" data-ng-hide="!file.$submit || options.autoUpload" data-ng-disabled="file.$state() == 'pending' || file.$state() == 'rejected'">
                     <i class="la la-upload"></i>
                     <span>Start</span>
                 </button>
-                <button type="button" class="btn btn-warning cancel" data-ng-click="file.$cancel()" data-ng-hide="!file.$cancel">
+                <button type="button" class="btn btn-warning btn-sm cancel" data-ng-click="file.$cancel()" data-ng-hide="!file.$cancel">
                     <i class="la la-ban"></i>
                     <span>Cancel</span>
                 </button>
-                <button data-ng-controller="FileDestroyController" type="button" class="btn btn-danger destroy" data-ng-click="file.$destroy()" data-ng-hide="!file.$destroy">
+                <button data-ng-controller="FileDestroyController" type="button" class="btn btn-danger btn-sm destroy" data-ng-click="file.$destroy()" data-ng-hide="!file.$destroy">
                     <i class="la la-trash"></i>
                     <span>Delete</span>
                 </button>

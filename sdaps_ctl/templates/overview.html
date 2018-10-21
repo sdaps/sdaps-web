@@ -2,69 +2,124 @@
 
 {% block content %}
 
-<h2>{{ survey.name }}</h2>
-
-<p>
-Title: {{survey.title}}
-</p>
-<p>
-Author: {{survey.author}}
-</p>
-
-{% if survey.busy %}
-<p style="font-weight: bold">
-  There are pending tasks for this survey. Please wait a while and reload this page at a later point (press F5 manually for now).
-</p>
-{% else %}
-{% if survey.initialized %}
-<p>
-  This survey is already initialized. You may not modify it any more. You can now upload
-  scans and correct the result (once implemented).
-</p>
-{% else %}
-<p>
-  The questionnaire for this survey is still being designed. Please finish the
-  questionnaire, and initialize the project.
-</p>
-{% endif %}
-
-<ul>
-  <li><a href="{% url 'questionnaire_tex_download' survey.id %}">Download LaTeX questionnaire</a></li>
-{% if may_edit and not survey.initialized %}
-  <li><a href="{% url 'questionnaire_edit' survey.id %}">Edit the questionnaire</a></li>
-{% endif %}
-{% if may_change and not survey.initialized %}
-  <li>
-    <form method="POST" action="{% url 'survey_build' survey.id %}">
-      {% csrf_token %}
-      <input type="submit" value="Setup survey"></input> (you cannot modify the questionnaire after this step!)
-    </form>
-  </li>
-{% endif %}
-{% if may_change and survey.initialized %}
-  <li>
-    <form method="POST" action="{% url 'survey_report' survey.id %}">
-      {% csrf_token %}
-      <input type="submit" value="Generate Report"></input> Once it is generated, download <a href="{% url 'report_download' survey.id %}">the report</a>.
-    </form>
-  </li>
-  <li><a href="{% url 'csv_download' survey.id %}">Download CSV with the result.</a></li>
-{% endif %}
-{% if may_review and survey.initialized %}
-  <li><a href="{% url 'survey_review' survey.id %}">Review the results.</a></li>
-{% endif %}
-{% if survey.initialized %}
-  <li><a href="{% url 'questionnaire_download' survey.id %}">Download printable questionnaire.</a></li>
-{% endif %}
-{% if may_upload and survey.initialized %}
-  <li><a href="{% url 'survey_upload' survey.id %}">Upload images for this survey</a></li>
-{% endif %}
-{% if may_delete %}
-  <li><a href="{% url 'survey_delete' survey.id %}">Delete this project.</a></li>
-{% endif %}
-</ul>
-</p>
-</p>
+<!-- TODO: survey.busy is not available anymore and should be swapped with
+    querying if there are any jobs running right now -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="jumbotron">
+            <h2 class="display-5">{{ survey.name }}</h2>
+            <p class="lead">"{{ survey.title }}" by "{{ survey.author }}" {% if survey.globalid %} <span class="badge badge-secondary">Global ID: {{ survey.globalid }}</span>{% endif %}</p>
+            <hr class="my-4">
+            {% if survey.busy %}
+            <p>
+                There are pending tasks for this survey. Please wait a while and reload this page at a later point (press F5 manually for now).
+            </p>
+            {% else %}
+            {% if survey.initialized %}
+            <p>
+                This survey is already initialized. You may not modify it any more. You can now upload
+                scans and correct the result (once implemented).
+            </p>
+            {% else %}
+            <p>
+                The questionnaire for this survey is still being designed. Please finish the
+                questionnaire, and initialize the project.
+            </p>
+            {% endif %}
+            {% if may_delete %}
+            <a type="button" class="pull-right btn btn-sm btn-danger" href="{% url 'survey_delete' survey.id %}" title="To the dialog for deleting the whole survey project"><i class="la la-trash"></i> Delete project</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="card-deck">
+        <div class="card {% if survey.initialized %}disabled{% else %}border-primary{% endif %}">
+          <div class="card-body">
+              <h5 class="card-title">Step 1</h5>
+              <h6 class="card-subtitle mb-2 text-muted">Craft questionnaire</h6>
+              <p class="card-text">Prepare your questionnaire for printing by adding checkboxes and texts.</p>
+          </div>
+          <div class="card-footer">
+              <a {% if may_edit and not survey.initialized %}href="{% url 'questionnaire_edit' survey.id %}"{% else %}{% endif %} class="btn btn-primary btn-sm {% if survey.initialized %}disabled{% endif %}" title="Edit the questionnaire"><i class="la la-pencil"></i> Edit</a>
+              <a {% if not survey.initialized %}href="{% url 'questionnaire_download' survey.id %}"{% else %}{% endif %} class="btn btn-info btn-sm {% if survey.initialized %}disabled{% endif %}" title="Preview pdf for testing and improving the questionnaire"><i class="la la-pencil-square"></i> Preview pdf</a>
+              <a href="{% url 'questionnaire_tex_download' survey.id %}" type="button" class="btn btn-secondary btn-sm" title="Download questionnaire faile as LaTeX"><i class="la la-download"></i> .tex</a>
+              <a href="{% url 'questionnaire_post' survey.id %}" type="button" class="btn btn-secondary btn-sm" title="Download questionnaire file as JSON"><i class="la la-download"></i> .json</a>
+          </div>
+        </div>
+        <div class="card {% if survey.initialized %}disabled{% else %}border-primary{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">Step 2</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Initialize it</h6>
+                <p class="card-text">You finished and checked your questionnaire? Then initialize the project. </p>
+                <div class="alert alert-danger" role="alert"><i class="la la-exclamation-circle"></i> After that you can't modify the questionnaire!</div>
+            </div>
+            <div class="card-footer">
+                <form method="POST" action="{% url 'survey_build' survey.id %}">
+                    {% csrf_token %}
+                    {% if survey.initialized %}
+                    <a type="button" class="btn btn-primary btn-sm disabled" title="Setup the survey for printing"><i class="la la-magic"></i> Setup survey</a>
+                    {% else %}
+                    <button type="submit" class="btn btn-primary btn-sm" title="Setup the survey for printing"><i class="la la-magic"></i> Setup survey</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        <div class="card {% if not survey.initialized %}disabled{% else %}border-primary{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">Step 3</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Start printing and sharing!</h6>
+                <p class="card-text">After initializing, download the pdf file and start printing. Finally, share it your survey participants!</p>
+            </div>
+            <div class="card-footer">
+                <a {% if survey.initialized %}href="{% url 'questionnaire_download' survey.id %}"{% else %}{% endif %} type="button" class="btn btn-info btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Download the questionnaire and print it for your participants"><i class="la la-check-square"></i> Final questionnaire (.pdf)</a>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="card-deck">
+        <div class="card {% if not survey.initialized %}disabled{% else %}border-primary{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">Step 4</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Scan and upload!</h6>
+                <p class="card-text">Let's scan all those filled questionnaires and upload them.</p>
+            </div>
+            <div class="card-footer">
+                <a {% if survey.initialized and may_upload %}href="{% url 'survey_upload' survey.id %}"{% else %}{% endif %} type="button" class="btn btn-primary btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Upload scans as image files or pdf for later review"><i class="la la-upload"></i> Upload</a>
+            </div>
+        </div>
+        <div class="card {% if not survey.initialized %}disabled{% else %}border-primary{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">Step 5</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Review!</h6>
+                <p class="card-text">Now we have to check all of those scans, so we get high quality data. Also we now can translate open questions in digital text.</p>
+            </div>
+            <div class="card-footer">
+                <a {% if survey.initialized and may_review %}href="{% url 'survey_review' survey.id %}"{% else %}{% endif %} type="button" class="btn btn-primary btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Take a look at the uploaded scans and check the recognition"><i class="la la-stethoscope"></i> Review</a>
+            </div>
+        </div>
+        <div class="card {% if survey.initialized and may_change %}border-primary{% else %}disabled{% endif %}">
+            <div class="card-body">
+                <h5 class="card-title">Step 6</h5>
+                <h6 class="card-subtitle mb-2 text-muted">FINISH! Get Report and Data!</h6>
+                <p class="card-text">All already reviewed scans will be automaticly summarized in a pdf report or get the pure data as a csv file.</p>
+            </div>
+            <div class="card-footer">
+                <form method="POST" action="{% url 'survey_report' survey.id %}">
+                    {% csrf_token %}
+                    {% if not survey.initialized %}
+                    <a type="button" class="btn btn-primary btn-sm disabled" title="Generate a pdf report to download"><i class="la la-magic"></i> Generate report</a>
+                    {% elif may_change %}
+                    <button type="submit" class="btn btn-primary btn-sm" title="Generate a pdf report to download"><i class="la la-magic"></i> Generate report</button>
+                    <a href="{% url 'report_download' survey.id %}" type="button" class="btn btn-info btn-sm" title="Summarizing report of the survey data as pdf"><i class="la la-download"></i> Report (.pdf)</a>
+                    <a href="{% url 'csv_download' survey.id %}" type="button" class="btn btn-info btn-sm" title="Data as a csv file"><i class="la la-download"></i> .csv</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 {% endblock %}

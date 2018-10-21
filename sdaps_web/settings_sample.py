@@ -43,7 +43,7 @@ INSTALLED_APPS = [
      'sdaps_ctl',
      'sdaps_web',
      'django_celery_results',
-     'bootstrap4',
+     'crispy_forms',
 ]
 
 
@@ -140,6 +140,9 @@ STATIC_URL = '/static/'
 # Celery setup
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_BROKER_URL = 'amqp://localhost//'
+
+# Crispy Forms
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # path to sdaps-created projects
 SDAPS_PROJECT_ROOT = '/tmp/projects'

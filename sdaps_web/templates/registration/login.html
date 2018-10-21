@@ -1,26 +1,42 @@
 {% extends "base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
 
 {% block content %}
 
-{% if form.errors %}
-<p>Your username and password didn't match. Please try again.</p>
-{% endif %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron">
+            <div class="row">
+                <div class="col-2">
+                    <i class="img-thumbnail rounded float-left la la-check-square-o" style="font-size: 70pt;"></i>
+                </div>
+                <div class="col-10">
+                    <h1>Welcome to sdaps</h1>
+                    <lead>Easily create, scan and analyze paper based questionnaires to get
+                    the data you want.</lead>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-<form method="post" action="{% url 'login' %}">
-{% csrf_token %}
-<table>
-<tr>
-    <td>{{ form.username.label_tag }}</td>
-    <td>{{ form.username }}</td>
-</tr>
-<tr>
-    <td>{{ form.password.label_tag }}</td>
-    <td>{{ form.password }}</td>
-</tr>
-</table>
+<div class="row">
+    <div class="col-md-4"></div>
+    <div class="col-md-4">
+        {% if form.errors %}
+        <div class="alert alert-danger">Your username and password didn't match. Please try again.</div>
+        {% endif %}
+        <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
 
-<input type="submit" value="login" />
-<input type="hidden" name="next" value="{{ next }}" />
-</form>
+            {{ form.username|as_crispy_field }}
 
+            {{ form.password|as_crispy_field }}
+
+            <button class="btn btn-success pull-right" type="submit">Login</button>
+            <input type="hidden" name="next" value="{{ next }}" />
+        </form>
+    </div>
+</div>
 {% endblock %}

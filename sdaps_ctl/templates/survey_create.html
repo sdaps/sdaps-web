@@ -1,19 +1,31 @@
 {% extends "base.html" %}
-{% load bootstrap4 %}
+{% load crispy_forms_tags %}
 
 {% block content %}
-
-<h2>Create new Survey</h2>
-
-<p><div class="row">
-  <form action="{% url "survey_create" %}" method="post" class="col-md-4">
-  {% csrf_token %}
-  {% bootstrap_form main_form %}
-  {% buttons %}
-  <input type="submit" value="Create Survey" />
-  {% endbuttons %}
-  </form>
-</div></p>
-
+<div class="row">
+    <div class="col-12">
+        <h2>Create new Survey</h2>
+    </div>
+</div>
+<div class="row">
+    <div class="col-6">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-6">
+                {{ form.name|as_crispy_field }}
+              </div>
+            </div>
+            {{ form.title|as_crispy_field }}
+            {{ form.author|as_crispy_field }}
+            <div class="row">
+                <div class="col-6">
+                {{ form.globalid|as_crispy_field }}
+                </div>
+            </div>
+        <button type="submit" class="btn btn-success">Create Survey</button>
+      </form>
+    </div>
+</div>
 {% endblock %}
 

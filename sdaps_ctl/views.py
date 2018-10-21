@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.views import generic
 from django.views.decorators import csrf
 from django.views.decorators.http import last_modified
+from django.utils.decorators import method_decorator
 
 from django.contrib.auth.decorators import login_required, permission_required
 
@@ -73,31 +74,6 @@ class SurveyList(LoginRequiredMixin, generic.ListView):
     def get_queryset(self):
         return SurveyAdmin.filter(self.request, models.Survey.objects).order_by('name')
 
-@permission_required('sdaps_ctl.add_survey')
-def survey_create(request):
-    if request.method == "POST":
-        # We want to update the survey from the form
-        form = forms.SurveyForm(request.POST)
-
-        if form.is_valid():
-            survey = form.save(commit=False)
-            survey.owner = request.user
-            survey.save()
-
-            # Rendering the empty document does not really hurt ...
-            if tasks.write_questionnaire(survey):
-                tasks.render_questionnaire(survey)
-
-            return HttpResponseRedirect(reverse('questionnaire_edit', args=(survey.id,)))
-    else:
-        form = forms.SurveyForm()
-
-    context_dict = {
-        'main_form' : form,
-    }
-
-    return render(request, 'survey_create.html', context_dict)
-
 @login_required
 def survey_add_images(request, survey_id):
     if request.method == "POST":
@@ -143,6 +119,23 @@ def survey_report(request, survey_id):
 
     # XXX: Everything else is not allowed
     raise Http404
+
+class SurveyCreateView(LoginRequiredMixin, generic.edit.CreateView):
+    model = models.Survey
+    form_class = forms.SurveyModelForm
+    template_name = 'survey_create.html'
+    success_url = '/surveys'
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        # Rendering the empty document does not really hurt ...
+        form.save()
+        if tasks.write_questionnaire(self.model):
+            tasks.render_questionnaire(self.model)
+        response = super().form_valid(form)
+        return response
+
+
 
 class SurveyDetail(LoginRequiredMixin, generic.DetailView):
     model = models.Survey
@@ -223,35 +216,25 @@ def questionnaire_tex_download(request, survey_id):
 
     return response
 
+class SurveyUpdateView(LoginRequiredMixin, generic.edit.UpdateView):
+    model = models.Survey
+    form_class = forms.SurveyModelForm
+    template_name = 'edit_questionnaire.html'
+    success_url = '/surveys'
 
-@login_required
-def edit(request, survey_id):
-    survey = get_survey_or_404(request, survey_id, change=True)
+    def get_object(self, queryset=None):
+        self.object = self.model.objects.get(id=self.kwargs['survey_id'])
+        if self.object.initialized:
+            raise Http404
+        return self.object
 
-    # Get CSRF token, so that cookie will be included
-    csrf.get_token(request)
-
-    # XXX: Nicer error message?
-    if survey.initialized:
-        raise Http404
-
-    if request.method == "POST":
-        # We want to update the survey from the form
-        form = forms.SurveyForm(request.POST, instance=survey)
-
-        if form.is_valid():
-            form.save()
-            if tasks.write_questionnaire(survey):
-                tasks.render_questionnaire(survey)
-    else:
-        form = forms.SurveyForm(instance=survey)
-
-    context_dict = {
-        'main_form' : form,
-        'survey' : survey,
-    }
-
-    return render(request, 'edit_questionnaire.html', context_dict)
+    def form_valid(self, form):
+        # Rendering the empty document does not really hurt ...
+        form.save()
+        if tasks.write_questionnaire(self.object):
+            tasks.render_questionnaire(self.object)
+        response = super().form_valid(form)
+        return response
 
 @login_required
 def delete(request, survey_id):
@@ -269,20 +252,22 @@ def delete(request, survey_id):
 
 @login_required
 def questionnaire(request, survey_id):
+    '''GET always gives you the questionnaire as json file. POST is accepted
+    when the survey is not initialized for sending in the questionnaire draft
+    via the editor.'''
     survey = get_survey_or_404(request, survey_id, change=True)
 
     # Get CSRF token, so that cookie will be included
     csrf.get_token(request)
 
-    # XXX: Nicer error message?
-    if survey.initialized:
-        raise Http404
-
     if request.method == 'POST':
-        survey.questionnaire = request.read()
-        survey.save()
-        if tasks.write_questionnaire(survey):
-            tasks.render_questionnaire(survey)
+        if survey.initialized:
+            raise Http404
+        else:
+            survey.questionnaire = request.read()
+            survey.save()
+            if tasks.write_questionnaire(survey):
+                tasks.render_questionnaire(survey)
 
     return HttpResponse(survey.questionnaire, content_type="application/json")
 
@@ -380,6 +365,7 @@ def survey_review_sheet(request, survey_id, sheet):
 
 @login_required
 def csv_download(request, survey_id):
+    '''GET gives you the csv-file from an initialized survey.'''
     djsurvey = get_survey_or_404(request, survey_id, change=True)
 
     if not djsurvey.initialized:
@@ -528,16 +514,17 @@ class SurveyUploadFile(LoginRequiredMixin, generic.View):
         # XXX: Store mimetype and return correct one here!
         return HttpResponse(upload.file, content_type="application/binary")
 
+
 urlpatterns = [
         url(r'^$', lambda x: HttpResponseRedirect('/surveys')),
         url(r'^surveys/?$', SurveyList.as_view(), name='surveys'),
-        url(r'^surveys/create/?$', survey_create, name='survey_create'),
+        url(r'^surveys/create/?$', permission_required('sdaps_ctl.add_survey')(SurveyCreateView.as_view()), name='survey_create'),
         url(r'^surveys/(?P<pk>\d+)/?$', SurveyDetail.as_view(), name='survey_overview'),
         url(r'^surveys/(?P<survey_id>\d+)/data.csv$', csv_download, name='csv_download'),
         url(r'^surveys/(?P<survey_id>\d+)/questionnaire.pdf$', questionnaire_download, name='questionnaire_download'),
         url(r'^surveys/(?P<survey_id>\d+)/questionnaire.tex$', questionnaire_tex_download, name='questionnaire_tex_download'),
         url(r'^surveys/(?P<survey_id>\d+)/report.pdf$', report_download, name='report_download'),
-        url(r'^surveys/(?P<survey_id>\d+)/edit/?$', edit, name='questionnaire_edit'),
+        url(r'^surveys/(?P<survey_id>\d+)/edit/?$', SurveyUpdateView.as_view(), name='questionnaire_edit'),
         url(r'^surveys/(?P<survey_id>\d+)/delete/?$', delete, name='survey_delete'),
         url(r'^surveys/(?P<survey_id>\d+)/edit/questionnaire/?$', questionnaire, name='questionnaire_post'),
 

@@ -1,70 +1,82 @@
 {% extends "base.html" %}
 {% load static %}
-{% load bootstrap4 %}
+{% load crispy_forms_tags %}
 
 {% block content %}
-
-<h2>{{ survey.name }}</h2>
-
-<p><div class="row">
-  <form action="{% url "questionnaire_edit" survey.id %}" method="post" class="col-md-4">
-  {% csrf_token %}
-  {% bootstrap_form main_form %}
-  {% buttons %}
-    <input type="submit" value="Update Metadata" />
-  {% endbuttons %}
-  </form>
-</div></p>
-
-<p><div class="row">
-  <div id="editor" class="col-md-6 ng-scope" ng-controller="questionnaireCtrl">
-
-    {% verbatim %}
-    <!-- Nested node template -->
-    <div ui-tree="options" id="tree-root">
-      <ol ui-tree-nodes="" ng-model="data">
-        <li class="angular-ui-tree-adder" data-nodrag>
-          <form class="form-inline ng-pristine ng-valid" role="form">
-            <div class="form-group">
-              <label>Object type</label>
-                <select id="editor-new-type" class="form-control ng-pristine ng-valid" ng-model="qobject._newObjType">
-                  <option value="multicol">Multicolumn Layout</option>
-                  <option value="section">Section</option>
-                  <option value="textbody">Textbody</option>
-                  <option value="singlemark">Single Mark Question</option>
-                  <option value="choicequestion">Choice Question</option>
-                  <option value="textbox">Textbox</option>
-                  <option value="markgroup">Mark Group</option>
-                  <option value="choicegroup">Choice Group</option>
-                </select>
-              </label>
+<div class="row">
+    <div class="col-12">
+        <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.id %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
+        <h2>Edit Details and Questionnaire:</h2>
+        <h2>{{ survey.name }} <a class="btn btn-secondary btn-sm" data-toggle="collapse" href="#collapseSurveyDetails" role="button" aria-expanded="false" aria-controls="collapseSurveyDetails" title="Edit Survey Detail"><i class="la la-pencil"></i> Edit</a></h2>
+        <div class="row collapse multi-collapse" id="collapseSurveyDetails">
+            <div class="col-6">
+                <form method="post" action="{% url "questionnaire_edit" survey_id=survey.id %}" novalidate>
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-6">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                    </div>
+                    {{ form.title|as_crispy_field }}
+                    {{ form.author|as_crispy_field }}
+                    <div class="row">
+                        <div class="col-6">
+                            {{ form.globalid|as_crispy_field }}
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success">Update Survey</button>
+                </form>
             </div>
-            <button type="submit" class="btn btn-default" ng-click="prependNewItem()">Prepend Object</button>
-            <button type="submit" class="btn btn-default" ng-click="appendNewItem()">Append Object</button>
-          </form>
-        </li>
-
-        <li ng-repeat="qobject in data" ui-tree-node ng-include="'questionnaire.html'"></li>
-      </ol>
+        </div>
     </div>
-
-    {% endverbatim %}
-  </div>
-
-  <div id="preview" class="col-md-6">
-    <div>
-      <button id="prev">Previous</button>
-      <button id="next">Next</button>
-      &nbsp; &nbsp;
-      <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+</div>
+<hr>
+<div class="row">
+    <div class="col-6">
+        <div id="editor" class="ng-scope" ng-controller="questionnaireCtrl">
+            {% verbatim %}
+            <!-- Nested node template -->
+            <div ui-tree="options" id="tree-root">
+                 <ol ui-tree-nodes="" ng-model="data">
+                     <li class="angular-ui-tree-adder" data-nodrag>
+                         <form class="form-inline ng-pristine ng-valid form-group pt-3" role="form">
+                             <label class="col-3 col-form-label col-form-label-sm">Object type</label>
+                             <select id="editor-new-type" class="col-7 form-control-sm custom-select ng-pristine ng-valid" ng-model="qobject._newObjType">
+                                 <option value="multicol">Multicolumn Layout</option>
+                                 <option value="section">Section</option>
+                                 <option value="textbody">Textbody</option>
+                                 <option value="singlemark">Single Mark Question</option>
+                                 <option value="choicequestion">Choice Question</option>
+                                 <option value="textbox">Textbox</option>
+                                 <option value="markgroup">Mark Group</option>
+                                 <option value="choicegroup">Choice Group</option>
+                              </select>
+                              <div class="btn-group-vertical col-2" role="group" aria-label="Object type input buttons">
+                                  <button type="submit" class="btn btn-default btn-sm" ng-click="prependNewItem()" title="Prepend Object"><i class="la la-reply-all"></i></button>
+                                  <button type="submit" class="btn btn-default btn-sm" ng-click="appendNewItem()" title="Append Object"><i class="la la-reply-all" style="transform: rotate(180deg) scale(-1, 1);"></i></button>
+                              </div>
+                         </form>
+                     </li>
+                     <li ng-repeat="qobject in data" ui-tree-node ng-include="'questionnaire.html'"></li>
+                 </ol>
+            </div>
+            {% endverbatim %}
+        </div>
     </div>
-    <div id="preview-container" style="width: 100%; margin-top:10px;">
-      <!-- The preview goes here! -->
-      <canvas class="pdfcanvas" id="preview" style="width: 100%;"/>
+    <div id="preview" class="col-md-6">
+        <center>
+            <div class="btn-group">
+                <button id="prev" class="btn btn-secondary"><i class="la la-arrow-left"></i> Previous</button>
+                <button class="btn btn-secondary disabled">Page: <span id="page_num"></span> / <span id="page_count"></span></button>
+                <button id="next" class="btn btn-secondary">Next <i class="la la-arrow-right"></i></button>
+            </div>
+        </center>
+        <div id="preview-container" style="width: 100%; margin-top:10px;">
+            <!-- The preview goes here! -->
+            <canvas class="pdfcanvas" id="preview" style="width: 100%;"/>
+        </div>
     </div>
-  </div>
-</div></p>
-
+</div>
 {% endblock %}
 
 {% block styles %}

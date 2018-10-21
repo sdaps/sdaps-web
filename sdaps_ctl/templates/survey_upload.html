@@ -10,28 +10,26 @@
     display: none;
 }
 </style>
-
 {% endblock %}
 
 {% block content %}
-
-<h2>Upload Scans for {{ survey.name }}</h2>
-
-<p>
-Title: {{survey.title}}
-</p>
-<p>
-Author: {{survey.author}}
-</p>
-
-<form method="POST" action="{% url 'survey_add_images' survey.id %}">
-  {% csrf_token %}
-  <input type="submit" value="Add uploaded files to project."></input>
-</form>
-
-
+<div class="row mb-4">
+    <div class="col">
+        <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.id %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
+        <h2>Upload Scans for {{ survey.name }}</h2>
+        <div class="lead">"{{ survey.title }}" by "{{ survey.author }}"</div>
+    </div>
+</div>
 {% include "file_upload_ui.html" %}
-
+<div class="row">
+    <div class="col-9"></div>
+    <div class="col-3">
+        <form method="POST" action="{% url 'survey_add_images' survey.id %}">
+            {% csrf_token %}
+            <button class="btn btn-success" type="submit"><i class="la la-rocket"></i> Add uploaded files to project</button>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 
