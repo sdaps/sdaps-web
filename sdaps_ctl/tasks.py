@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 from django.conf import settings
 from django.core.cache import cache
+from django.shortcuts import render, get_object_or_404
 
 from celery import shared_task
 from celery.result import AsyncResult
@@ -32,6 +33,7 @@ from sdaps.cmdline import add
 logger = get_task_logger(__name__)
 
 LOCK_EXPIRE = 60 * 20
+#LOCK_EXPIRE = 0
 
 sdaps.init()
 
@@ -57,9 +59,11 @@ def task_lock(lock_id, oid):
             cache.delete(lock_id)
 
 @shared_task(track_started=True, bind=True)
-def add_images(self, djsurvey):
+def add_images(self, djsurvey_id):
+    djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
 
     lock_id = ('%s_add_images' % djsurvey.id)
+
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:
             images = list(djsurvey.uploads.all())
@@ -105,11 +109,12 @@ def add_images(self, djsurvey):
             return False
 
 @shared_task(track_started=True, bind=True)
-def recognize_scan(self, djsurvey):
+def recognize_scan(self, djsurvey_id):
     from sdaps.recognize import recognize
+    djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
 
     lock_id = ('%s_recognize' % djsurvey.id)
-    print(lock_id)
+
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:
             survey = model.survey.Survey.load(djsurvey.path)
@@ -158,33 +163,44 @@ def create_survey(self, djsurvey):
             copy_to_survey(dict_files)
 
 @shared_task(track_started=True, bind=True)
-def write_questionnaire(self, djsurvey):
+def write_questionnaire(self, djsurvey_id):
     """Translates the json file of questionnaire objects to LaTeX commands."""
+    print('WRITE_QUESTIONNAIRE')
     from .texwriter import texwriter
+    djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
 
-    lock_id = ('%s_write_questionnaire' % djsurvey.id)
     logger.debug('Write questionnaire (with id %s)', djsurvey.id)
 
     # Must not yet be initialized
     if djsurvey.initialized:
         return False
 
+    lock_id = ('%s_write_questionnaire' % djsurvey.id)
+
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:
             texwriter(djsurvey)
             logger.debug('Questionnaire written (with id %s)', djsurvey.id)
             return True
-        else:
-            return False
 
 @shared_task(track_started=True, bind=True)
-def render_questionnaire(self, djsurvey):
+def render_questionnaire(self, djsurvey_id):
     """Renders the LaTeX questionnaire out of the json file that was send and
     saved via the editor by users"""
-    lock_id = ('%s_render_questionnaire' % djsurvey.id)
+    # def update_pdf_if_needed:
+    #     get_db_time
+    #     get_pdf_time (eigenes Eintrag Model)
+    #     db =< pdf -> exit
+    #     generate pdf
+    #     update_pdf_time
+
+    djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
+
     logger.debug('Render questionnaire (with id %s)', djsurvey.id)
     # Must not yet be initialized
     assert(djsurvey.initialized == False)
+
+    lock_id = ('%s_render_questionnaire' % djsurvey.id)
 
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:
@@ -195,15 +211,17 @@ def render_questionnaire(self, djsurvey):
                 logger.debug('Render failed (with id %s)', djsurvey.id)
                 return False
     logger.debug('Render task (with id %s) is already running. It will be automaticly deleted after %s minutes' % (djsurvey.id, (LOCK_EXPIRE/60)))
-    return False
 
 @shared_task(bind=True)
-def build_survey(self, djsurvey):
+def build_survey(self, djsurvey_id):
     """Creates the SDAPS project and database for the survey.
     This process should be run on an already initialized survey that
     has a questionnaire written to it."""
-    lock_id = ('%s_build_survey' % djsurvey.id)
+    djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
+
     assert(djsurvey.initialized == False)
+
+    lock_id = ('%s_build_survey' % djsurvey.id)
 
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:
@@ -266,7 +284,9 @@ def build_survey(self, djsurvey):
             log.logfile.close()
 
 @shared_task(bind=True)
-def generate_report(self, djsurvey):
+def generate_report(self, djsurvey_id):
+    djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
+
     lock_id = ('%s_generate_report' % djsurvey.id)
 
     with task_lock(lock_id, self.app.oid) as acquired:

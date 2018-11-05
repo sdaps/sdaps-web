@@ -66,8 +66,6 @@ Clone sdaps (core) in sdaps\_web repo:
 
 `python setup.py install`
 
-`export PYTHONPATH="${PYTHONPATH}:/absolute_path_to_repo_of/sdaps_web/.venv/lib/python3.7/site-packages/sdaps"` path to sdaps repo
-
 `cd ..`
 
 Install 'rabbitmq' and start it:

@@ -80,8 +80,9 @@ def survey_add_images(request, survey_id):
         survey = get_survey_or_404(request, survey_id, change=True)
 
         # Queue file addition
-        if tasks.add_images(survey):
-            tasks.recognize_scan(survey)
+        survey_id = str(survey.id)
+        if tasks.add_images.apply_async(args=(survey_id, )):
+            tasks.recognize_scan.apply_async(args=(survey_id, ))
 
         return HttpResponseRedirect(reverse('survey_overview', args=(survey.id,)))
 
@@ -97,7 +98,7 @@ def survey_build(request, survey_id):
             raise Http404
 
         # Queue project creation
-        tasks.build_survey(survey)
+        tasks.build_survey.apply_async(args=(survey_id, ))
 
         return HttpResponseRedirect(reverse('survey_overview', args=(survey.id,)))
 
@@ -113,7 +114,7 @@ def survey_report(request, survey_id):
             raise Http404
 
         # Queue project creation
-        tasks.generate_report(survey)
+        tasks.generate_report.apply_async(args=(survey.id, ))
 
         return HttpResponseRedirect(reverse('survey_overview', args=(survey.id,)))
 
@@ -130,8 +131,9 @@ class SurveyCreateView(LoginRequiredMixin, generic.edit.CreateView):
         form.instance.owner = self.request.user
         # Rendering the empty document does not really hurt ...
         form.save()
-        if tasks.write_questionnaire(self.model):
-            tasks.render_questionnaire(self.model)
+        survey_id = str(self.model.id)
+        if tasks.write_questionnaire.apply_async(args=(survey_id, )):
+            tasks.render_questionnaire.apply_async(args=(survey_id, ))
         response = super().form_valid(form)
         return response
 
@@ -223,7 +225,7 @@ class SurveyUpdateView(LoginRequiredMixin, generic.edit.UpdateView):
     success_url = '/surveys'
 
     def get_object(self, queryset=None):
-        self.object = self.model.objects.get(id=self.kwargs['survey_id'])
+        self.object = get_object_or_404(models.Survey, pk=self.kwargs['survey_id'])
         if self.object.initialized:
             raise Http404
         return self.object
@@ -231,8 +233,9 @@ class SurveyUpdateView(LoginRequiredMixin, generic.edit.UpdateView):
     def form_valid(self, form):
         # Rendering the empty document does not really hurt ...
         form.save()
-        if tasks.write_questionnaire(self.object):
-            tasks.render_questionnaire(self.object)
+        survey_id = str(self.object.id)
+        if tasks.write_questionnaire.apply_async(args=(survey_id, )):
+            tasks.render_questionnaire.apply_async(args=(survey_id, ))
         response = super().form_valid(form)
         return response
 
@@ -254,7 +257,8 @@ def delete(request, survey_id):
 def questionnaire(request, survey_id):
     '''GET always gives you the questionnaire as json file. POST is accepted
     when the survey is not initialized for sending in the questionnaire draft
-    via the editor.'''
+    via the editor. The json gets written as latex and then rendered for the
+    editor preview.'''
     survey = get_survey_or_404(request, survey_id, change=True)
 
     # Get CSRF token, so that cookie will be included
@@ -266,8 +270,10 @@ def questionnaire(request, survey_id):
         else:
             survey.questionnaire = request.read()
             survey.save()
-            if tasks.write_questionnaire(survey):
-                tasks.render_questionnaire(survey)
+
+            survey_id = str(survey.id)
+            if tasks.write_questionnaire.apply_async(args=(survey_id, )):
+                tasks.render_questionnaire.apply_async(args=(survey_id, ))
 
     return HttpResponse(survey.questionnaire, content_type="application/json")
 
