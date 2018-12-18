@@ -70,8 +70,7 @@
     display: none;
 }
 
-.review_box checkbox-ellipse {
+.review_box .checkbox-label-ellipse {
     /* Huge border radius */
     border-radius: 1000px;
 }
-
