@@ -1,8 +1,9 @@
 from django.conf.urls import url
 from django.contrib.auth import views as auth_views
+from sdaps_web.settings import LOGIN_TEXT
 
 urlpatterns = [
-    url(r'^accounts/login/$', auth_views.LoginView.as_view(), name="login"),
+    url(r'^accounts/login/$', auth_views.LoginView.as_view(extra_context={'login_text': LOGIN_TEXT}), {'template_name': 'login.html'}, name="login"),
     url(r'^accounts/logout/$', auth_views.LogoutView.as_view(), name="logout"),
 #    url(r'^accounts/profile$', auth_views.profile),
     url(r'^accounts/password_change/$', auth_views.PasswordChangeView.as_view(), name="password_change"),

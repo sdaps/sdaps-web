@@ -123,6 +123,8 @@ USE_L10N = True
 USE_TZ = True
 
 
+# that can optionally be added to the login page to inform new users
+LOGIN_TEXT = ''
 
 
 # TODO: Priorities some tasks lower
