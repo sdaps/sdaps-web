@@ -129,9 +129,10 @@ class SurveyCreateView(LoginRequiredMixin, generic.edit.CreateView):
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
-        # Rendering the empty document does not really hurt ...
-        form.save()
+        self.model = form.save()
+        self.model.save()
         survey_id = str(self.model.id)
+        # Rendering the empty document
         if tasks.write_questionnaire.apply_async(args=(survey_id, )):
             tasks.render_questionnaire.apply_async(args=(survey_id, ))
         response = super().form_valid(form)
