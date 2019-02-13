@@ -240,6 +240,7 @@ def build_survey(self, djsurvey_id):
             # Defaults
             survey.defs.print_questionnaire_id = False
             survey.defs.print_survey_id = True
+            survey.defs.engine = defs.latex_engine
 
             survey.add_questionnaire(model.questionnaire.Questionnaire())
 
