@@ -40,25 +40,30 @@ What is missing:
    * What should be done about surveys that are finished?
    * What kind of permission management could be interesting?
 
-## Installation
+## Installation (on Ubuntu)
+**Dependencies (for sdaps and sdaps_web):**
 
-Clone this repo:
+`sudo apt install git python3-virtualenv virtualenv python3-pkgconfig python3-dev python3-distutils-extra rabbitmq-server libtiff-dev libglib2.0-dev libgirepository1.0-dev libcairo2-dev python3-cairo-dev sqlite3`
+
+(This dependency list is not complete. If you want to make sure everything is working and you are on Ubuntu, you can additionally install the PPA: https://sdaps.org/getting-started/ )
+
+**Clone this repo:**
 
 `git clone https://github.com/sdaps/sdaps_web`
 
 `cd sdaps_web`
 
-`virtualenv .venv`
+`virtualenv -p python3 .venv`
+
+Depending on your linux distro: `ln -s /usr/lib/python3/dist-packages/DistUtilsExtra .venv/lib/python3.6/site-packages/DistUtilsExtra` or `ln -s /usr/lib/python3.7/site-packages/DistUtilsExtra .venv/lib/python3.7/site-packages/DistUtilsExtra`
 
 `source .venv/bin/activate`
 
 `pip install -r requirements.txt`
 
-Clone sdaps (core) in sdaps\_web repo:
+**Clone sdaps (core) in sdaps\_web repo:**
 
 `git clone https://github.com/sdaps/sdaps --recursive`
-
-`ln -s /usr/lib/python3.7/site-packages/DistUtilsExtra .venv/lib/python3.7/site-packages/DistUtilsExtra`
 
 `cd sdaps`
 
@@ -68,9 +73,11 @@ Clone sdaps (core) in sdaps\_web repo:
 
 `cd ..`
 
-Install 'rabbitmq' and start it:
+**Install 'rabbitmq' and start it:**
 
 ArchLinux: `pacman -S rabbitmq` `systemctl start rabbitmq`
+
+Ubuntu: `sudo systemctl start rabbitmq-server`
 
 `cp sdaps_web/settings_sample.py sdaps_web/settings.py`
 
@@ -86,7 +93,7 @@ Then open another terminal window, repeat `source .venv/bin/activate` in the
 same directory and the export of the PYTHONPATH above in the new terminal and
 run:
 
-`python -m celery -A sdaps_web worker -Q background,default -E`
+`python -m celery -A sdaps_web worker -E`
 
 If both (celery and django) are running, you can open `localhost:8080` in your
 browser.
