@@ -19,7 +19,7 @@
 
   .controller('questionnaireCtrl', ['$scope', '$http', function($scope, $http) {
 
-    $scope.data_url = document.URL + '/questionnaire';
+    $scope.data_url = document.URL + 'questionnaire/';
 
     $scope.remove = function(scope) {
       scope.remove();

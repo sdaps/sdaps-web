@@ -5,12 +5,12 @@
 {% block content %}
 <div class="row">
     <div class="col-12">
-        <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.id %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
+        <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.slug %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
         <h2>Edit Details and Questionnaire:</h2>
         <h2>{{ survey.name }} <a class="btn btn-secondary btn-sm" data-toggle="collapse" href="#collapseSurveyDetails" role="button" aria-expanded="false" aria-controls="collapseSurveyDetails" title="Edit Survey Detail"><i class="la la-pencil"></i> Edit</a></h2>
         <div class="row collapse multi-collapse" id="collapseSurveyDetails">
             <div class="col-6">
-                <form method="post" action="{% url "questionnaire_edit" survey_id=survey.id %}" novalidate>
+                <form method="post" action="{% url "questionnaire_edit" slug=survey.slug %}" novalidate>
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-6">
@@ -99,7 +99,7 @@
       PDFJS.workerSrc = '{% static "sdaps_ctl/pdf.worker.js" %}';
 
       /* Hook up the preview widget. */
-      var preview = new PDFPreview.Preview($('#preview'), '{% url "questionnaire_download" survey.id %}');
+      var preview = new PDFPreview.Preview($('#preview'), '{% url "questionnaire_download" survey.slug %}');
       /* And attach to window for editor. */
       window.preview = preview;
     });

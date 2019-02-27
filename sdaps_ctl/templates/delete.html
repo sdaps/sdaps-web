@@ -14,7 +14,7 @@
 </div>
 <div class="row">
   <div class="col">
-      <form action="{% url "survey_delete" survey.id %}" class="form-inline" method="post">
+      <form action="{% url "survey_delete" survey.slug %}" class="form-inline" method="post">
         {% csrf_token %}
         <label class="col-form-label my-1 mr-2 {% if yes_missing %}text-danger{% endif %}">If you are sure, enter "YES" into the field: </label>
           <input class="form-control my-1 mr-2" type="text" name="delete" />{% if yes_missing %}{% endif %}<br />

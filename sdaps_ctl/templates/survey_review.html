@@ -4,7 +4,7 @@
 {% block content %}
 <div class="row mb-3">
     <div class="col-12">
-        <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.id %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
+        <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.slug %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
         <h2>Review Scans of {{ survey.name }}</h2>
         <lead>"{{ survey.title }}" by "{{ survey.author }}"</lead>
     </div>
@@ -74,8 +74,8 @@
   <script type="text/javascript" src="{% static "/sdaps_ctl/survey_review.js" %}"></script>
   <script type="text/javascript">
     /* Need to set some global vars here for survey_review.js. */
-    window.image_base = "{% url "survey_overview" survey.id %}/images/"
-    window.sheet_base = "{% url "survey_overview" survey.id %}/review/"
+    window.image_base = "{% url "survey_overview" survey.slug %}images/"
+    window.sheet_base = "{% url "survey_overview" survey.slug %}review/"
     window.review_sheets = {{ sheet_count }};
   </script>
 

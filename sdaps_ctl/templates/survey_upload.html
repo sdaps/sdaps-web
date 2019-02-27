@@ -15,7 +15,7 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col">
-        <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.id %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
+        <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.slug %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
         <h2>Upload Scans for {{ survey.name }}</h2>
         <div class="lead">"{{ survey.title }}" by "{{ survey.author }}"</div>
     </div>
@@ -24,7 +24,7 @@
 <div class="row">
     <div class="col-9"></div>
     <div class="col-3">
-        <form method="POST" action="{% url 'survey_add_images' survey.id %}">
+        <form method="POST" action="{% url 'survey_add_images' survey.slug %}">
             {% csrf_token %}
             <button class="btn btn-success" type="submit"><i class="la la-rocket"></i> Add uploaded files to project</button>
         </form>
@@ -54,7 +54,7 @@
 
 <script type="text/javascript">
     /* Need to set some global vars here for survey_upload.js. */
-    window.url = "{% url "survey_upload_post" survey.id %}";
+    window.url = "{% url "survey_upload_post" survey.slug %}";
 </script>
 <script type="text/javascript" src="{% static "sdaps_ctl/survey_upload.js" %}"></script>
 <script type="text/javascript" src="{% static "sdaps_ctl/jquery/jquery_fix_csrf.js" %}"></script>

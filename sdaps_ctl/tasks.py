@@ -218,6 +218,7 @@ def render_questionnaire(self, djsurvey_id):
 
     lock_id = ('%s_render_questionnaire' % djsurvey.id)
 
+    logger.debug('Rendering path "%s")', djsurvey.path)
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:
             if utils.atomic_latex_compile(djsurvey.path, 'questionnaire.tex'):

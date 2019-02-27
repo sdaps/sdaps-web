@@ -28,6 +28,7 @@ from django.conf import settings
 
 from django.contrib.auth.models import User, Group
 from django.utils.text import get_valid_filename
+from django.utils.crypto import get_random_string
 
 from django.urls import reverse
 
@@ -39,6 +40,7 @@ class Survey(models.Model):
     class Meta:
         permissions = (("review_survey", "Can review surveys"),)
 
+    slug = models.SlugField(unique=True)
     name = models.CharField(max_length=100)
 
     #: Whether the project is initilized (and the questionnaire cannot be
@@ -62,6 +64,11 @@ class Survey(models.Model):
     @property
     def path(self):
         return os.path.join(settings.SDAPS_PROJECT_ROOT, str(self.id))
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = get_random_string(6,'ABCDEFGHIJKLMNOPQVWXYZ0123456789')
+        super().save(*args, **kwargs)
 
 UPLOADING = 0
 FINISHED = 1

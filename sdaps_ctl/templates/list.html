@@ -22,7 +22,7 @@
             <tbody>
                 {% for survey in survey_list %}
                 <tr>
-                    <td><b><a href="{% url 'survey_overview' survey.id %}">{{ survey.name }}</a></b></td>
+                    <td><b><a href="{% url 'survey_overview' survey.slug %}">{{ survey.name }}</a></b></td>
                     <td>{{ survey.title }}</td>
                     <td>{{ survey.author }}</td>
                     <td>{% if survey.initialized %}<i class="la la-check-circle"></i>{% else %}<i class="la la-circle"></i>{% endif %} </td>

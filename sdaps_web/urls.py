@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from django.conf.urls import *
+from django.urls import include, path
+from django.http import HttpResponseRedirect
 
 import sdaps_ctl.views
 from . import views
@@ -33,7 +34,8 @@ urlpatterns = [
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^admin/', admin.site.urls),
-    url(r'^', include(views)),
-    url(r'^', include(sdaps_ctl.views)),
+    path('admin/', admin.site.urls),
+    path('', include(views)),
+    path('', lambda x: HttpResponseRedirect('/surveys')),
+    path('surveys/', include(sdaps_ctl.views)),
 ]
