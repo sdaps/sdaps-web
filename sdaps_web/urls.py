@@ -16,9 +16,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from django.urls import include, path
-from django.http import HttpResponseRedirect
+from django.views.generic.base import RedirectView
 
-import sdaps_ctl.views
 from . import views
 
 # Uncomment the next two lines to enable the admin:
@@ -36,6 +35,6 @@ urlpatterns = [
     # Uncomment the next line to enable the admin:
     path('admin/', admin.site.urls),
     path('', include(views)),
-    path('', lambda x: HttpResponseRedirect('/surveys')),
-    path('surveys/', include(sdaps_ctl.views)),
+    path('', RedirectView.as_view(url='/surveys')),
+    path('surveys/', include('sdaps_ctl.urls')),
 ]

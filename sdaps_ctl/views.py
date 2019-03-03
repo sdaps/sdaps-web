@@ -23,14 +23,14 @@ import re
 
 from .admin import SurveyAdmin
 
-from django.urls import include, path, reverse, re_path
+from django.urls import reverse
 
 from django.views import generic
 from django.views.decorators import csrf
 from django.views.decorators.http import last_modified
 from django.utils.decorators import method_decorator
 
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.files.base import ContentFile
@@ -289,8 +289,10 @@ def questionnaire(request, slug):
             survey_id = str(survey.id)
             if tasks.write_questionnaire.apply_async(args=(survey_id, )):
                 tasks.render_questionnaire.apply_async(args=(survey_id, ))
+            return HttpResponse(status=202)
 
-    return HttpResponse(survey.questionnaire, content_type="application/json")
+    elif request.method == 'GET':
+        return HttpResponse(survey.questionnaire, content_type="application/json")
 
 @login_required
 def survey_image(request, slug, filenum, page):
@@ -391,9 +393,6 @@ def csv_download(request, slug):
 
     if not djsurvey.initialized:
         raise Http404
-
-    # Now this is getting hairy, we need to unpickle the data :-(
-    #with models.LockedSurvey(djsurvey.id, 5):
 
     survey = SDAPSSurvey.load(djsurvey.path)
 
@@ -534,29 +533,3 @@ class SurveyUploadFile(LoginRequiredMixin, generic.View):
 
         # XXX: Store mimetype and return correct one here!
         return HttpResponse(upload.file, content_type="application/binary")
-
-
-urlpatterns = [
-        path('', SurveyList.as_view(), name='surveys'),
-        path('create/', permission_required('sdaps_ctl.add_survey')(SurveyCreateView.as_view()), name='survey_create'),
-        path('<slug:slug>/', SurveyDetail.as_view(), name='survey_overview'),
-        path('<slug:slug>/data.csv', csv_download, name='csv_download'),
-        path('<slug:slug>/questionnaire.pdf', questionnaire_download, name='questionnaire_download'),
-        path('<slug:slug>/questionnaire.tex', questionnaire_tex_download, name='questionnaire_tex_download'),
-        path('<slug:slug>/report.pdf', report_download, name='report_download'),
-        path('<slug:slug>/edit/', SurveyUpdateView.as_view(), name='questionnaire_edit'),
-        path('<slug:slug>/delete/', delete, name='survey_delete'),
-        path('<slug:slug>/edit/questionnaire/', questionnaire, name='questionnaire_post'),
-
-        path('<slug:slug>/review/', survey_review, name='survey_review'),
-        path('<slug:slug>/review/<int:sheet>/', survey_review_sheet, name='survey_review_sheet'),
-        path('<slug:slug>/images/<int:filenum>/<int:page>/', survey_image, name='survey_image'),
-
-        path('<slug:slug>/build/', survey_build, name='survey_build'),
-        path('<slug:slug>/report/', survey_report, name='survey_report'),
-        path('<slug:slug>/add_images/', survey_add_images, name='survey_add_images'),
-        path('<slug:slug>/upload/', survey_upload, name='survey_upload'),
-        path('<slug:slug>/upload/post/', SurveyUploadPost.as_view(), name='survey_upload_post'),
-        re_path(r'^(?P<slug>\w+)/upload/post/(?P<filename>.+)$', SurveyUploadFile.as_view(), name='survey_upload_file'),
-    ]
-

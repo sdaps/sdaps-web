@@ -181,7 +181,7 @@ def create_survey(self, djsurvey):
 @shared_task(track_started=True, bind=True)
 def write_questionnaire(self, djsurvey_id):
     """Translates the json file of questionnaire objects to LaTeX commands."""
-    print('WRITE_QUESTIONNAIRE')
+    logger.debug('Starting Task: WRITE_QUESTIONNAIRE')
     from .texwriter import texwriter
     djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
 

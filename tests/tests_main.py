@@ -4,6 +4,7 @@ import shutil
 from django.test import TestCase, tag
 from sdaps_ctl.models import Survey
 from sdaps_ctl import tasks
+from sdaps_web import settings
 from django.contrib.auth.models import User
 from django.conf import settings
 
@@ -18,9 +19,11 @@ class SurveyModelFunctionsTestCase(TestCase):
     "create()" or "delete()"'''
     def setUp(self):
         reset_sdaps_project_root()
-        User.objects.create(username="admin")
-        Survey.objects.create(
+        self.testslug = '123ABC'
+        self.testuser = User.objects.create(username="admin")
+        self.testsurvey = Survey.objects.create(
                 name="Test Survey Model Functions",
+                slug=self.testslug,
                 title="Test Survey Title",
                 author="Mrs. and Mr. Surveycreator",
                 questionnaire=b"""
@@ -52,23 +55,26 @@ class SurveyModelFunctionsTestCase(TestCase):
                 """,
                 owner=User.objects.get(username="admin"))
 
+    def tearDown(self):
+        if os.path.isdir(self.testsurvey.path):
+            shutil.rmtree(self.testsurvey.path)
+
     @tag('Survey.create')
     def test_survey_dirs_after_creating(self):
         """Checks if after Survey.create(), the survey folder is available in SDAPS_PROJECT_ROOT"""
-        test_survey = Survey.objects.get()
-        self.assertEqual(os.path.exists(settings.SDAPS_PROJECT_ROOT + "/" + str(test_survey.id)), True)
+        self.testsurvey_instance = Survey.objects.get(slug=self.testslug)
+        self.assertTrue(os.path.exists(settings.SDAPS_PROJECT_ROOT + "/" + str(self.testsurvey_instance.id)))
 
     @tag('Survey.delete')
     def test_survey_dirs_after_deleting(self):
         """Checks if after Survey.delete(), there is no survey folder in SDAPS_PROJECT_ROOT"""
-        test_survey = Survey.objects.get()
-        self.assertEqual(os.path.exists(settings.SDAPS_PROJECT_ROOT + "/" + str(test_survey.id)), True)
-        test_survey_id = test_survey.id
-        test_survey.delete()
-        self.assertEqual(os.path.exists(settings.SDAPS_PROJECT_ROOT + "/" + str(test_survey_id)), False)
-        deleted_date = datetime.datetime.now().strftime('%Y%m%d-%H%M') + "-"
-        complete_deleted_path = settings.SDAPS_PROJECT_ROOT + "/deleted/" + deleted_date + str(test_survey_id)
-        self.assertEqual(os.path.exists(complete_deleted_path), True)
+        self.testsurvey_instance = Survey.objects.get(slug=self.testslug)
+        deleted_datetime = datetime.datetime.now().strftime('%Y%m%d-%H%M') + "-"
+        complete_deleted_path = settings.SDAPS_PROJECT_ROOT + "/deleted/" + deleted_datetime + str(self.testsurvey_instance.id)
+        self.testsurvey_instance.delete()
+
+        self.assertEqual(os.path.exists(settings.SDAPS_PROJECT_ROOT + "/" + str(self.testsurvey_instance.id)), False)
+        self.assertTrue(os.path.exists(complete_deleted_path))
 
 
 class UninitializedSurveyTasksTestCase(TestCase):
@@ -76,22 +82,27 @@ class UninitializedSurveyTasksTestCase(TestCase):
 
     def setUp(self):
         reset_sdaps_project_root()
-        User.objects.create(username="admin")
-        Survey.objects.create(
+        if not os.path.isdir(settings.SDAPS_PROJECT_ROOT):
+            print('Project root does not exists. Create directory.')
+            os.mkdir(settings.SDAPS_PROJECT_ROOT)
+        self.testuser = User.objects.create(username="admin")
+        self.testslug = '123ABC'
+        self.testsurvey = Survey.objects.create(
                 name="Test Uninitialized Survey",
+                slug=self.testslug,
                 title="Test Survey Title",
                 author="Mrs. and Mr. Surveycreator",
-                questionnaire=b'[{"columns":2,"type":"multicol","children":[{"text":"Text","type":"textbody"},{"text":"Text","type":"textbody"}]},{"question":"Question","height":4,"expand":true,"type":"textbox"},{"title":"Section","type":"section"},{"text":"Text","type":"textbody"},{"question":"question","checkboxcount":5,"lower":"a","upper":"b","type":"singlemark"},{"question":"Question","columns":4,"type":"choicequestion","children":[{"answer":"Item","colspan":1,"type":"choiceitem"},{"answer":"Item","colspan":2,"height":1.2,"type":"choiceitemtext"},{"answer":"Item2","colspan":2,"height":1.2,"type":"choiceitemtext"}]},{"question":"Question","height":4,"expand":true,"type":"textbox"},{"heading":"Headline","checkboxcount":5,"type":"markgroup","children":[{"question":"Question","lower":"a","upper":"b","type":"markline"},{"question":"Question","lower":"a","upper":"b","type":"markline"}]},{"title":"Title","type":"section"},{"heading":"Headline","type":"choicegroup","children":[{"choice":"Choice","type":"groupaddchoice"},{"Question":"question","type":"choiceline","question":"ONE"},{"Question":"question","type":"choiceline","question":"Two"},{"Question":"question","type":"choiceline","question":"Three"}]}]',
+                questionnaire=bytes('[{"columns":2,"type":"multicol","children":[{"text":"Text","type":"textbody"},{"text":"Text","type":"textbody"}]},{"question":"Question","height":4,"expand":true,"type":"textbox"},{"title":"Section","type":"section"},{"text":"Text","type":"textbody"},{"question":"question","checkboxcount":5,"lower":"a","upper":"b","type":"singlemark"},{"question":"Question","columns":4,"type":"choicequestion","children":[{"answer":"Item","colspan":1,"type":"choiceitem"},{"answer":"Item","colspan":2,"height":1.2,"type":"choiceitemtext"},{"answer":"Item2","colspan":2,"height":1.2,"type":"choiceitemtext"}]},{"question":"Question","height":4,"expand":true,"type":"textbox"},{"heading":"Headline","checkboxcount":5,"type":"markgroup","children":[{"question":"Question","lower":"a","upper":"b","type":"markline"},{"question":"Question","lower":"a","upper":"b","type":"markline"}]},{"title":"Title","type":"section"},{"heading":"Headline","type":"choicegroup","children":[{"choice":"Choice","type":"groupaddchoice"},{"Question":"question","type":"choiceline","question":"ONE"},{"Question":"question","type":"choiceline","question":"Two"},{"Question":"question","type":"choiceline","question":"Three"}]}]', 'utf8'),
                 owner=User.objects.get(username="admin"))
+
+    def tearDown(self):
+        if os.path.isdir(self.testsurvey.path):
+            shutil.rmtree(self.testsurvey.path)
 
     @tag('tasks')
     def test_write_questionnaire(self):
-        """Cheks if questionnaire (JSON) from Survey model gets transformed to a LaTeX document"""
-        test_survey = Survey.objects.get()
-        texfile = settings.SDAPS_PROJECT_ROOT + "/" + str(test_survey.id) + "/questionnaire.tex"
-        if self.assertEqual(tasks.write_questionnaire(test_survey), True):
-            self.assertEqual(os.is_file(texfile), True)
-
-    @tag('tasks')
-    def test_
-
+        """Checks if questionnaire (JSON) from Survey model gets transformed to a LaTeX document"""
+        self.testsurvey_instance = Survey.objects.get(slug=self.testslug)
+        texfile = self.testsurvey_instance.path + "/questionnaire.tex"
+        if self.assertTrue(tasks.write_questionnaire(self.testsurvey_instance.id)):
+            self.assertTrue(os.path.isfile(texfile))
