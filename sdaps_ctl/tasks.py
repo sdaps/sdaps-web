@@ -36,6 +36,7 @@ import os
 import re
 import shutil
 import glob
+import logging
 
 import sdaps
 from sdaps import log
@@ -47,6 +48,8 @@ from sdaps import reporttex
 from sdaps.cmdline import add
 
 logger = get_task_logger(__name__)
+if settings.DEBUG:
+    logger.setLevel(logging.DEBUG)
 
 LOCK_EXPIRE = 60 * 20
 #LOCK_EXPIRE = 0
