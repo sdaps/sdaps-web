@@ -58,8 +58,11 @@ class Survey(models.Model):
 
     questionnaire = models.BinaryField(default=b'[]')
 
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.CASCADE)
+    owner = models.ManyToManyField(
+            User,
+            related_name="ownership_of_survey",
+            related_query_name="ownership_of_survey"
+            )
 
     @property
     def path(self):

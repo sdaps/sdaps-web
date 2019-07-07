@@ -56,9 +56,9 @@ class TestPreSurveyInitViews(TestCase):
             name='test-survey',
             slug=self.testslug,
             title='Test Survey',
-            author='The Tester',
-            owner=self.testuser
+            author='The Tester'
             )
+        self.testsurvey.owner.add(self.testuser)
 
     def tearDown(self):
         if os.path.isdir(self.testsurvey.path):

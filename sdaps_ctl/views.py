@@ -142,9 +142,9 @@ class SurveyCreateView(LoginRequiredMixin, generic.edit.CreateView):
     success_url = '/surveys'
 
     def form_valid(self, form):
-        form.instance.owner = self.request.user
         self.model = form.save()
         self.model.save()
+        self.model.owner.add(self.request.user)
         survey_id = str(self.model.id)
         # Rendering the empty document
         if tasks.write_questionnaire.apply_async(args=(survey_id, )):

@@ -52,8 +52,8 @@ class SurveyModelFunctionsTestCase(TestCase):
                     ]
                   }
                 ]
-                """,
-                owner=User.objects.get(username="admin"))
+                """)
+        self.testsurvey.owner.add(User.objects.get(username="admin"))
 
     def tearDown(self):
         if os.path.isdir(self.testsurvey.path):
@@ -92,8 +92,8 @@ class UninitializedSurveyTasksTestCase(TestCase):
                 slug=self.testslug,
                 title="Test Survey Title",
                 author="Mrs. and Mr. Surveycreator",
-                questionnaire=bytes('[{"columns":2,"type":"multicol","children":[{"text":"Text","type":"textbody"},{"text":"Text","type":"textbody"}]},{"question":"Question","height":4,"expand":true,"type":"textbox"},{"title":"Section","type":"section"},{"text":"Text","type":"textbody"},{"question":"question","checkboxcount":5,"lower":"a","upper":"b","type":"singlemark"},{"question":"Question","columns":4,"type":"choicequestion","children":[{"answer":"Item","colspan":1,"type":"choiceitem"},{"answer":"Item","colspan":2,"height":1.2,"type":"choiceitemtext"},{"answer":"Item2","colspan":2,"height":1.2,"type":"choiceitemtext"}]},{"question":"Question","height":4,"expand":true,"type":"textbox"},{"heading":"Headline","checkboxcount":5,"type":"markgroup","children":[{"question":"Question","lower":"a","upper":"b","type":"markline"},{"question":"Question","lower":"a","upper":"b","type":"markline"}]},{"title":"Title","type":"section"},{"heading":"Headline","type":"choicegroup","children":[{"choice":"Choice","type":"groupaddchoice"},{"Question":"question","type":"choiceline","question":"ONE"},{"Question":"question","type":"choiceline","question":"Two"},{"Question":"question","type":"choiceline","question":"Three"}]}]', 'utf8'),
-                owner=User.objects.get(username="admin"))
+                questionnaire=bytes('[{"columns":2,"type":"multicol","children":[{"text":"Text","type":"textbody"},{"text":"Text","type":"textbody"}]},{"question":"Question","height":4,"expand":true,"type":"textbox"},{"title":"Section","type":"section"},{"text":"Text","type":"textbody"},{"question":"question","checkboxcount":5,"lower":"a","upper":"b","type":"singlemark"},{"question":"Question","columns":4,"type":"choicequestion","children":[{"answer":"Item","colspan":1,"type":"choiceitem"},{"answer":"Item","colspan":2,"height":1.2,"type":"choiceitemtext"},{"answer":"Item2","colspan":2,"height":1.2,"type":"choiceitemtext"}]},{"question":"Question","height":4,"expand":true,"type":"textbox"},{"heading":"Headline","checkboxcount":5,"type":"markgroup","children":[{"question":"Question","lower":"a","upper":"b","type":"markline"},{"question":"Question","lower":"a","upper":"b","type":"markline"}]},{"title":"Title","type":"section"},{"heading":"Headline","type":"choicegroup","children":[{"choice":"Choice","type":"groupaddchoice"},{"Question":"question","type":"choiceline","question":"ONE"},{"Question":"question","type":"choiceline","question":"Two"},{"Question":"question","type":"choiceline","question":"Three"}]}]', 'utf8'))
+        self.testsurvey.owner.add(User.objects.get(username="admin"))
 
     def tearDown(self):
         if os.path.isdir(self.testsurvey.path):
