@@ -3,18 +3,20 @@
 {% block content %}
 <div class="row mb-5">
     <div class="col-12">
-        <h2>Available Surveys</h2>
+        <h2>Available Surveys (ordered by last updated/modified</h2>
         <lead>Select one of the existing surveys, or <a href="{% url "survey_create" %}"><button class="btn btn-success btn-sm" ><i class="la la-plus"></i>create a new survey</button></a>.</lead>
     </div>
 </div>
 <div class="row">
     <div class="col-12">
-        <table class="table table-striped">
+        <table class="table table-bordered table-striped" data-toggle="table">
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Name</th>
                     <th scope="col">Title</th>
                     <th scope="col">Author(s)</th>
+                    <th scope="col">Created</th>
+                    <th scope="col">Updated</th>
                     <th scope="col">Initialized?</th>
                 </tr>
             </thead>
@@ -25,6 +27,8 @@
                     <td><b><a href="{% url 'survey_overview' survey.slug %}">{{ survey.name }}</a></b></td>
                     <td>{{ survey.title }}</td>
                     <td>{{ survey.author }}</td>
+                    <td>{{ survey.created_at }}</td>
+                    <td>{{ survey.updated_at }}</td>
                     <td>{% if survey.initialized %}<i class="la la-check-circle"></i>{% else %}<i class="la la-circle"></i>{% endif %} </td>
                 </tr>
                 {% endfor %}
@@ -36,4 +40,11 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+{% block scripts %}
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $('#surveytable').DataTable();
+    } );
+  </script>
 {% endblock %}

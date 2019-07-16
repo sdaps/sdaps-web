@@ -86,7 +86,7 @@ class SurveyList(LoginRequiredMixin, generic.ListView):
     context_object_name = 'survey_list'
 
     def get_queryset(self):
-        return SurveyAdmin.filter(self.request, models.Survey.objects).order_by('name')
+        return models.Survey.objects.filter(owner=self.request.user).order_by('-updated_at')
 
 @login_required
 def survey_add_images(request, slug):

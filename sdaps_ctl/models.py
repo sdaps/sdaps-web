@@ -55,6 +55,8 @@ class Survey(models.Model):
 
     title = models.CharField(max_length=200, default='')
     author = models.CharField(max_length=200, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     questionnaire = models.BinaryField(default=b'[]')
 
