@@ -86,6 +86,8 @@ class SurveyList(LoginRequiredMixin, generic.ListView):
     context_object_name = 'survey_list'
 
     def get_queryset(self):
+        if self.request.user.is_staff:
+            return models.Survey.objects.order_by('-updated_at')
         return models.Survey.objects.filter(owner=self.request.user).order_by('-updated_at')
 
 @login_required

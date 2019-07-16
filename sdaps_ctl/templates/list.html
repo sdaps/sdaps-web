@@ -9,6 +9,7 @@
 </div>
 <div class="row">
     <div class="col-12">
+	{% if user.is_staff %}<small>Notice: You are a staff member and are looking at all available surveys.</small>{% endif %}
         <table class="table table-bordered table-striped" data-toggle="table">
             <thead class="thead-dark">
                 <tr>
