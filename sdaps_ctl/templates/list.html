@@ -10,7 +10,7 @@
 <div class="row">
     <div class="col-12">
 	{% if user.is_staff %}<small>Notice: You are a staff member and are looking at all available surveys.</small>{% endif %}
-        <table class="table table-bordered table-striped" data-toggle="table">
+        <table id="surveytable" class="display table table-bordered table-striped" data-toggle="table">
             <thead class="thead-dark">
                 <tr>
                     <th scope="col">Name</th>
@@ -28,10 +28,14 @@
                     <td><b><a href="{% url 'survey_overview' survey.slug %}">{{ survey.name }}</a></b></td>
                     <td>{{ survey.title }}</td>
                     <td>{{ survey.author }}</td>
-                    <td>{{ survey.created_at }}</td>
-                    <td>{{ survey.updated_at }}</td>
-                    <td>{% if survey.initialized %}<i class="la la-check-circle"></i>{% else %}<i class="la la-circle"></i>{% endif %} </td>
-                </tr>
+                    <td data-order="{{ survey.created_at|date:"Ymd-Hi" }}">{{ survey.created_at }}</td>
+                    <td data-order="{{ survey.updated_at|date:"Ymd-Hi" }}">{{ survey.updated_at }}</td>
+		    {% if survey.initialized %}
+		    <td data-order="True"><i class="la la-check-circle"></i></td>
+		    {% else %}
+		    <td data-order="False"><i class="la la-circle"></i></td>
+		    {% endif %}
+		</tr>
                 {% endfor %}
             </tbody>
         </table>
@@ -43,6 +47,7 @@
 </div>
 {% endblock %}
 {% block scripts %}
+
   <script type="text/javascript">
     $(document).ready(function() {
       $('#surveytable').DataTable();
