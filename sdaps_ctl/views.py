@@ -137,6 +137,7 @@ class SurveyCreateView(LoginRequiredMixin, generic.edit.CreateView):
         if tasks.write_questionnaire.apply_async(args=(survey_id, )):
             tasks.render_questionnaire.apply_async(args=(survey_id, ))
         response = super().form_valid(form)
+
         return response
 
 class SurveyDetail(AnyPermissionRequiredMixin, generic.DetailView):
@@ -174,6 +175,7 @@ def questionnaire_download(request, slug):
     response = HttpResponse(wrapper, content_type='application/x-pdf')
     response['Content-Length'] = os.path.getsize(filename)
     response['Cache-Control'] = 'max-age=0, must-revalidate'
+    response['Content-Disposition'] = ('attachment; filename="%s_questionnaire.pdf"' % slug)
 
     return response
 
@@ -189,6 +191,7 @@ def report_download(request, slug):
     wrapper = FileWrapper(open(filename, 'rb'))
     response = HttpResponse(wrapper, content_type='application/x-pdf')
     response['Content-Length'] = os.path.getsize(filename)
+    response['Content-Disposition'] = ('attachment; filename="%s_report.pdf"' % slug)
 
     return response
 
@@ -204,6 +207,7 @@ def questionnaire_tex_download(request, slug):
     wrapper = FileWrapper(open(filename, 'rb'))
     response = HttpResponse(wrapper, content_type='text/x-tex')
     response['Content-Length'] = os.path.getsize(filename)
+    response['Content-Disposition'] = ('attachment; filename="%s_questionnaire.tex"' % slug)
 
     return response
 
@@ -227,6 +231,7 @@ class SurveyUpdateView(PermissionRequiredMixin, generic.edit.UpdateView):
         if tasks.write_questionnaire.apply_async(args=(survey_id, )):
             tasks.render_questionnaire.apply_async(args=(survey_id, ))
         response = super().form_valid(form)
+
         return response
 
 @login_required
@@ -267,7 +272,11 @@ def questionnaire(request, slug):
             return HttpResponse(status=202)
 
     elif request.method == 'GET':
-        return HttpResponse(survey.questionnaire, content_type="application/json")
+        response = HttpResponse(survey.questionnaire, content_type="application/json")
+        response['Content-Disposition'] = ('attachment; filename="%s_questionnaire.json"' % slug)
+
+        return response
+
 
 @permission_required('can_review_scans', (models.Survey, 'slug', 'slug'))
 def survey_image(request, slug, filenum, page):
@@ -356,7 +365,10 @@ def survey_review_sheet(request, slug, sheet):
         'data' : survey.questionnaire.sdaps_ctl.get_data()
     }
 
-    return HttpResponse(json.dumps(res), content_type="application/json")
+    response = HttpResponse(json.dumps(res), content_type="application/json")
+    response['Content-Disposition'] = ('attachment; filename="%s_questionnaire.json"' % slug)
+
+    return response
 
 
 @permission_required('can_download_results', (models.Survey, 'slug', 'slug'))
@@ -372,7 +384,10 @@ def csv_download(request, slug):
     outdata = io.StringIO()
     csvdata.csvdata_export(survey, outdata, None)
 
-    return HttpResponse(outdata.getvalue(), content_type="text/csv; charset=utf-8")
+    response = HttpResponse(outdata.getvalue(), content_type="text/csv; charset=utf-8")
+    response['Content-Disposition'] = ('attachment; filename="%s_data.csv"' % slug)
+
+    return response
 
 @permission_required('can_upload_scans', (models.Survey, 'slug', 'slug'))
 def survey_upload(request, slug):
