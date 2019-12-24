@@ -51,9 +51,9 @@ class TestUrls(SimpleTestCase):
         url = reverse('survey_review_sheet', kwargs={'slug':'some-slug', 'sheet': 1})
         self.assertEquals(resolve(url).func, survey_review_sheet)
 
-    def test_surveyimage_url_resolves(self):
-        url = reverse('survey_image', kwargs={'slug':'some-slug', 'filenum': 1, 'page': 1})
-        self.assertEquals(resolve(url).func, survey_image)
+    def test_surveyscan_url_resolves(self):
+        url = reverse('survey_scan', kwargs={'slug':'some-slug', 'filenum': 1, 'page': 1})
+        self.assertEquals(resolve(url).func, survey_scan)
 
     def test_surveybuild_url_resolves(self):
         url = reverse('survey_build', args=['some-slug'])
@@ -63,9 +63,9 @@ class TestUrls(SimpleTestCase):
         url = reverse('survey_report', args=['some-slug'])
         self.assertEquals(resolve(url).func, survey_report)
 
-    def test_surveyaddimages_url_resolves(self):
-        url = reverse('survey_add_images', args=['some-slug'])
-        self.assertEquals(resolve(url).func, survey_add_images)
+    def test_surveyaddscans_url_resolves(self):
+        url = reverse('survey_add_scans', args=['some-slug'])
+        self.assertEquals(resolve(url).func, survey_add_scans)
 
     def test_surveyupload_url_resolves(self):
         url = reverse('survey_upload', args=['some-slug'])

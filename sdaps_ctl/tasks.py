@@ -78,10 +78,10 @@ def task_lock(lock_id, oid):
             cache.delete(lock_id)
 
 @shared_task(track_started=True, bind=True)
-def add_images(self, djsurvey_id):
+def add_scans(self, djsurvey_id):
     djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
 
-    lock_id = ('%s_add_images' % djsurvey.id)
+    lock_id = ('%s_add_scans' % djsurvey.id)
 
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:

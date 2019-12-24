@@ -76,13 +76,13 @@ class SurveyList(LoginRequiredMixin, generic.list.ListView):
         return surveys_user_has_perms
 
 @permission_required('can_upload_scans', (models.Survey, 'slug', 'slug'))
-def survey_add_images(request, slug):
+def survey_add_scans(request, slug):
     if request.method == "POST":
         survey = get_object_or_404(models.Survey, slug=slug)
 
         # Queue file addition
         survey_id = str(survey.id)
-        if tasks.add_images.apply_async(args=(survey_id, )):
+        if tasks.add_scans.apply_async(args=(survey_id, )):
             tasks.recognize_scan.apply_async(args=(survey_id, ))
 
         return HttpResponseRedirect(reverse('survey_overview', args=(survey.slug,)))
@@ -279,7 +279,7 @@ def questionnaire(request, slug):
 
 
 @permission_required('can_review_scans', (models.Survey, 'slug', 'slug'))
-def survey_image(request, slug, filenum, page):
+def survey_scan(request, slug, filenum, page):
     # This function does not open the real SDAPS survey, as unpickling the data
     # is way to inefficient.
     survey = get_object_or_404(models.Survey, slug=slug)
