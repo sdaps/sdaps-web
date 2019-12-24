@@ -21,8 +21,9 @@ from django.db.models import Q
 from django import forms
 from django.contrib import admin
 from .models import Survey, UploadedFile
+from guardian.admin import GuardedModelAdmin
 
-class SurveyAdmin(admin.ModelAdmin):
+class SurveyAdmin(GuardedModelAdmin):
     list_display = ('name', 'title', 'author')
 
     @classmethod
@@ -37,9 +38,9 @@ class SurveyAdmin(admin.ModelAdmin):
         if obj.owner == request.user:
             return True
 
-        if obj.group:
-            if request.user.groups.filter(pk=obj.group.id).exists():
-                return True
+        #if obj.group:
+        #    if request.user.groups.filter(pk=obj.group.id).exists():
+        #        return True
 
         return False
 
@@ -76,8 +77,6 @@ class SurveyAdmin(admin.ModelAdmin):
 admin.site.register(Survey, SurveyAdmin)
 
 
-class UploadedFileAdmin(admin.ModelAdmin):
+class UploadedFileAdmin(GuardedModelAdmin):
     pass
 admin.site.register(UploadedFile, UploadedFileAdmin)
-
-

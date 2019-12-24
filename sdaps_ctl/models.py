@@ -33,12 +33,24 @@ from django.utils.crypto import get_random_string
 from django.urls import reverse
 
 from celery.result import AsyncResult
-
+from guardian.shortcuts import assign_perm, get_perms_for_model
 
 class Survey(models.Model):
 
     class Meta:
-        permissions = (("review_survey", "Can review surveys"),)
+        permissions = (
+                ("can_design_draft", "Can design a survey draft via the editor"),
+                ("can_initialize", "Can finally setup/initialize the survey for printing"),
+                ("can_download_empty", "Can download empty (to be filled) survey)"),
+                ("can_upload_scans", "Can upload scanned sheets"),
+                ("can_review_scans", "Can review uploaded scanned sheets"),
+                ("can_verify_scans", "Can verify uploaded reviewed scans per page"),
+                ("can_download_results", "Can download report and csv files"),
+                ("can_download_scans", "Can download uploaded scanned sheets"),
+                ("can_download_project", "Can download the whole sdaps project for backup or working locally"),
+                ("can_edit_basic_info", "Can edit for example title, author, global id..."),
+                )
+        default_permissions = ('add', 'change', 'delete')
 
     slug = models.SlugField(unique=True)
     name = models.CharField(max_length=100)
@@ -169,6 +181,13 @@ def move_survey_dir(sender, instance, using, **kwargs):
         # And rename/move the old directory
         os.rename(path, os.path.join(delpath, datetime.datetime.now().strftime('%Y%m%d-%H%M') + '-' + str(instance.id)))
 
+def assign_initial_survey_perms(sender, instance, created, **kwargs):
+    survey_model_perms = [perm.codename for perm in get_perms_for_model(sender)]
+    for model_perm in survey_model_perms:
+        for owner in instance.owner.all():
+            assign_perm(model_perm, owner, instance)
+
+signals.post_save.connect(assign_initial_survey_perms, sender=Survey)
 signals.post_save.connect(create_survey_dir, sender=Survey)
 signals.post_delete.connect(move_survey_dir, sender=Survey)
 

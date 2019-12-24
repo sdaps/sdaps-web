@@ -6,3 +6,4 @@ simplejson==3.16
 opencv-python==3.4.3.18
 PyGObject==3.30.1
 reportlab==3.5.9
+django-guardian==2.1
