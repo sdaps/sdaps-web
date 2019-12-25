@@ -145,11 +145,6 @@ class SurveyDetail(AnyPermissionRequiredMixin, generic.DetailView):
     model = models.Survey
     template_name = 'overview.html'
 
-    def get_object(self, *args, **kwargs):
-        self.object = generic.DetailView.get_object(self, *args, **kwargs)
-
-        return self.object
-
 # File download last modified test
 def survey_file_last_modification(request, slug, filename):
     survey = get_object_or_404(models.Survey, slug=slug)
@@ -390,7 +385,7 @@ def csv_download(request, slug):
     return response
 
 @permission_required('can_upload_scans', (models.Survey, 'slug', 'slug'))
-def survey_upload(request, slug):
+def survey_upload_scans(request, slug):
     survey = get_object_or_404(models.Survey, slug=slug)
 
     csrf.get_token(request)
@@ -402,17 +397,15 @@ def survey_upload(request, slug):
         'survey' : survey,
     }
 
-    return render(request, 'survey_upload.html', context_dict)
+    return render(request, 'survey_upload_scans.html', context_dict)
 
 
-class SurveyUploadPost(PermissionRequiredMixin, generic.base.View):
+class SurveyUploadScansPost(PermissionRequiredMixin, generic.edit.UpdateView):
     permission_required = 'can_upload_scans'
-    raise_exception = True
     content_range_pattern = re.compile(r'^bytes (?P<start>\d+)-(?P<end>\d+)/(?P<size>\d+)')
 
     def get_object(self):
-        self.object = get_object_or_404(models.Survey, slug=self.kwargs['slug'])
-        return self.object
+        return get_object_or_404(models.Survey, slug=self.kwargs['slug'])
 
     def ensure_valid_upload(self, upload):
         if upload.status != models.UPLOADING:
@@ -420,7 +413,6 @@ class SurveyUploadPost(PermissionRequiredMixin, generic.base.View):
         return True
 
     def post(self, request, slug):
-
         #upload_id = request.POST.get('upload_id')
 
         single_file = len(request.FILES.getlist('files[]')) == 1
@@ -447,7 +439,7 @@ class SurveyUploadPost(PermissionRequiredMixin, generic.base.View):
                 length = chunk.size
 
             # TODO: Figure out a way that name collisions work!
-            upload = models.UploadedFile.objects.filter(survey=self.object, filename=chunk.name).first()
+            upload = models.UploadedFile.objects.filter(survey=self.get_object(), filename=chunk.name).first()
 
             if upload is not None:
                 if not self.ensure_valid_upload(upload):
@@ -456,7 +448,7 @@ class SurveyUploadPost(PermissionRequiredMixin, generic.base.View):
 
             else:
                 # Create a new upload
-                upload = models.UploadedFile(survey=self.object, filename=chunk.name, filesize=length)
+                upload = models.UploadedFile(survey=self.get_object(), filename=chunk.name, filesize=length)
                 # Ensure PK is created
                 upload.save()
                 upload.file.save(name='', content=ContentFile(''), save=True)
@@ -482,8 +474,9 @@ class SurveyUploadPost(PermissionRequiredMixin, generic.base.View):
 
         return response
 
-    def generate_response(self, survey):
-        files = list(survey.uploads.all())
+    def get(self, request, slug):
+        obj = get_object_or_404(models.Survey, slug=slug)
+        files = list(obj.uploads.all())
         result = []
         for f in files:
             result.append(f.get_description())
@@ -495,25 +488,21 @@ class SurveyUploadPost(PermissionRequiredMixin, generic.base.View):
         return HttpResponse(json.dumps(result), content_type="application/json")
 
 
-    def get(self, request, slug):
-        return self.generate_response(self.object)
-
-class SurveyUploadFile(PermissionRequiredMixin, generic.View):
+class SurveyUploadScansFile(PermissionRequiredMixin, generic.edit.UpdateView):
     permission_required = 'can_upload_scans'
 
     def get_object(self):
-        self.object = get_object_or_404(Survey, slug=self.kwargs['slug'])
-        return self.object
+        return models.UploadedFile.objects.filter(survey=self.kwargs['slug'], filename=filename).first()
 
     def delete(self, request, filename):
-        upload = models.UploadedFile.objects.filter(survey=self.object, filename=filename).first()
+        upload = self.get_object()
         upload.delete()
 
         return HttpResponse(json.dumps({ 'files' : [ { filename : True }] }), content_type="application/json")
 
 
     def get(self, request, filename):
-        upload = models.UploadedFile.objects.filter(survey=self.object, filename=filename).first()
+        upload = self.get_object()
 
         if upload is None:
             raise Http404

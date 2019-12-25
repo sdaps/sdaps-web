@@ -74,7 +74,7 @@
   <script type="text/javascript" src="{% static "/sdaps_ctl/survey_review.js" %}"></script>
   <script type="text/javascript">
     /* Need to set some global vars here for survey_review.js. */
-    window.image_base = "{% url "survey_overview" survey.slug %}images/"
+    window.image_base = "{% url "survey_overview" survey.slug %}scans/"
     window.sheet_base = "{% url "survey_overview" survey.slug %}review/"
     window.review_sheets = {{ sheet_count }};
   </script>

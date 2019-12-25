@@ -19,9 +19,9 @@ urlpatterns = [
 
         # upload_matter: Uploading scans for review
         path('<slug:slug>/add_scans/', survey_add_scans, name='survey_add_scans'),
-        path('<slug:slug>/upload/', survey_upload, name='survey_upload'),
-        path('<slug:slug>/upload/post/', SurveyUploadPost.as_view(), name='survey_upload_post'),
-        re_path(r'^(?P<slug>\w+)/upload/post/(?P<filename>.+)$', SurveyUploadFile.as_view(), name='survey_upload_file'),
+        path('<slug:slug>/upload/', survey_upload_scans, name='survey_upload_scans'),
+        path('<slug:slug>/upload/post/', SurveyUploadScansPost.as_view(), name='survey_upload_scans_post'),
+        re_path(r'^(?P<slug>\w+)/upload/post/(?P<filename>.+)$', SurveyUploadScansFile.as_view(), name='survey_upload_scans_file'),
 
         # review_matter: Review the scans
         path('<slug:slug>/review/', survey_review, name='survey_review'),

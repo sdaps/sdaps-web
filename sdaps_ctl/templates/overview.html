@@ -26,7 +26,7 @@
                 questionnaire, and initialize the project.
             </p>
             {% endif %}
-            {% if may_delete %}
+            {% if perms.survey.can_delete %}
             <a type="button" class="pull-right btn btn-sm btn-danger" href="{% url 'survey_delete' survey.slug %}" title="To the dialog for deleting the whole survey project"><i class="la la-trash"></i> Delete project</a>
             {% endif %}
         </div>
@@ -41,7 +41,7 @@
               <p class="card-text">Prepare your questionnaire for printing by adding checkboxes and texts.</p>
           </div>
           <div class="card-footer">
-              <a {% if may_edit and not survey.initialized %}href="{% url 'questionnaire_edit' survey.slug %}"{% else %}{% endif %} class="btn btn-primary btn-sm {% if survey.initialized %}disabled{% endif %}" title="Edit the questionnaire"><i class="la la-pencil"></i> Edit</a>
+              <a {% if perms.survey.can_design_draft and not survey.initialized %}href="{% url 'questionnaire_edit' survey.slug %}"{% else %}{% endif %} class="btn btn-primary btn-sm {% if survey.initialized %}disabled{% endif %}" title="Edit the questionnaire"><i class="la la-pencil"></i> Edit</a>
               <a {% if not survey.initialized %}href="{% url 'questionnaire_download' survey.slug %}"{% else %}{% endif %} class="btn btn-info btn-sm {% if survey.initialized %}disabled{% endif %}" title="Preview pdf for testing and improving the questionnaire"><i class="la la-pencil-square"></i> Preview pdf</a>
               <a href="{% url 'questionnaire_tex_download' survey.slug %}" type="button" class="btn btn-secondary btn-sm" title="Download questionnaire faile as LaTeX"><i class="la la-download"></i> .tex</a>
               <a href="{% url 'questionnaire_post' survey.slug %}" type="button" class="btn btn-secondary btn-sm" title="Download questionnaire file as JSON"><i class="la la-download"></i> .json</a>
@@ -86,7 +86,7 @@
                 <p class="card-text">Let's scan all those filled questionnaires and upload them.</p>
             </div>
             <div class="card-footer">
-                <a {% if survey.initialized and may_upload %}href="{% url 'survey_upload' survey.slug %}"{% else %}{% endif %} type="button" class="btn btn-primary btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Upload scans as image files or pdf for later review"><i class="la la-upload"></i> Upload</a>
+                <a {% if survey.initialized and perms.survey.can_upload_scans %}href="{% url 'survey_upload_scans' survey.slug %}"{% else %}{% endif %} type="button" class="btn btn-primary btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Upload scans as image files or pdf for later review"><i class="la la-upload"></i> Upload</a>
             </div>
         </div>
         <div class="card {% if not survey.initialized %}disabled{% else %}border-primary{% endif %}">
@@ -96,10 +96,10 @@
                 <p class="card-text">Now we have to check all of those scans, so we get high quality data. Also we now can translate open questions in digital text.</p>
             </div>
             <div class="card-footer">
-                <a {% if survey.initialized and may_review %}href="{% url 'survey_review' survey.slug %}"{% else %}{% endif %} type="button" class="btn btn-primary btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Take a look at the uploaded scans and check the recognition"><i class="la la-stethoscope"></i> Review</a>
+                <a {% if survey.initialized and perms.survey.can_review_scans %}href="{% url 'survey_review' survey.slug %}"{% else %}{% endif %} type="button" class="btn btn-primary btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Take a look at the uploaded scans and check the recognition"><i class="la la-stethoscope"></i> Review</a>
             </div>
         </div>
-        <div class="card {% if survey.initialized and may_change %}border-primary{% else %}disabled{% endif %}">
+        <div class="card {% if survey.initialized and perms.survey.can_initialize %}border-primary{% else %}disabled{% endif %}">
             <div class="card-body">
                 <h5 class="card-title">Step 6</h5>
                 <h6 class="card-subtitle mb-2 text-muted">FINISH! Get Report and Data!</h6>
@@ -110,7 +110,7 @@
                     {% csrf_token %}
                     {% if not survey.initialized %}
                     <a type="button" class="btn btn-primary btn-sm disabled" title="Generate a pdf report to download"><i class="la la-magic"></i> Generate report</a>
-                    {% elif may_change %}
+                    {% elif perms.survey.can_download_results %}
                     <button type="submit" class="btn btn-primary btn-sm" title="Generate a pdf report to download"><i class="la la-magic"></i> Generate report</button>
                     <a href="{% url 'report_download' survey.slug %}" type="button" class="btn btn-info btn-sm" title="Summarizing report of the survey data as pdf"><i class="la la-download"></i> Report (.pdf)</a>
                     <a href="{% url 'csv_download' survey.slug %}" type="button" class="btn btn-info btn-sm" title="Data as a csv file"><i class="la la-download"></i> .csv</a>
