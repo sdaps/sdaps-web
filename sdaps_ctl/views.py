@@ -214,7 +214,7 @@ class SurveyUpdateView(PermissionRequiredMixin, generic.edit.UpdateView):
 
         return response
 
-@login_required
+@permission_required('can_delete', (models.Survey, 'slug', 'slug'))
 def delete(request, slug):
     survey = get_object_or_404(models.Survey, slug=slug)
 
