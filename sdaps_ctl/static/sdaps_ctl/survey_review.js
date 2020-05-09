@@ -184,7 +184,7 @@
 
         $scope.sheets[sheet_number]['$dirty'] = false;
 
-        $http.post($scope.sheet_base + sheet_number, { 'data' : submitData })
+        $http.post($scope.sheet_base + sheet_number + '/', { 'data' : submitData })
             .error(function(data, status, headers, config) {
                 alert("There was a data loss! The server responded with an error while submitting the data!");
             });

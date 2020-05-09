@@ -86,7 +86,7 @@
                 <p class="card-text">Let's scan all those filled questionnaires and upload them.</p>
             </div>
             <div class="card-footer">
-                <a {% if survey.initialized and perms.survey.can_upload_scans %}href="{% url 'survey_upload_scans' survey.slug %}"{% else %}{% endif %} type="button" class="btn btn-primary btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Upload scans as image files or pdf for later review"><i class="la la-upload"></i> Upload</a>
+                <a {% if survey.initialized and perms.survey.can_upload_scans %}href="{% url 'survey_add_scans' survey.slug %}"{% else %}{% endif %} type="button" class="btn btn-primary btn-sm {% if not survey.initialized %}disabled{% endif %}" title="Upload scans as image files or pdf for later review"><i class="la la-upload"></i> Upload</a>
             </div>
         </div>
         <div class="card {% if not survey.initialized %}disabled{% else %}border-primary{% endif %}">
