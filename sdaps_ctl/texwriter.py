@@ -101,7 +101,7 @@ def texwriter(djsurvey):
 
     data = {}
 
-    data['language'] = 'english'
+    data['language'] = djsurvey.language
 
     data['author'] = djsurvey.author
     data['title'] = djsurvey.title

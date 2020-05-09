@@ -20,22 +20,46 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from . import models
 
+available_survey_languages = [
+        ( "english"          , "English"          ),    #"en"
+        ( "german"           , "German"           ),    #"de" succ
+        ( "spanish"          , "Spanish"          ),    #"es" 
+        ( "finnish"          , "Finnish"          ),    #"fi"
+        ( "french"           , "French"           ),    #"fr" succ
+        ( "italian"          , "Italian"          ),    #"it"
+        ( "korean"           , "Korean"           ),    #"ko"
+        ( "norwegianbokmal"  , "Norwegian bokmål" ),    #"nb"
+        ( "dutch"            , "Dutch"            ),    #"nl" succ
+        ( "polish"           , "Polish"           ),    #"pl"
+        ( "portuguese"       , "Portuguese"       ),    #"pt" succ
+        ( "portuguese-brazil", "Portuguese (BRA)" ),    #"pt_BR"
+        ( "romanian"         , "Romanian"         ),    #"ro"
+        ( "russian"          , "Russian"          ),    #"ru"   
+        ( "sinhala"          , "Sinhala"          ),    #"si"   
+        ( "swedish"          , "Swedish"          ),    #"sv"   
+        ( "ukrainian"        , "Ukrainian"        ),    #"uk"   
+        ( "chinese-hans-hk"  , "Chinese (HK)"     ),    #"zh_Hans"
+        ]
+
 class SurveyModelForm(forms.ModelForm):
     # Is there a way to get the max_length from the Model?
     name = forms.CharField(min_length=4, max_length=100)
+    language = forms.ChoiceField(widget=forms.Select, choices=available_survey_languages)
 
     class Meta:
         model = models.Survey
-        fields = ('name', 'title', 'author', 'globalid')
+        fields = ('name', 'title', 'author', 'language', 'globalid')
         labels = {
                 'name': "Name",
                 'title': "Title",
                 'author': "Author(s)",
+                'language': "Language",
                 'globalid': "Global ID",
                 }
         help_texts = {
                 'title': "The title that gets printed on the survey",
                 'author': "The author(s) or responsible persons or organisations of the survey that gets printed on the survey",
+                'language': "Select a language of the header",
                 'globalid': "To differentiate between different versions of similar surveys, an id will be printed on the survey",
                 'name': "Name of the Survey, so you'll find it easily in this interface",
                 }
