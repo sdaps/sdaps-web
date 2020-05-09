@@ -17,11 +17,11 @@ urlpatterns = [
         path('<slug:slug>/questionnaire.tex', questionnaire_tex_download, name='questionnaire_tex_download'),
         path('<slug:slug>/build/', survey_build, name='survey_build'),
 
-        # upload_matter: Uploading scans for review
-        path('<slug:slug>/add_scans/', survey_add_scans, name='survey_add_scans'),
-        path('<slug:slug>/upload/', survey_upload_scans, name='survey_upload_scans'),
-        path('<slug:slug>/upload/post/', SurveyUploadScansPost.as_view(), name='survey_upload_scans_post'),
-        re_path(r'^(?P<slug>\w+)/upload/post/(?P<filename>.+)$', SurveyUploadScansFile.as_view(), name='survey_upload_scans_file'),
+        # upload_matter: Uploading scans for recognition
+        path('<slug:slug>/add_scans/', SurveyAddScans.as_view(), name='survey_add_scans'),
+        path('<slug:slug>/upload/', SurveyUploadScansFiles.as_view(), name='survey_upload_scans'),
+        path('<slug:slug>/upload/<str:filename>/', SurveyUploadScansFiles.as_view(), name='survey_upload_scans_file'),
+        #re_path(r'^(?P<slug>\w+)/upload/(?P<filename>.+)$', SurveyUploadScansFiles.as_view(), name='survey_upload_scans'),
 
         # review_matter: Review the scans
         path('<slug:slug>/review/', survey_review, name='survey_review'),

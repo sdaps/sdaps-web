@@ -75,21 +75,6 @@ class SurveyList(LoginRequiredMixin, generic.list.ListView):
                 accept_global_perms=False)
         return surveys_user_has_perms
 
-@permission_required('can_upload_scans', (models.Survey, 'slug', 'slug'))
-def survey_add_scans(request, slug):
-    if request.method == "POST":
-        survey = get_object_or_404(models.Survey, slug=slug)
-
-        # Queue file addition
-        survey_id = str(survey.id)
-        if tasks.add_scans.apply_async(args=(survey_id, )):
-            tasks.recognize_scan.apply_async(args=(survey_id, ))
-
-        return HttpResponseRedirect(reverse('survey_overview', args=(survey.slug,)))
-
-    # XXX: Everything else is not allowed
-    raise Http404
-
 @permission_required('can_initialize', (models.Survey, 'slug', 'slug'))
 def survey_build(request, slug):
     if request.method == "POST":
@@ -384,39 +369,66 @@ def csv_download(request, slug):
 
     return response
 
-@permission_required('can_upload_scans', (models.Survey, 'slug', 'slug'))
-def survey_upload_scans(request, slug):
-    survey = get_object_or_404(models.Survey, slug=slug)
 
-    csrf.get_token(request)
-
-    if not survey.initialized:
-        raise Http404
-
-    context_dict = {
-        'survey' : survey,
-    }
-
-    return render(request, 'survey_upload_scans.html', context_dict)
-
-
-class SurveyUploadScansPost(PermissionRequiredMixin, generic.edit.UpdateView):
+class SurveyAddScans(PermissionRequiredMixin, generic.edit.UpdateView):
+    """
+    There is a difference between uploading the files of scans to the database
+    (SurveyUploadScansFiles) and adding them to the survey for recognition (this View).
+    """
     permission_required = 'can_upload_scans'
     content_range_pattern = re.compile(r'^bytes (?P<start>\d+)-(?P<end>\d+)/(?P<size>\d+)')
 
     def get_object(self):
-        return get_object_or_404(models.Survey, slug=self.kwargs['slug'])
-
-    def ensure_valid_upload(self, upload):
-        if upload.status != models.UPLOADING:
-            return False
-        return True
+        return get_object_or_404(models.Survey, slug=self.kwargs['slug'], initialized=True)
 
     def post(self, request, slug):
-        #upload_id = request.POST.get('upload_id')
+        """
+        Adding already uploaded files to the survey for recognition, then start
+        recognition task for uploaded files.
+        """
+        survey = self.get_object()
 
+        # Queue file addition
+        survey_id = str(survey.id)
+        if tasks.add_scans.apply_async(args=(survey_id, )):
+            tasks.recognize_scan.apply_async(args=(survey_id, ))
+
+        return HttpResponseRedirect(reverse('survey_overview', args=(survey.slug,)))
+
+    def get(self, request, slug):
+        """
+        Get list of all uploaded scans (which have been not added to the survey for
+        recognition) from the database for specific survey
+        """
+        csrf.get_token(request)
+
+        context_dict = {
+            'survey' : self.get_object(),
+        }
+        return render(request, 'survey_upload_scans.html', context_dict)
+
+class SurveyUploadScansFiles(PermissionRequiredMixin, generic.edit.UpdateView):
+    """
+    View for handling single scan files before adding them to survey for recognition.
+    """
+    permission_required = 'can_upload_scans'
+
+    def get_object(self):
+        return get_object_or_404(models.Survey, slug=self.kwargs['slug'], initialized=True)
+
+#    def ensure_valid_upload(self, upload):
+#        if upload.status != models.UPLOADING:
+#            return False
+#        return True
+
+    def post(self, request, slug):
+        """
+        Upload single files of scans to the database and get response (like upload errors) via json.
+        """
+        #upload_id = request.POST.get('upload_id')
         single_file = len(request.FILES.getlist('files[]')) == 1
-        result = list()
+
+        response_uploaded_files = list()
         range_header = None
         for chunk in request.FILES.getlist('files[]'):
             # Get the details about the chunk/upload
@@ -424,7 +436,7 @@ class SurveyUploadScansPost(PermissionRequiredMixin, generic.edit.UpdateView):
             if content_range:
                 match = self.content_range_pattern.match(content_range)
                 if not match:
-                    result.append({ 'name' : chunk.name, 'error' : 'Broken or wrong content range.' })
+                    response_uploaded_files.append({ 'name' : chunk.name, 'error' : 'Broken or wrong content range.' })
                     continue
 
                 start = int(match.group('start'))
@@ -439,33 +451,29 @@ class SurveyUploadScansPost(PermissionRequiredMixin, generic.edit.UpdateView):
                 length = chunk.size
 
             # TODO: Figure out a way that name collisions work!
+            # Check if file with the same name is already uploaded for that survey
             upload = models.UploadedFile.objects.filter(survey=self.get_object(), filename=chunk.name).first()
-
-            if upload is not None:
-                if not self.ensure_valid_upload(upload):
-                    result.append({ 'name' : chunk.name, 'error' : 'File already uploaded or in an error state.' })
-                    continue
-
+            if upload:
+                response_uploaded_files.append({ 'name' : chunk.name, 'error' : 'File already uploaded or in an error state. Please, rename the file and upload again.' })
             else:
                 # Create a new upload
-                upload = models.UploadedFile(survey=self.get_object(), filename=chunk.name, filesize=length)
+                new_upload = models.UploadedFile(survey=self.get_object(), filename=chunk.name, filesize=length)
                 # Ensure PK is created
-                upload.save()
-                upload.file.save(name='', content=ContentFile(''), save=True)
+                new_upload.save()
+                new_upload.file.save(name='', content=ContentFile(''), save=True)
 
-            upload.append_chunk(chunk, offset=start, length=size)
+                new_upload.append_chunk(chunk, offset=start, length=size)
+                new_upload.save()
 
-            upload.save()
+                response_uploaded_files.append(new_upload.get_description())
 
-            result.append(upload.get_description())
-
-            if single_file:
-                # Send back the range that is already uploaded
-                range_header = 'bytes %i-%i' % (0, upload.file.size-1)
+                if single_file:
+                    # Send back the range that is already uploaded
+                    range_header = 'bytes %i-%i' % (0, new_upload.file.size-1)
 
         # only include the uploaded files in response
         result = {
-            'files' : result,
+            'files' : response_uploaded_files,
         }
 
         response = HttpResponse(json.dumps(result), content_type="application/json")
@@ -474,38 +482,36 @@ class SurveyUploadScansPost(PermissionRequiredMixin, generic.edit.UpdateView):
 
         return response
 
-    def get(self, request, slug):
-        obj = get_object_or_404(models.Survey, slug=slug)
-        files = list(obj.uploads.all())
-        result = []
-        for f in files:
-            result.append(f.get_description())
+    def get(self, request, slug, filename=''):
+        """
+        This gives one single uploaded file of a survey.
+        """
 
-        result = {
-            'files' : result,
-        }
+        if filename:
+            upload =  get_object_or_404(klass=models.UploadedFile, survey=self.get_object(), filename=filename)
+            wrapper = FileWrapper(open(upload.file, 'rb'))
+            response = HttpResponse(wrapper, content_type='application/x-pdf')
+            response['Content-Length'] = upload.filesize
+            response['Content-Disposition'] = ('attachment; filename="%s_%s_upload.pdf"' % (slug, upload.filename))
+        else:
+            uploaded_files_from_db = list(models.UploadedFile.objects.filter(survey=self.get_object()))
+            #uploaded_files_from_db = list(self.get_object().uploads.all())
+            uploaded_files_to_view = []
+            for uploaded_file_from_db in uploaded_files_from_db:
+                uploaded_files_to_view.append(uploaded_file_from_db.get_description())
 
-        return HttpResponse(json.dumps(result), content_type="application/json")
+            result = {
+                'files' : uploaded_files_to_view,
+            }
+            response = HttpResponse(json.dumps(result), content_type="application/json")
+        return response
 
-
-class SurveyUploadScansFile(PermissionRequiredMixin, generic.edit.UpdateView):
-    permission_required = 'can_upload_scans'
-
-    def get_object(self):
-        return models.UploadedFile.objects.filter(survey=self.kwargs['slug'], filename=filename).first()
-
-    def delete(self, request, filename):
-        upload = self.get_object()
+    def delete(self, request, slug, filename):
+        """
+        Deleting uploaded scans (which have been not added to the survey) from 
+        the database
+        """
+        upload = models.UploadedFile.objects.filter(survey=self.get_object(), filename=filename).first()
         upload.delete()
 
         return HttpResponse(json.dumps({ 'files' : [ { filename : True }] }), content_type="application/json")
-
-
-    def get(self, request, filename):
-        upload = self.get_object()
-
-        if upload is None:
-            raise Http404
-
-        # XXX: Store mimetype and return correct one here!
-        return HttpResponse(upload.file, content_type="application/binary")

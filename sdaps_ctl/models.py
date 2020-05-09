@@ -119,7 +119,7 @@ class UploadedFile(models.Model):
     def get_description(self):
         size = self.file.size
 
-        url = reverse('survey_upload_scans_file', args=(self.survey.id, self.filename))
+        url = reverse('survey_upload_scans_file', args=(self.survey.slug, self.filename))
 
         res = {
             'name' : self.filename,

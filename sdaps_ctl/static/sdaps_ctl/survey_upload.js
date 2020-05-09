@@ -15,7 +15,8 @@
 (function () {
     'use strict';
 
-    var url = window.url;
+    var url_add_scans = window.url_add_scans;
+    var url_upload_files = window.url_upload_files;
 
     angular.module('sdaps', [
         'blueimp.fileupload'
@@ -39,11 +40,11 @@
             '$scope', '$http', '$filter', '$window',
             function ($scope, $http) {
                 $scope.options = {
-                    url: url,
+                    url: url_upload_files,
                 };
                 $scope.loadingFiles = true;
 
-                $http.get(url)
+                $http.get(url_upload_files)
                     .then(
                         function (response) {
                             $scope.loadingFiles = false;

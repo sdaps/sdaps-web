@@ -65,20 +65,12 @@ class TestUrls(SimpleTestCase):
 
     def test_surveyaddscans_url_resolves(self):
         url = reverse('survey_add_scans', args=['some-slug'])
-        self.assertEquals(resolve(url).func, survey_add_scans)
+        self.assertEquals(resolve(url).func.view_class, SurveyAddScans)
 
     def test_surveyuploadscans_url_resolves(self):
         url = reverse('survey_upload_scans', args=['some-slug'])
-        self.assertEquals(resolve(url).func, survey_upload_scans)
+        self.assertEquals(resolve(url).func.view_class, SurveyUploadScansFiles)
 
-    def test_surveyuploadscanspost_url_resolves(self):
-        url = reverse('survey_upload_scans_post', args=['some-slug'])
-        self.assertEquals(resolve(url).func.view_class, SurveyUploadScansPost)
-
-    def test_surveyuploadscansfile_url_resolves(self):
+    def test_surveyuploadscansfiles_url_resolves(self):
         url = reverse('survey_upload_scans_file', args={'slug':'some-slug', 'filename': 1})
-        self.assertEquals(resolve(url).func.view_class, SurveyUploadScansFile)
-
-    def test_redirecttosurveyscanslist_url_resolves(self):
-        url = reverse('survey_upload_scans_file', args={'slug':'some-slug', 'filename': 1})
-        self.assertEquals(resolve(url).func.view_class, SurveyUploadScansFile) 
+        self.assertEquals(resolve(url).func.view_class, SurveyUploadScansFiles)

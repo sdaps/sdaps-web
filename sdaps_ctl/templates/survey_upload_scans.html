@@ -54,7 +54,9 @@
 
 <script type="text/javascript">
     /* Need to set some global vars here for survey_upload.js. */
-    window.url = "{% url "survey_upload_scans_post" survey.slug %}";
+    window.url_add_scans = "{% url "survey_add_scans" survey.slug %}";
+    window.url_upload_files = "{% url "survey_upload_scans" survey.slug %}";
+
 </script>
 <script type="text/javascript" src="{% static "sdaps_ctl/survey_upload.js" %}"></script>
 <script type="text/javascript" src="{% static "sdaps_ctl/jquery/jquery_fix_csrf.js" %}"></script>
