@@ -10,58 +10,82 @@
     </div>
 </div>
 <div class="row">
+    {% verbatim %}
     <div class="col-12">
-        {% verbatim %}
         <div class="review_widget" ng-controller="reviewCtrl">
-            <div class="review_container">
-                <div class="row">
-                    <div class="col-3">
-                        <div class="btn-group">
-                            <button type="submit" class="btn btn-primary" ng-click="setCurrentSheet(current_sheet-1)" title="Previous Sheet"><i class="la la-step-backward"></i><i class="la la-file-text"></i></button>
-                            <button type="submit" class="btn btn-info" ng-click="prev()" title="Previous Image"><i class="la la-toggle-left"></i><i class="la la-file-image-o"></i></button>
+            <div class="row">
+                <div class="col-9">
+                    <div class="review_container">
+                        <div class="row">
+                            <div class="col-3">
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary" ng-click="setCurrentSheet(current_sheet-1)" title="Previous Sheet"><i class="la la-step-backward"></i><i class="la la-file-text"></i></button>
+                                    <button type="submit" class="btn btn-info" ng-click="prev()" title="Previous Image"><i class="la la-toggle-left"></i><i class="la la-file-image-o"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group row">
+                                    <label class="col-form-label col-2">Sheet:</label> <input type="number" class="col-4 form-control" ng-min="1" ng-max="{{ review_sheets }}" ng-model="current_sheet_num"></input>
+                                    <label class="col-form-label col-2">Page:</label> <input type="number" class="col-4 form-control" ng-min="1" ng-model="current_image_num"></input>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="btn-group pull-right">
+                                    <button type="submit" class="btn btn-info" ng-click="next()" title="Next Image"><i class="la la-toggle-right"></i><i class="la la-file-image-o"></i></button>
+                                    <button type="submit" class="btn btn-primary" ng-click="setCurrentSheet(current_sheet+1)" title="Next Sheet"><i class="la la-step-forward"></i><i class="la la-file-text"></i></button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="form-group row">
-                            <label class="col-form-label col-2">Sheet:</label> <input type="number" class="col-4 form-control" ng-min="1" ng-max="{{ review_sheets }}" ng-model="current_sheet_num"></input>
-                            <label class="col-form-label col-2">Page:</label> <input type="number" class="col-4 form-control" ng-min="1" ng-model="current_image_num"></input>
+                        <div class="row">
+                            <div class="col-12 pull-right">
+                                <div class="btn-group pull-right">
+                                    <button type="submit" class="btn btn-sm btn-secondary" ng-click="zoomIn()" title="Zoom In"><i class="la la-search-plus"></i><i class="la la-file-text"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-secondary" ng-click="zoomOut()" title="Zoom Out"><i class="la la-search-minus"></i><i class="la la-file-text"></i></button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="btn-group pull-right">
-                            <button type="submit" class="btn btn-info" ng-click="next()" title="Next Image"><i class="la la-toggle-right"></i><i class="la la-file-image-o"></i></button>
-                            <button type="submit" class="btn btn-primary" ng-click="setCurrentSheet(current_sheet+1)" title="Next Sheet"><i class="la la-step-forward"></i><i class="la la-file-text"></i></button>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 pull-right">
-                        <div class="btn-group pull-right">
-                            <button type="submit" class="btn btn-sm btn-secondary" ng-click="zoomIn()" title="Zoom In"><i class="la la-search-plus"></i><i class="la la-file-text"></i></button>
-                            <button type="submit" class="btn btn-sm btn-secondary" ng-click="zoomOut()" title="Zoom Out"><i class="la la-search-minus"></i><i class="la la-file-text"></i></button>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- The container that scales the review -->
-                <div class="review" style="height: 100%; {{genPrefixes('transform: scale(' + zoom + ');')}} {{genPrefixes('transform-origin: 0% 0%;')}}">
-                    <!-- The background image. -->
-                    <div id="review_image_container" style="position: absolute">
-                        <div ng-repeat="(sheet_num, sheet) in this.sheets" ng-show="!sheet.$loading" style="position: absolute">
-                            <img ng-repeat="image in sheet['images']" ng-src="{{ imageSource(image) }}" style="{{genPrefixes(imageRotation(image))}} position: absolute; z-index: {{ {false : -2, true: -1 }[$index == current_image && sheet_num == current_sheet] }};" />
-                        </div>
-                    </div>
-                    <div id="review_boxes_container" style="position: absolute; {{genPrefixes(getCurrentMatrix())}} {{genPrefixes('transform-origin: 0% 0%;')}} ">
-                        <div class="review_box" ng-repeat="(box_id, box) in this.sheets[current_sheet]['data']" ng-show="box.page == this.sheets[current_sheet]['images'][current_image]['page']" style="position: absolute; left: {{ box.x * 100 }}px; top: {{ box.y * 100 }}px; width: {{ box.width * 100 }}px; height: {{box.height * 100}}px;">
-                            <input id="_review_box_{{box_id}}" class="checkbox-{{ box.form }}" type="checkbox" ng-model="box.state" />
-                            <label for="_review_box_{{box_id}}"></label>
+                        <!-- The container that scales the review -->
+                        <div class="review" style="height: 100%; {{genPrefixes('transform: scale(' + zoom + ');')}} {{genPrefixes('transform-origin: 0% 0%;')}}">
+                            <!-- The background image. -->
+                            <div id="review_image_container" style="position: absolute">
+                                <div ng-repeat="(sheet_num, sheet) in this.sheets" ng-show="!sheet.$loading" style="position: absolute">
+                                    <img ng-repeat="image in sheet['images']" ng-src="{{ imageSource(image) }}" style="{{genPrefixes(imageRotation(image))}} position: absolute; z-index: {{ {false : -2, true: -1 }[$index == current_image && sheet_num == current_sheet] }};" />
+                                </div>
+                            </div>
+                            <div id="review_boxes_container" style="position: absolute; {{genPrefixes(getCurrentMatrix())}} {{genPrefixes('transform-origin: 0% 0%;')}} ">
+                                <div class="review_box" ng-repeat="(box_id, box) in this.sheets[current_sheet]['data']" ng-show="box.page == this.sheets[current_sheet]['images'][current_image]['page']" style="position: absolute; left: {{ box.x * 100 }}px; top: {{ box.y * 100 }}px; width: {{ box.width * 100 }}px; height: {{box.height * 100}}px;">
+                                    <input id="_review_box_{{box_id}}" class="checkbox-{{ box.form }}" type="checkbox" ng-model="box.state" />
+                                    <label for="_review_box_{{box_id}}" class="checkbox-label-{{ box.form }}" title="{{ box_id }}"></label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        {% endverbatim %}
-    </div>
+                <div class="col-3">
+                    <div class="card">
+                        <div class="card-header">Content Bar</div>
+                        <div class="card-body">
+                            <form>
+                                <div class="form-group form-check">
+                                    <div id="review_elements_container" style="position: relative;">
+                                        <div class="review_element custom-control custom-checkbox" ng-repeat="(element_id, element) in this.sheets[current_sheet]['data']" ng-show="element.page == this.sheets[current_sheet]['images'][current_image]['page']">
+                                            <input id="_review_element_{{ element_id }}" class="checkbox-{{ element.form }} form-check-input" type="checkbox" ng-model="element.state" />
+                                            <label for="_review_element_{{ element_id }}" class="form-check-label">{{ element_id }}</label>
+                                            <div ng-if="element.text !== undefined" >
+                                                <textarea id="_review_element_text_{{ element_id }}" class="form-control" ng-model="element.text" > </textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div><!-- card -->
+                </div><!-- col-3 -->
+            </div><!-- row -->
+        </div><!-- review_widget -->
+    </div><!-- row -->
+    {% endverbatim %}
 </div>
 {% endblock %}
 
