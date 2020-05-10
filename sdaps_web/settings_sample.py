@@ -44,6 +44,7 @@ INSTALLED_APPS = [
      'sdaps_web',
      'django_celery_results',
      'crispy_forms',
+     'guardian',
 ]
 
 
@@ -108,6 +109,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend', 'guardian.backends.ObjectPermissionBackend')
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
@@ -122,6 +124,26 @@ USE_L10N = True
 
 USE_TZ = True
 
+AVAILABLE_SURVEY_LANGUAGES = [
+        ( "english"          , "English"          ),    #"en"
+        ( "german"           , "German"           ),    #"de" succ
+        ( "spanish"          , "Spanish"          ),    #"es" 
+#        ( "finnish"          , "Finnish"          ),    #"fi"
+        ( "french"           , "French"           ),    #"fr" succ
+#        ( "italian"          , "Italian"          ),    #"it"
+#        ( "korean"           , "Korean"           ),    #"ko"
+        ( "norsk"            , "Norwegian bokmål" ),    #"nb"
+        ( "dutch"            , "Dutch"            ),    #"nl" succ
+#        ( "polish"           , "Polish"           ),    #"pl"
+        ( "portuguese"       , "Portuguese"       ),    #"pt" succ
+        ( "portuguese-brazil", "Portuguese (BRA)" ),    #"pt_BR"
+#        ( "romanian"         , "Romanian"         ),    #"ro"
+#        ( "russian"          , "Russian"          ),    #"ru"   
+#        ( "sinhala"          , "Sinhala"          ),    #"si"   
+#        ( "swedish"          , "Swedish"          ),    #"sv"   
+#        ( "ukrainian"        , "Ukrainian"        ),    #"uk"   
+#        ( "chinese-hans-hk"  , "Chinese (HK)"     ),    #"zh_Hans"
+        ]
 
 # that can optionally be added to the login page to inform new users
 LOGIN_TEXT = ''

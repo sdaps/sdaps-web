@@ -16,30 +16,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from django import forms
+from django.conf import settings
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
 from . import models
 
-available_survey_languages = [
-        ( "english"          , "English"          ),    #"en"
-        ( "german"           , "German"           ),    #"de" succ
-        ( "spanish"          , "Spanish"          ),    #"es" 
-        ( "finnish"          , "Finnish"          ),    #"fi"
-        ( "french"           , "French"           ),    #"fr" succ
-        ( "italian"          , "Italian"          ),    #"it"
-        ( "korean"           , "Korean"           ),    #"ko"
-        ( "norwegianbokmal"  , "Norwegian bokmål" ),    #"nb"
-        ( "dutch"            , "Dutch"            ),    #"nl" succ
-        ( "polish"           , "Polish"           ),    #"pl"
-        ( "portuguese"       , "Portuguese"       ),    #"pt" succ
-        ( "portuguese-brazil", "Portuguese (BRA)" ),    #"pt_BR"
-        ( "romanian"         , "Romanian"         ),    #"ro"
-        ( "russian"          , "Russian"          ),    #"ru"   
-        ( "sinhala"          , "Sinhala"          ),    #"si"   
-        ( "swedish"          , "Swedish"          ),    #"sv"   
-        ( "ukrainian"        , "Ukrainian"        ),    #"uk"   
-        ( "chinese-hans-hk"  , "Chinese (HK)"     ),    #"zh_Hans"
-        ]
+available_survey_languages = settings.AVAILABLE_SURVEY_LANGUAGES
 
 class SurveyModelForm(forms.ModelForm):
     # Is there a way to get the max_length from the Model?
