@@ -108,9 +108,8 @@ def texwriter(djsurvey):
 
     content = []
 
-    questionnaire = djsurvey.questionnaire
-    print(type(questionnaire))
-    questionnaire = json.loads(questionnaire)
+    questionnaire = json.loads(djsurvey.questionnaire)
+
 
     for qobject in questionnaire:
         content.append(render_qobject(qobject))

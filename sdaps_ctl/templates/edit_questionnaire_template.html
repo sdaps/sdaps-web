@@ -2,7 +2,10 @@
 
 {% verbatim %}
 
+
 <script type="text/ng-template" id="questionnaire.html">
+
+  <!-- Start: Definition of Questionnaire Objects and its characteristics -->
   <div class="angular-ui-tree-handle pb-4" ng-show="!qobject.$editing">
     <a href="" class="btn btn-danger btn-sm float-right" data-nodrag ng-click="removeObj(this)"><i class="la la-minus"></i></a>
     <a href="" class="btn btn-primary btn-sm float-right" data-nodrag ng-show="canAdd(qobject.type)" ng-click="addChild(qobject)"><i ng-show="!qobject.$adding" class="la la-plus"></i><i ng-show="qobject.$adding" class="la la-close"></i></a>
@@ -205,6 +208,9 @@
             </div>
         </div>
 
+	<!-- options -->
+
+
         <div class="row col mt-2 ml-1">
             <button type="submit" class="btn btn-primary" ng-click="doneEditingObj(qobject)">Done</button>
         </div>
@@ -212,11 +218,12 @@
 
   </div>
 
+  <!-- Begin: Questionnaire Object Selector -->
   <ol ui-tree-nodes="" ng-model="qobject.children">
     <li class="angular-ui-tree-adder" ng-show="qobject.$adding">
       <form class="form-inline ng-pristine ng-valid" role="form">
           <div class="col-3">
-              <label class="col-form-label-sm">Object type</label>
+              <label class="col-form-label-sm">Select an Questionnaire Object</label>
           </div>
           <div class="col-7">
               <select class="col-form-control-sm custom-select ng-pristine ng-valid" ng-model="qobject.$newObjType">
@@ -246,6 +253,7 @@
     <li ng-repeat="qobject in qobject.children" ui-tree-node ng-include="'questionnaire.html'">
     </li>
   </ol>
+   <!-- End: Questionnaire Object Selector -->
 </script>
 
 {% endverbatim %}

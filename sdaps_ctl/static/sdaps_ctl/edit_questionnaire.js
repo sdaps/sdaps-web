@@ -25,6 +25,17 @@
       scope.remove();
     };
 
+    $scope.changeOption = function() {
+      var optionval = document.getElementById("papersize").value;
+      console.log("optionval", optionval);
+      var res = { };
+      res['type'] = 'papersize';
+      res['optval'] = optionval;
+      res['$editing'] = true;
+      console.log("optionres", res);
+      $scope.data.push(res);
+    };
+
     $scope.newItem = function(type) {
       /* XXX: translations? */
       var defaults = {
@@ -49,6 +60,7 @@
       }
       res['type'] = type;
       res['$editing'] = true;
+      console.log("newItem ", res);
       return res;
     }
 
@@ -57,6 +69,7 @@
       if (!objtype)
         return;
 
+      console.log("appendNewItem", $scope.newItem(objtype));
       $scope.data.push($scope.newItem(objtype));
     };
 
@@ -183,12 +196,14 @@
 
     $scope.update_server = _.debounce(function() {
       if (IsJsonStr(JSON.stringify($scope.data))) {
-      $http.post($scope.data_url, $scope.data).success(function(data, status, headers, config) {
+        $http.post($scope.data_url, $scope.data).success(function(data, status, headers, config) {
           if (window.preview) {
             /* Tell the preview that we expect an update soon (wait a maximum of 20s). */
             window.preview.expect_update(20000);
           }
         });
+      } else {
+        console.log('The created json file is not valid.');
       }
     }, 1000);
 

@@ -37,6 +37,10 @@
         <div id="editor" class="ng-scope" ng-controller="questionnaireCtrl">
             {% verbatim %}
             <!-- Nested node template -->
+	    <div>
+	    <label class="col-3 col-form-label col-form-label-sm">Papersize</label>
+	    <input type="text" id="papersize" class="form-control col-9" value="TESTETSTETETSTT" ng-change="changeOption()" ng-model="option" />
+	    </div>
             <div ui-tree="options" id="tree-root">
                  <ol ui-tree-nodes="" ng-model="data">
                      <li class="angular-ui-tree-adder" data-nodrag>
