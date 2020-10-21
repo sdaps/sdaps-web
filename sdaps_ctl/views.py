@@ -59,8 +59,11 @@ from sdaps import csvdata
 from . import buddies
 import cairo
 
-survey_model_perms = list(perm.codename for perm in get_perms_for_model(models.Survey))
-without_global_survey_model_perms = [perm for perm in survey_model_perms if perm not in ['add_survey', 'change_survey', 'delete_survey', 'view_survey']] 
+def survey_model_perms():
+    return list(perm.codename for perm in get_perms_for_model(models.Survey))
+
+def without_global_survey_model_perms():
+    return [perm for perm in survey_model_perms() if perm not in ['add_survey', 'change_survey', 'delete_survey', 'view_survey']] 
 
 class SurveyList(LoginRequiredMixin, generic.list.ListView):
     template_name = 'list.html'
@@ -69,7 +72,7 @@ class SurveyList(LoginRequiredMixin, generic.list.ListView):
     def get_queryset(self):
         surveys_user_has_perms = get_objects_for_user(
                 user=self.request.user,
-                perms=without_global_survey_model_perms,
+                perms=without_global_survey_model_perms(),
                 klass=models.Survey,
                 any_perm=True,
                 accept_global_perms=False)
@@ -126,9 +129,11 @@ class SurveyCreateView(LoginRequiredMixin, generic.edit.CreateView):
         return response
 
 class SurveyDetail(AnyPermissionRequiredMixin, generic.DetailView):
-    permission_required = survey_model_perms
     model = models.Survey
     template_name = 'overview.html'
+
+    def ___init___(self):
+        permission_require = survey_model_perms()
 
 # File download last modified test
 def survey_file_last_modification(request, slug, filename):

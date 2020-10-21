@@ -55,7 +55,9 @@ What is missing:
 
 `virtualenv -p python3 .venv`
 
-Depending on your linux distro: `ln -s /usr/lib/python3/dist-packages/DistUtilsExtra .venv/lib/python3.6/site-packages/DistUtilsExtra` or `ln -s /usr/lib/python3.7/site-packages/DistUtilsExtra .venv/lib/python3.7/site-packages/DistUtilsExtra`
+Depending on your linux distro:
+`ln -s /usr/lib/python3/dist-packages/DistUtilsExtra .venv/lib/python3.8/site-packages/DistUtilsExtra` or
+`ln -s /usr/lib/python3.7/site-packages/DistUtilsExtra .venv/lib/python3.7/site-packages/DistUtilsExtra`
 
 `source .venv/bin/activate`
 
