@@ -25,17 +25,6 @@
       scope.remove();
     };
 
-    $scope.changeOption = function() {
-      var optionval = document.getElementById("papersize").value;
-      console.log("optionval", optionval);
-      var res = { };
-      res['type'] = 'papersize';
-      res['optval'] = optionval;
-      res['$editing'] = true;
-      console.log("optionres", res);
-      $scope.data.push(res);
-    };
-
     $scope.newItem = function(type) {
       /* XXX: translations? */
       var defaults = {
@@ -69,7 +58,6 @@
       if (!objtype)
         return;
 
-      console.log("appendNewItem", $scope.newItem(objtype));
       $scope.data.push($scope.newItem(objtype));
     };
 
