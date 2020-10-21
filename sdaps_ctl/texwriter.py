@@ -97,46 +97,32 @@ def render_qobject(qobject, allowed_types=None):
     else:
         raise AssertionError('Unknown qtype %s!' % t)
 
-def texwriter(djsurvey):
-
-    data = {}
-
-    data['language'] = djsurvey.language
-
-    data['author'] = djsurvey.author
-    data['title'] = djsurvey.title
-
-    content = []
-
-    questionnaire = json.loads(djsurvey.questionnaire)
-
-
-    for qobject in questionnaire:
-        content.append(render_qobject(qobject))
-
-    data['content'] = '\n'.join(content)
-
-    document = template % data
-
-    f = open(os.path.join(djsurvey.path, 'questionnaire.tex'), 'w')
-    f.write(document)
-
-    return
-
-template = r"""
+def return_template():
+    template = r"""
 \documentclass[
   %% Babel language, also used to load translations
-  %(language)s,
+  %(language)s
+  %% Use A4 paper size, you can change this to eg. letterpaper if you need
+  %% the letter format. The normal methods to modify the paper size should
+  %% be picked up by SDAPS automatically.
+  %% a4paper, setting this might break the example scan unfortunately
+  %% letterpaper
+  %(paper_format)s
   %%
   %% If you need it, you can add a custom barcode at the center
-  %%globalid=SDAPS,
+  %(globalid)s
   %%
   %% And the following adds a per sheet barcode at the bottom left
-  %%print_questionnaire_id,
+  %(print_questionnaire_id)s
   %%
   %% You can choose between twoside and oneside. twoside is the default, and
   %% requires the document to be printed and scanned in duplex mode.
   %%oneside,
+  %%
+  %% With SDAPS 1.1.6 and newer you can choose the mode used when recognizing
+  %% checkboxes. valid modes are "checkcorrect" (default), "check" and
+  %% "fill".
+  %%checkmode=checkcorrect,
   %%
   %% The following options make sense so that we can get a better feel for the
   %% final look.
@@ -149,11 +135,38 @@ template = r"""
 \title{%(title)s}
 
 \begin{document}
-  \begin{questionnaire}
+  \begin{questionnaire}[%(noinfo)s]
     %(content)s
   \end{questionnaire}
 \end{document}
-
 """
+    return template
 
+def texwriter(djsurvey):
+    template = return_template()
+    data = {}
 
+    data['author'] = djsurvey.author
+    data['title'] = djsurvey.title
+
+    data['language'] = djsurvey.language + ","
+    
+    data['globalid'] = ("globalid=" + djsurvey.globalid + ",") if djsurvey.globalid else "%"
+    data['print_questionnaire_id'] = ("print_questionnaire_id,") if False else "%"
+    data['paper_format'] = ("a4paper,") if True else "letterpaper,"
+    data['noinfo'] = "noinfo" if False else ""
+
+    content = []
+
+    questionnaire = json.loads(djsurvey.questionnaire)
+
+    for qobject in questionnaire:
+        content.append(render_qobject(qobject))
+
+    data['content'] = '\n'.join(content)
+    document = template % data
+
+    f = open(os.path.join(djsurvey.path, 'questionnaire.tex'), 'w')
+    f.write(document)
+
+    return
