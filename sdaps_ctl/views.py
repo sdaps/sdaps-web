@@ -132,8 +132,8 @@ class SurveyDetail(AnyPermissionRequiredMixin, generic.DetailView):
     model = models.Survey
     template_name = 'overview.html'
 
-    def ___init___(self):
-        permission_require = survey_model_perms()
+    def __init__(self):
+        self.permission_required = survey_model_perms()
 
 # File download last modified test
 def survey_file_last_modification(request, slug, filename):
