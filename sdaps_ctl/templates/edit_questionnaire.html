@@ -38,18 +38,9 @@
 {% endblock %}
 
 {% block scripts %}
-  <script type="text/javascript" src="{% static "sdaps_ctl/likert_editor.js" %}"></script>
-  <script type="text/javascript">
-    $(function(){
-      /* For the PDFJS worker (isn't there a nicer way to do this? */
-      PDFJS.workerSrc = '{% static "sdaps_ctl/pdf.worker.js" %}';
+    <script type="text/javascript" src="{% static "sdaps_ctl/likert_editor.js" %}"></script>
+{% endblock %}
 
-      /* Hook up the preview widget. */
-      var preview = new PDFPreview.Preview($('#preview'), '{% url "questionnaire_download" survey.slug %}');
-      /* And attach to window for editor. */
-      window.preview = preview;
-    });
-
-  </script>
-
+{% block styles %}
+    <link href="{% static "sdaps_ctl/css/likert_editor.css" %}" rel="stylesheet" />
 {% endblock %}
