@@ -17,6 +17,10 @@ docker-compose exec web python manage.py migrate
 
 echo "Running script to create the superuser"
 sleep 1s
-docker-compose exec web python manage.py createsuperuser --username "admin"
+docker-compose exec web python manage.py createsuperuser --username "admin" --password "admin" --email "admin@sdaps.dev"
+
+echo "############################################################"
+echo "Created superuser with username 'admin' and password 'admin'"
+echo "############################################################"
 
 docker-compose down
