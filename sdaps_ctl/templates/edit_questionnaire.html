@@ -33,67 +33,12 @@
 </div>
 <hr>
 <div class="row">
-    <div class="col-6">
-        <div id="editor" class="ng-scope" ng-controller="questionnaireCtrl">
-            {% verbatim %}
-            <!-- Nested node template -->
-            <div ui-tree="options" id="tree-root">
-                 <ol ui-tree-nodes="" ng-model="data">
-                     <li class="angular-ui-tree-adder" data-nodrag>
-                         <form class="form-inline ng-pristine ng-valid form-group pt-3" role="form">
-                             <label class="col-3 col-form-label col-form-label-sm">Object type</label>
-                             <select id="editor-new-type" class="col-7 form-control-sm custom-select ng-pristine ng-valid" ng-model="qobject._newObjType">
-                                 <option value="multicol">Multicolumn Layout</option>
-                                 <option value="section">Section</option>
-                                 <option value="textbody">Textbody</option>
-                                 <option value="singlemark">Single Mark Question</option>
-                                 <option value="choicequestion">Choice Question</option>
-                                 <option value="textbox">Textbox</option>
-                                 <option value="markgroup">Mark Group</option>
-                                 <option value="choicegroup">Choice Group</option>
-                              </select>
-                              <div class="btn-group-vertical col-2" role="group" aria-label="Object type input buttons">
-                                  <button type="submit" class="btn btn-default btn-sm" ng-click="prependNewItem()" title="Prepend Object"><i class="la la-reply-all"></i></button>
-                                  <button type="submit" class="btn btn-default btn-sm" ng-click="appendNewItem()" title="Append Object"><i class="la la-reply-all" style="transform: rotate(180deg) scale(-1, 1);"></i></button>
-                              </div>
-                         </form>
-                     </li>
-                     <li ng-repeat="qobject in data" ui-tree-node ng-include="'questionnaire.html'"></li>
-                 </ol>
-            </div>
-            {% endverbatim %}
-        </div>
-    </div>
-    <div id="preview" class="col-md-6">
-        <center>
-            <div class="btn-group">
-                <button id="prev" class="btn btn-secondary"><i class="la la-arrow-left"></i> Previous</button>
-                <button class="btn btn-secondary disabled">Page: <span id="page_num"></span> / <span id="page_count"></span></button>
-                <button id="next" class="btn btn-secondary">Next <i class="la la-arrow-right"></i></button>
-            </div>
-        </center>
-        <div id="preview-container" style="width: 100%; margin-top:10px;">
-            <!-- The preview goes here! -->
-            <canvas class="pdfcanvas" id="preview" style="width: 100%;"/>
-        </div>
-    </div>
+    <div id="likert-editor" class="col-12" />
 </div>
 {% endblock %}
 
-{% block styles %}
-  <link href="{% static "sdaps_ctl/css/angular-ui-tree.min.css" %}" rel="stylesheet" />
-  {% include "edit_questionnaire_template.html" %}
-{% endblock %}
-
-
 {% block scripts %}
-  <script type="text/javascript" src="{% static "sdaps_ctl/angular.min.js" %}" /></script>
-  <script type="text/javascript" src="{% static "sdaps_ctl/angular-ui-tree.min.js" %}" /></script>
-  <script type="text/javascript" src="{% static "sdaps_ctl/pdf.js" %}"></script>
-
-  <!-- And custom scripts -->
-  <script type="text/javascript" src="{% static "sdaps_ctl/edit_questionnaire.js" %}"></script>
-  <script type="text/javascript" src="{% static "sdaps_ctl/pdf_preview.js" %}"></script>
+  <script type="text/javascript" src="{% static "sdaps_ctl/likert_editor.js" %}"></script>
   <script type="text/javascript">
     $(function(){
       /* For the PDFJS worker (isn't there a nicer way to do this? */
@@ -108,4 +53,3 @@
   </script>
 
 {% endblock %}
-
