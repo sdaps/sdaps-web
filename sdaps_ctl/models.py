@@ -18,6 +18,7 @@
 import os
 import time
 import datetime
+import json
 
 from . import tasks
 
@@ -68,6 +69,7 @@ class Survey(models.Model):
     title = models.CharField(max_length=200, default='')
     author = models.CharField(max_length=200, default='')
     language = models.CharField(max_length=200, default='')
+    latex_class_options = models.TextField(default='')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -88,6 +90,35 @@ class Survey(models.Model):
         if not self.slug:
             self.slug = get_random_string(6,'ABCDEFGHIJKLMNOPQVWXYZ0123456789')
         super().save(*args, **kwargs)
+
+    def get_tex_cls_opts(self, key):
+        if self.latex_class_options:
+            tex_cls_opts = json.loads(self.latex_class_options)
+            return tex_cls_opts[key]
+        else:
+            return False
+
+    def set_tex_cls_opts(self, key, value):
+        # change an option
+        tex_cls_opts_json = json.loads('{}')
+        if self.latex_class_options:
+            tex_cls_opts_json = json.loads(self.latex_class_options)
+        # create the option
+        tex_cls_opts_json[key] = value
+        self.latex_class_options = json.dumps(tex_cls_opts_json)
+        self.save()
+    
+    @property
+    def opts_noinfo(self):
+        return self.get_tex_cls_opts('noinfo')
+
+    @property
+    def opts_paper_format(self):
+        return self.get_tex_cls_opts('paper_format')
+
+    @property
+    def opts_print_questionnaire_id(self):
+        return self.get_tex_cls_opts('print_questionnaire_id')
 
 UPLOADING = 0
 FINISHED = 1

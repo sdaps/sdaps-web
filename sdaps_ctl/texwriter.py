@@ -17,7 +17,7 @@
 
 import os
 
-import simplejson as json
+import json
 
 def get(d, attr, val):
     try:
@@ -152,9 +152,10 @@ def texwriter(djsurvey):
     data['language'] = djsurvey.language + ","
     
     data['globalid'] = ("globalid=" + djsurvey.globalid + ",") if djsurvey.globalid else "%"
-    data['print_questionnaire_id'] = ("print_questionnaire_id,") if False else "%"
-    data['paper_format'] = ("a4paper,") if True else "letterpaper,"
-    data['noinfo'] = "noinfo" if False else ""
+
+    data['paper_format'] = "a4paper," if djsurvey.opts_paper_format == "a4paper" else "letterpaper,"
+    data['noinfo'] = "noinfo" if djsurvey.opts_noinfo == True else ""
+    data['print_questionnaire_id'] = "print_questionnaire_id," if djsurvey.opts_print_questionnaire_id == True else "%"
 
     content = []
 

@@ -6,26 +6,26 @@
 <div class="row">
     <div class="col-12">
         <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.slug %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
+	    {% if form.errors %}
+	       {% for field in form %}
+		   {% for error in field.errors %} 
+		      <div class="alert alert-danger">
+			   <strong>{{ error|escape }}</strong>
+		      </div>
+		   {% endfor %}
+	       {% endfor %}
+	    {% endif %}
         <h2>Edit Details and Questionnaire:</h2>
         <h2>{{ survey.name }} <a class="btn btn-secondary btn-sm" data-toggle="collapse" href="#collapseSurveyDetails" role="button" aria-expanded="false" aria-controls="collapseSurveyDetails" title="Edit Survey Detail"><i class="la la-pencil"></i> Edit</a></h2>
         <div class="row collapse multi-collapse" id="collapseSurveyDetails">
-            <div class="col-6">
+            <div class="col-12">
                 <form method="post" action="{% url "questionnaire_edit" slug=survey.slug %}" novalidate>
                     {% csrf_token %}
                     <div class="row">
-                        <div class="col-6">
-                            {{ form.name|as_crispy_field }}
-                        </div>
+                        <div class="col-12">
+		            {% crispy form %}
+       			</div>
                     </div>
-                    {{ form.title|as_crispy_field }}
-                    {{ form.author|as_crispy_field }}
-		    {{ form.language|as_crispy_field }}
-                    <div class="row">
-                        <div class="col-6">
-                            {{ form.globalid|as_crispy_field }}
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success">Update Survey</button>
                 </form>
             </div>
         </div>

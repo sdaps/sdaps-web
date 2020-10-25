@@ -50,7 +50,7 @@ from . import tasks
 from . import forms
 import io
 
-import simplejson as json
+import json
 
 from sdaps.model.survey import Survey as SDAPSSurvey
 from sdaps import image
@@ -199,9 +199,11 @@ def questionnaire_tex_download(request, slug):
 class SurveyUpdateView(PermissionRequiredMixin, generic.edit.UpdateView):
     permission_required = 'can_design_draft'
     model = models.Survey
-    form_class = forms.SurveyModelForm
+    form_class = forms.SurveyEditForm
     template_name = 'edit_questionnaire.html'
-    success_url = '/surveys'
+
+    def get_success_url(self):
+        return '/surveys/' + self.object.slug + '/edit'
 
     def get_object(self, queryset=None):
         self.object = get_object_or_404(models.Survey, slug=self.kwargs['slug'])
