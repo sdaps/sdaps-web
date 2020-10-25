@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  db:
+    restart: always
+    image: postgres:13-alpine
+    networks:
+      - backend
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+    volumes:
+      - ./db:/var/lib/postgresql/data
+
+  rabbitmq:
+    image: rabbitmq:3.8-alpine
+    networks:
+      - backend
+
+  web:
+    build: .
+    ports:
+      - 8080:8080
+    entrypoint: ./entrypoint.sh
+    volumes:
+      - .:/project
+      - ./proj:/tmp/projects
+    depends_on:
+      - db
+      - rabbitmq
+    networks:
+      - backend
+      - frontend
+
+networks:
+  frontend:
+  backend:
+    internal: true

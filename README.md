@@ -14,33 +14,35 @@ about using some AGPL like license).
 
 Well, that is about it for now.
 
-
-----
+---
 
 What is working (sort of):
- * Running background tasks using celery
- * Uploading scans and importing them into projects
- * Running recognition
- * Building a questionnaire (LaTeX document)
- * Changing the questionnaire ussing angular.js
- * pdf.js based preview is working
- * Basic UI for reviewing the recognition
- * Downloading results as CSV and reports
+
+- Running background tasks using celery
+- Uploading scans and importing them into projects
+- Running recognition
+- Building a questionnaire (LaTeX document)
+- Changing the questionnaire ussing angular.js
+- pdf.js based preview is working
+- Basic UI for reviewing the recognition
+- Downloading results as CSV and reports
 
 What is missing:
- * PDF Preview widget needs proper UI
- * All pages (especially editing page) need a proper stylesheet/structure.
- * Django templats need to be reworked
- * Slow tasks should get a less important queue
- * User/rights management
- * General thoughts about usability:
-   * How are surveys managed?
-   * Should they be grouped?
-   * How should they be sorted?
-   * What should be done about surveys that are finished?
-   * What kind of permission management could be interesting?
+
+- PDF Preview widget needs proper UI
+- All pages (especially editing page) need a proper stylesheet/structure.
+- Django templats need to be reworked
+- Slow tasks should get a less important queue
+- User/rights management
+- General thoughts about usability:
+  - How are surveys managed?
+  - Should they be grouped?
+  - How should they be sorted?
+  - What should be done about surveys that are finished?
+  - What kind of permission management could be interesting?
 
 ## Installation (on Ubuntu)
+
 **Dependencies (for sdaps and sdaps_web):**
 
 `sudo apt install git python3-virtualenv virtualenv python3-pkgconfig python3-dev python3-distutils-extra rabbitmq-server libtiff-dev libglib2.0-dev libgirepository1.0-dev libcairo2-dev python3-cairo-dev sqlite3`
@@ -63,7 +65,7 @@ Depending on your linux distro:
 
 `pip install -r requirements.txt`
 
-**Clone sdaps (core) in sdaps\_web repo:**
+**Clone sdaps (core) in sdaps_web repo:**
 
 `git clone https://github.com/sdaps/sdaps --recursive`
 
@@ -99,3 +101,19 @@ run:
 
 If both (celery and django) are running, you can open `localhost:8080` in your
 browser.
+
+## Docker setup
+
+First, you have to install `docker` and `docker-compose`. After doing that, run:
+
+```shell
+./easy-init
+```
+
+This will setup the docker environment for you.
+
+After this is finished, run the server by running:
+
+```shell
+./server
+```

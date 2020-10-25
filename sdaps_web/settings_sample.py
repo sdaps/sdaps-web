@@ -85,8 +85,12 @@ WSGI_APPLICATION = 'sdaps_web.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': '',
+        'HOST': 'db',
+        'PORT': '',
     }
 }
 
@@ -127,7 +131,7 @@ USE_TZ = True
 AVAILABLE_SURVEY_LANGUAGES = [
         ( "english"          , "English"          ),    #"en"
         ( "german"           , "German"           ),    #"de" succ
-        ( "spanish"          , "Spanish"          ),    #"es" 
+        ( "spanish"          , "Spanish"          ),    #"es"
 #        ( "finnish"          , "Finnish"          ),    #"fi"
         ( "french"           , "French"           ),    #"fr" succ
 #        ( "italian"          , "Italian"          ),    #"it"
@@ -138,10 +142,10 @@ AVAILABLE_SURVEY_LANGUAGES = [
         ( "portuguese"       , "Portuguese"       ),    #"pt" succ
         ( "portuguese-brazil", "Portuguese (BRA)" ),    #"pt_BR"
 #        ( "romanian"         , "Romanian"         ),    #"ro"
-#        ( "russian"          , "Russian"          ),    #"ru"   
-#        ( "sinhala"          , "Sinhala"          ),    #"si"   
-#        ( "swedish"          , "Swedish"          ),    #"sv"   
-#        ( "ukrainian"        , "Ukrainian"        ),    #"uk"   
+#        ( "russian"          , "Russian"          ),    #"ru"
+#        ( "sinhala"          , "Sinhala"          ),    #"si"
+#        ( "swedish"          , "Swedish"          ),    #"sv"
+#        ( "ukrainian"        , "Ukrainian"        ),    #"uk"
 #        ( "chinese-hans-hk"  , "Chinese (HK)"     ),    #"zh_Hans"
         ]
 
@@ -163,7 +167,7 @@ STATIC_URL = '/static/'
 
 # Celery setup
 CELERY_RESULT_BACKEND = 'django-db'
-CELERY_BROKER_URL = 'amqp://localhost//'
+CELERY_BROKER_URL = 'amqp://rabbitmq//'
 
 # Crispy Forms
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -179,4 +183,3 @@ LOGIN_REDIRECT_URL = '/surveys'
 from django.core.files.storage import FileSystemStorage
 
 SDAPS_UPLOAD_STORAGE=FileSystemStorage(SDAPS_PROJECT_ROOT, base_url=None)
-
