@@ -104,7 +104,9 @@ browser.
 
 ## Docker setup
 
-First, you have to install `docker` and `docker-compose`. After doing that, run:
+First, you have to install `docker` and `docker-compose`: [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/)
+
+After doing that, run:
 
 ```shell
 ./easy-init

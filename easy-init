@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cp sdaps_web/settings_sample.py sdaps_web/settings.py
+
 echo "Building Docker image for sdaps_web"
 sleep 1s
 
