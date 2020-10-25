@@ -6,7 +6,7 @@ sleep 1s
 docker-compose build
 docker-compose up -d
 
-echo "Waitig for 20 seconds to let the containers start properly"
+echo "Waiting for 20 seconds to let the containers start properly"
 sleep 20s
 
 echo "Running migrations"
