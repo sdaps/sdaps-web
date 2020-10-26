@@ -122,7 +122,7 @@ def return_template():
   %% With SDAPS 1.1.6 and newer you can choose the mode used when recognizing
   %% checkboxes. valid modes are "checkcorrect" (default), "check" and
   %% "fill".
-  %%checkmode=checkcorrect,
+  checkmode=%(checkmode)s,
   %%
   %% The following options make sense so that we can get a better feel for the
   %% final look.
@@ -156,6 +156,7 @@ def texwriter(djsurvey):
     data['paper_format'] = "a4paper," if djsurvey.opts_paper_format == "a4paper" else "letterpaper,"
     data['noinfo'] = "noinfo" if djsurvey.opts_noinfo else ""
     data['print_questionnaire_id'] = "print_questionnaire_id," if djsurvey.opts_print_questionnaire_id else "no_print_questionnaire_id,"
+    data['checkmode'] = 'checkcorrect' if not djsurvey.opts_checkmode else djsurvey.opts_checkmode
 
     content = []
 

@@ -93,8 +93,11 @@ class Survey(models.Model):
 
     def get_tex_cls_opts(self, key):
         if self.latex_class_options:
-            tex_cls_opts = json.loads(self.latex_class_options)
-            return tex_cls_opts[key]
+            try:
+                tex_cls_opts = json.loads(self.latex_class_options)
+                return tex_cls_opts[key]
+            except:
+                return False
         else:
             return False
 
@@ -122,6 +125,13 @@ class Survey(models.Model):
         if p_q_id == "":
             return False
         return p_q_id 
+
+    @property
+    def opts_checkmode(self):
+        cm = self.get_tex_cls_opts('checkmode')
+        if cm == "":
+            return False
+        return cm
 
 UPLOADING = 0
 FINISHED = 1

@@ -104,10 +104,16 @@ class SurveyEditForm(SurveyModelForm):
             help_text="If a list of IDs seperated by semicolons is entered, those IDs get printed as qr-/barcode on the questionnaire. Example: Multiple choice tests in class.",
             required = False
             )
+    opts_checkmode = forms.ChoiceField(
+            widget=forms.RadioSelect, 
+            label="Checkmode",
+            choices=[('checkcorrect', 'checkcorrect'), ('fill', 'fill'), ('check', 'check')],
+            help_text='checkcorrect: check to mark, fill to correct (unmark) (default). check: check or fill to mark. fill: fill to mark'
+            )
 
     class Meta(SurveyModelForm.Meta):
         model = models.Survey
-        fields = ('title', 'author', 'globalid', 'name', 'language', 'opts_noinfo', 'opts_paper_format', 'opts_print_questionnaire_id')
+        fields = ('title', 'author', 'globalid', 'name', 'language', 'opts_noinfo', 'opts_paper_format', 'opts_print_questionnaire_id', 'opts_checkmode')
 
     def __init__(self, *args, **kwargs):
         super(SurveyModelForm, self).__init__(*args, **kwargs)
@@ -117,6 +123,7 @@ class SurveyEditForm(SurveyModelForm):
             self.fields['opts_paper_format'].initial = 'a4paper' if not instance.opts_paper_format else instance.opts_paper_format
             if not instance.opts_print_questionnaire_id == False:
                 self.fields['opts_print_questionnaire_id'].initial = instance.opts_print_questionnaire_id
+            self.fields['opts_checkmode'].initial = 'checkcorrect' if not instance.opts_checkmode else instance.opts_checkmode
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
@@ -130,8 +137,12 @@ class SurveyEditForm(SurveyModelForm):
                 ),
                 Row(css_class='form-row col-md-2'),
                 Row(
+                    Row(
+                    Column('opts_paper_format', css_class='col-md-6'),
+                    Column('opts_checkmode', css_class='col-md-6'),
+                    css_class='form-row'
+                    ),                  
                     Column('opts_noinfo', css_class='col-md-12'),
-                    Column('opts_paper_format', css_class='col-md-12'),
                     Column('opts_print_questionnaire_id', css_class='col-md-12'),
                     css_class='form-row col-md-5'
                 ),
@@ -145,6 +156,7 @@ class SurveyEditForm(SurveyModelForm):
         instance.set_tex_cls_opts('noinfo', self.cleaned_data['opts_noinfo'])
         instance.set_tex_cls_opts('paper_format', self.cleaned_data['opts_paper_format'])
         instance.set_tex_cls_opts('print_questionnaire_id', self.cleaned_data['opts_print_questionnaire_id'])
+        instance.set_tex_cls_opts('checkmode', self.cleaned_data['opts_checkmode'])
         if commit:
             instance.save()
         return instance
