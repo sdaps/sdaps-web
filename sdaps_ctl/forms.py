@@ -97,11 +97,11 @@ class SurveyEditForm(SurveyModelForm):
             widget=forms.RadioSelect, 
             label="Paper Format",
             choices=[('a4paper', 'A4'), ('letterpaper', 'Letter')],
-            initial='a4paper',
             )
-    opts_print_questionnaire_id = forms.BooleanField(
-            widget=forms.CheckboxInput,
-            label="No Questionnaire ID",
+    opts_print_questionnaire_id = forms.CharField(
+            widget=forms.Textarea(attrs = {'placeholder': 'ID02;ID04;...'}),
+            label="Print Unique IDs",
+            help_text="If a list of IDs seperated by semicolons is entered, those IDs get printed as qr-/barcode on the questionnaire. Example: Multiple choice tests in class.",
             required = False
             )
 
@@ -114,8 +114,9 @@ class SurveyEditForm(SurveyModelForm):
         instance = kwargs.get('instance', None)
         if instance:
             self.fields['opts_noinfo'].initial = instance.opts_noinfo
-            self.fields['opts_paper_format'].initial = instance.opts_paper_format
-            self.fields['opts_print_questionnaire_id'].initial = instance.opts_print_questionnaire_id
+            self.fields['opts_paper_format'].initial = 'a4paper' if not instance.opts_paper_format else instance.opts_paper_format
+            if not instance.opts_print_questionnaire_id == False:
+                self.fields['opts_print_questionnaire_id'].initial = instance.opts_print_questionnaire_id
         self.helper = FormHelper()
         self.helper.layout = Layout(
             Row(
@@ -124,11 +125,11 @@ class SurveyEditForm(SurveyModelForm):
                     Column('title', css_class='col-md-12'),
                     Column('author', css_class='col-md-12'),
                     Column('language', css_class='col-md-12'),
+                    Column('globalid', css_class='col-md-12'),
                     css_class='form-row col-md-5'
                 ),
                 Row(css_class='form-row col-md-2'),
                 Row(
-                    Column('globalid', css_class='col-md-12'),
                     Column('opts_noinfo', css_class='col-md-12'),
                     Column('opts_paper_format', css_class='col-md-12'),
                     Column('opts_print_questionnaire_id', css_class='col-md-12'),
@@ -138,6 +139,7 @@ class SurveyEditForm(SurveyModelForm):
                 css_class='col-md-12 form-row'
             ),
         )
+
     def save(self, commit=True):
         instance = super(SurveyEditForm, self).save(commit=False)
         instance.set_tex_cls_opts('noinfo', self.cleaned_data['opts_noinfo'])

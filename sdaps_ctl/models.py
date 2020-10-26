@@ -118,7 +118,10 @@ class Survey(models.Model):
 
     @property
     def opts_print_questionnaire_id(self):
-        return self.get_tex_cls_opts('print_questionnaire_id')
+        p_q_id = self.get_tex_cls_opts('print_questionnaire_id')
+        if p_q_id == "":
+            return False
+        return p_q_id 
 
 UPLOADING = 0
 FINISHED = 1

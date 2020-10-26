@@ -188,7 +188,7 @@ def write_questionnaire(self, djsurvey_id):
     from .texwriter import texwriter
     djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
 
-    logger.debug('Write questionnaire (with id %s)', djsurvey.id)
+    logger.debug('Write questionnaire (with slug %s)', djsurvey.slug)
 
     # Must not yet be initialized
     if djsurvey.initialized:
@@ -199,7 +199,7 @@ def write_questionnaire(self, djsurvey_id):
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:
             texwriter(djsurvey)
-            logger.debug('Questionnaire written (with id %s)', djsurvey.id)
+            logger.debug('Questionnaire written (with slug %s)', djsurvey.slug)
             return True
 
 @shared_task(track_started=True, bind=True)
@@ -215,7 +215,7 @@ def render_questionnaire(self, djsurvey_id):
 
     djsurvey = get_object_or_404(models.Survey, pk=djsurvey_id)
 
-    logger.debug('Render questionnaire (with id %s)', djsurvey.id)
+    logger.debug('Render questionnaire (with slug %s)', djsurvey.slug)
     # Must not yet be initialized
     assert(djsurvey.initialized == False)
 
@@ -225,10 +225,10 @@ def render_questionnaire(self, djsurvey_id):
     with task_lock(lock_id, self.app.oid) as acquired:
         if acquired:
             if utils.atomic_latex_compile(djsurvey.path, 'questionnaire.tex'):
-                logger.debug('Render successful (with id %s)', djsurvey.id)
+                logger.debug('Render successful (with slug %s)', djsurvey.slug)
                 return True
             else:
-                logger.debug('Render failed (with id %s)', djsurvey.id)
+                logger.debug('Render failed (with slug %s)', djsurvey.slug)
                 return False
     logger.debug('Render task (with id %s) is already running. It will be automaticly deleted after %s minutes' % (djsurvey.id, (LOCK_EXPIRE/60)))
 
@@ -247,9 +247,11 @@ def build_survey(self, djsurvey_id):
         if acquired:
             import sdaps.setuptex as setup
             from sdaps.utils import latex
+            from sdaps.stamp import latex as stamp_latex
             from sdaps.setuptex import sdapsfileparser
             survey = model.survey.Survey.new(djsurvey.path)
 
+            logger.debug('Generate Draft of %s' % djsurvey.slug)
             latex.write_override(survey, survey.path('sdaps.opt'), draft=True)
             if not utils.atomic_latex_compile(djsurvey.path, 'questionnaire.tex', need_sdaps=True):
                 # XXX: The sqlite file should not be created immediately!
@@ -257,8 +259,16 @@ def build_survey(self, djsurvey_id):
                 return False
 
             # We now have the .sdaps file that can be parsed
-            # Defaults
-            survey.defs.print_questionnaire_id = False
+            # Defaults for print_questionnaire_id, print_survey_id and latex_engine
+            djsurv_p_q_id = djsurvey.opts_print_questionnaire_id 
+            if djsurv_p_q_id == False:
+                logger.debug('Questionnaire IDs are NOT available.')
+                survey.defs.print_questionnaire_id = False
+            else:
+                logger.debug('Found Questionnaire IDs, that will be printed.')
+                survey.defs.print_questionnaire_id = True
+                djsurv_p_q_id = str(djsurv_p_q_id).split(";")
+                djsurv_p_q_id[:] = [item for item in djsurv_p_q_id if item != '']
             survey.defs.print_survey_id = True
             survey.defs.engine = defs.latex_engine
 
@@ -287,7 +297,9 @@ def build_survey(self, djsurvey_id):
                 os.unlink(survey.path('survey.sqlite'))
                 return False
 
-            latex.write_override(survey, survey.path('sdaps.opt'), draft=False)
+            if survey.defs.print_questionnaire_id == False:
+                logger.debug("NO Questionnaire IDs!")
+                latex.write_override(survey, survey.path('sdaps.opt'), draft=False)
 
             if not utils.atomic_latex_compile(djsurvey.path, 'questionnaire.tex', need_sdaps=True):
                 os.unlink(survey.path('survey.sqlite'))
@@ -295,12 +307,21 @@ def build_survey(self, djsurvey_id):
             # TODO: If something goes wrong while initializing the survey,
             # there should be an option to delete the files.
             survey.save()
+            logger.debug("Survey Saved.")
 
             djsurvey.initialized = True
+            logger.debug("Survey initialized.")
             djsurvey.title = survey.title
             if 'Author' in survey.info:
                 djsurvey.author = survey.info['Author']
             djsurvey.save()
+
+            # Execute 'stamp' (printing questionnaire ids on survey) if ids available
+            if not survey.defs.print_questionnaire_id == False:
+                stamped_pdf_path = djsurvey.path + "/questionnaire.pdf"
+                if os.path.exists(stamped_pdf_path):
+                    os.remove(stamped_pdf_path)
+                stamp_latex.create_stamp_pdf(survey, stamped_pdf_path, questionnaire_ids=djsurv_p_q_id)
 
             log.logfile.close()
 
