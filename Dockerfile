@@ -7,7 +7,11 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN mkdir -p /etc/dpkg/sources.list.d/
 RUN echo "deb http://ppa.launchpad.net/benjamin-sipsolutions/sdaps-stable/ubuntu xenial main" > /etc/dpkg/sources.list.d/sdaps
-# RUN add-apt-repository -y ppa:benjamin-sipsolutions/sdaps-stable
+
+RUN apt update && apt install -y curl gnupg
+
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+RUN echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
 RUN apt update && \
   apt upgrade -y && \
@@ -25,6 +29,7 @@ RUN apt update && \
   python3-cairo-dev \
   python3-pip \
   screen \
+  yarn \
   sdaps
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1

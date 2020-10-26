@@ -2,13 +2,14 @@ version: "3.8"
 services:
   db:
     restart: always
-    image: postgres:13-alpine
+    image: postgres:13
     networks:
       - backend
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
+    user: "${UID}:${GID}"
     volumes:
       - ./db:/var/lib/postgresql/data
 
@@ -22,6 +23,7 @@ services:
     ports:
       - 8080:8080
     entrypoint: ./entrypoint.sh
+    user: "${UID}:${GID}"
     volumes:
       - .:/project
       - ./proj:/tmp/projects

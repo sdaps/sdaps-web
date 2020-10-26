@@ -6,3 +6,4 @@ sdaps_web/settings.py
 sdaps/
 proj/
 db/
+.env
