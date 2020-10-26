@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 cp sdaps_web/settings_sample.py sdaps_web/settings.py
 mkdir node_modules db proj
 
