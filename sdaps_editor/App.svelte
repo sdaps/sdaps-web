@@ -34,7 +34,6 @@
 </script>
 
 <main>
-  <h1>ASHTASHTASHTAS</h1>
   <ul>
     <li>
       <button class="btn btn-primary" on:click={() => addSection(-1)}>Add
