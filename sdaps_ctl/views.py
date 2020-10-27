@@ -250,7 +250,7 @@ def questionnaire(request, slug):
         if survey.initialized:
             raise Http404
         else:
-            survey.questionnaire = request.read().decode("utf-8")
+            survey.questionnaire = request.body.decode("utf-8")
             survey.save()
 
             survey_id = str(survey.id)
