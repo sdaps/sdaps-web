@@ -63,7 +63,7 @@ def survey_model_perms():
     return list(perm.codename for perm in get_perms_for_model(models.Survey))
 
 def without_global_survey_model_perms():
-    return [perm for perm in survey_model_perms() if perm not in ['add_survey', 'change_survey', 'delete_survey', 'view_survey']] 
+    return [perm for perm in survey_model_perms() if perm not in ['add_survey', 'change_survey', 'delete_survey', 'view_survey']]
 
 class SurveyList(LoginRequiredMixin, generic.list.ListView):
     template_name = 'list.html'
@@ -250,7 +250,7 @@ def questionnaire(request, slug):
         if survey.initialized:
             raise Http404
         else:
-            survey.questionnaire = request.read()
+            survey.questionnaire = request.read().decode("utf-8")
             survey.save()
 
             survey_id = str(survey.id)
@@ -515,7 +515,7 @@ class SurveyUploadScansFiles(PermissionRequiredMixin, generic.edit.UpdateView):
 
     def delete(self, request, slug, filename):
         """
-        Deleting uploaded scans (which have been not added to the survey) from 
+        Deleting uploaded scans (which have been not added to the survey) from
         the database
         """
         upload = models.UploadedFile.objects.filter(survey=self.get_object(), filename=filename).first()

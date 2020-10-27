@@ -150,7 +150,7 @@ def texwriter(djsurvey):
     data['title'] = djsurvey.title
 
     data['language'] = djsurvey.language + ","
-    
+
     data['globalid'] = ("globalid=" + djsurvey.globalid + ",") if djsurvey.globalid else "%"
 
     data['paper_format'] = "a4paper," if djsurvey.opts_paper_format == "a4paper" else "letterpaper,"

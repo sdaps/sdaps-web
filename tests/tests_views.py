@@ -35,7 +35,7 @@ class TestPreSurveyInitViews(TestCase):
         #self.questionnairetexdownload_url = reverse('questionnaire_tex_download', args=[self.testslug])
         #self.surveybuild_url = reverse('survey_build', args=[self.testslug])
 
-        self.json_questionnaire = json.dumps('[{"text":"Text","type":"textbody"},{"title":"Title","type":"section"},{"columns":2,"type":"multicol","children":[{"question":"question","checkboxcount":5,"lower":"a","upper":"b","type":"singlemark"},{"question":"Question","height":4,"expand":true,"type":"textbox"}]},{"heading":"Headline","type":"choicegroup","children":[{"choice":"Choice","type":"groupaddchoice"},{"Question":"question","type":"choiceline","question":"Question"}]},{"question":"question","checkboxcount":5,"lower":"a","upper":"b","type":"singlemark"}]')
+        self.json_questionnaire = '[{"text":"Text","type":"textbody"},{"title":"Title","type":"section"},{"columns":2,"type":"multicol","children":[{"question":"question","checkboxcount":5,"lower":"a","upper":"b","type":"singlemark"},{"question":"Question","height":4,"expand":true,"type":"textbox"}]},{"heading":"Headline","type":"choicegroup","children":[{"choice":"Choice","type":"groupaddchoice"},{"Question":"question","type":"choiceline","question":"Question"}]},{"question":"question","checkboxcount":5,"lower":"a","upper":"b","type":"singlemark"}]'
 
         # Create User
         self.testuser = User(username="TestUser",
@@ -94,21 +94,19 @@ class TestPreSurveyInitViews(TestCase):
     def test_surveyquestionnairepost_GET(self):
         """Successfully GET questionnaire.json and it is json"""
         testsurvey_instance = Survey.objects.get(slug=self.testsurvey.slug)
-        testsurvey_instance.questionnaire = bytes(self.json_questionnaire, 'utf8')
+        testsurvey_instance.questionnaire = self.json_questionnaire
         testsurvey_instance.save()
         response = self.client.get(self.surveyquestionnairepost_url)
 
         self.assertEquals(response.status_code, 200)
-        self.assertEquals(response.content, testsurvey_instance.questionnaire)
-        json.loads(response.content)
-        json.loads(testsurvey_instance.questionnaire)
+        self.assertEquals(response.content, bytes(testsurvey_instance.questionnaire, 'utf-8'))
 
     def test_surveyquestionnairepost_POST(self):
         """Successfully POST the questionnaire draft as json and saving into Survey instance"""
         response = self.client.post(self.surveyquestionnairepost_url, self.json_questionnaire, content_type='application/json')
         testsurvey_instance = Survey.objects.get(slug=self.testsurvey.slug)
 
-        self.assertEquals(testsurvey_instance.questionnaire, bytes(self.json_questionnaire, 'utf8'))
+        self.assertEquals(testsurvey_instance.questionnaire, self.json_questionnaire)
         self.assertEquals(response.status_code, 202)
 
     def test_surveyquestionnairepost_POST_initialized(self):

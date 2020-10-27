@@ -75,7 +75,7 @@ class Survey(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    questionnaire = JSONField()
+    questionnaire = JSONField(default = [])
 
     owner = models.ManyToManyField(
             User,
@@ -111,7 +111,7 @@ class Survey(models.Model):
         tex_cls_opts_json[key] = value
         self.latex_class_options = json.dumps(tex_cls_opts_json)
         self.save()
-    
+
     @property
     def opts_noinfo(self):
         return self.get_tex_cls_opts('noinfo')
@@ -125,7 +125,7 @@ class Survey(models.Model):
         p_q_id = self.get_tex_cls_opts('print_questionnaire_id')
         if p_q_id == "":
             return False
-        return p_q_id 
+        return p_q_id
 
     @property
     def opts_checkmode(self):
@@ -242,4 +242,3 @@ def delete_uploaded_file(sender, instance, using, **kwargs):
     instance.file.delete(save=False)
 
 signals.post_delete.connect(delete_uploaded_file, sender=UploadedFile)
-
