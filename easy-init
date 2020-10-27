@@ -5,8 +5,8 @@ set -e
 cp sdaps_web/settings_sample.py sdaps_web/settings.py
 mkdir node_modules db proj
 
-echo "UID=$(id -u)" > .env
-echo "GID=$(id -g)" >> .env
+echo "USERID=$(id -u)" > .env
+echo "GROUPID=$(id -g)" >> .env
 
 echo "Building Docker image for sdaps_web"
 sleep 1s

@@ -6,10 +6,10 @@ services:
     networks:
       - backend
     environment:
-      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_HOST_AUTH_METHOD=trustz
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
-    user: "${UID}:${GID}"
+    user: "${USERID}:${GROUPID}"
     volumes:
       - ./db:/var/lib/postgresql/data
 
@@ -23,7 +23,9 @@ services:
     ports:
       - 8080:8080
     entrypoint: ./entrypoint.sh
-    user: "${UID}:${GID}"
+    environment:
+      - USERID=${USERID}
+    user: "${USERID}:${GROUPID}"
     volumes:
       - .:/project
       - ./proj:/tmp/projects

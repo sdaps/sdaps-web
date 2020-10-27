@@ -35,7 +35,10 @@ RUN apt update && \
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 1
 RUN update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
 
+RUN useradd -ms /bin/bash app
 ADD . /project
+
+USER app
 
 WORKDIR /project
 
