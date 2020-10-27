@@ -1,4 +1,5 @@
-import os
+import os, os.path
+import re
 import shutil
 
 from django.test import TestCase, tag
@@ -11,8 +12,9 @@ from django.conf import settings
 import datetime
 
 def reset_sdaps_project_root():
-    shutil.rmtree(settings.SDAPS_PROJECT_ROOT)
-    os.mkdir(settings.SDAPS_PROJECT_ROOT)
+    for root, dirs, files in os.walk(settings.SDAPS_PROJECT_ROOT):
+        for file in files:
+            os.remove(os.path.join(root, file))
 
 class SurveyModelFunctionsTestCase(TestCase):
     '''The SurveyModel has a lot of functions directly attached to it, like

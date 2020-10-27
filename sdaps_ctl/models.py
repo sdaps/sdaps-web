@@ -24,6 +24,7 @@ from . import tasks
 
 from django.db.models import signals
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 
 from django.conf import settings
 
@@ -74,7 +75,7 @@ class Survey(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    questionnaire = models.BinaryField(default=b'[]')
+    questionnaire = JSONField()
 
     owner = models.ManyToManyField(
             User,
