@@ -33,26 +33,39 @@
   }
 </script>
 
+<style>
+  .sectionContainer {
+    display: flex;
+    flex-flow: column;
+
+    width: 100%;
+  }
+
+  .section {
+    display: block;
+  }
+</style>
+
 <main>
-  <ul>
-    <li>
+  <div class="sectionContainer">
+    <div class="section">
       <button class="btn btn-primary" on:click={() => addSection(-1)}>Add
         Section</button>
-    </li>
+    </div>
     {#each sections as section (section.idx)}
-      <li>
+      <div class="section">
         <button class="btn" disabled>Section
           {section.idx}
           ({section.step})</button>
         <button
           class="btn btn-danger"
           on:click={() => deleteSection(section.idx)}>Remove</button>
-      </li>
-      <li>
+      </div>
+      <div class="section">
         <button
           class="btn btn-primary"
           on:click={() => addSection(section.idx)}>Add Section</button>
-      </li>
+      </div>
     {/each}
-  </ul>
+  </div>
 </main>
