@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
                 ('latex_class_options', models.TextField(default='')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('questionnaire', django.contrib.postgres.fields.jsonb.JSONField(default=[])),
+                ('questionnaire', django.contrib.postgres.fields.jsonb.JSONField(default=list)),
                 ('owner', models.ManyToManyField(related_name='ownership_of_survey', related_query_name='ownership_of_survey', to=settings.AUTH_USER_MODEL)),
             ],
             options={

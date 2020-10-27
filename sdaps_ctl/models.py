@@ -75,7 +75,7 @@ class Survey(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    questionnaire = JSONField(default = [])
+    questionnaire = JSONField(default = list)
 
     owner = models.ManyToManyField(
             User,
