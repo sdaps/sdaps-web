@@ -6,7 +6,7 @@ services:
     networks:
       - backend
     environment:
-      - POSTGRES_HOST_AUTH_METHOD=trustz
+      - POSTGRES_HOST_AUTH_METHOD=trust
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
     user: "${USERID}:${GROUPID}"
