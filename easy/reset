@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+echo "Resetting everything!"
+
+docker-compose down
+rm -rf node_modules db proj .env
+./easy/init

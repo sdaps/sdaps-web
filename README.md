@@ -109,7 +109,7 @@ First, you have to install `docker` and `docker-compose`: [https://docs.docker.c
 After doing that, run:
 
 ```shell
-./easy-init
+./easy/init
 ```
 
 This will setup the docker environment for you.
@@ -117,5 +117,25 @@ This will setup the docker environment for you.
 After this is finished, run the server by running:
 
 ```shell
-./server
+./easy/server
+```
+
+To see the logs for the currently running services and build pipelines, take a look at the following scripts:
+
+```shell
+./easy/django-log
+```
+
+```shell
+./easy/celery-log
+```
+
+```shell
+./easy/svelte-log
+```
+
+If you wanna have a fresh start and wipe everything, just run:
+
+```shell
+./easy/reset
 ```

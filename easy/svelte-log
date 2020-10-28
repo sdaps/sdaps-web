@@ -1,0 +1,3 @@
+#!/bin/bash
+
+docker-compose exec web tail -fn 0 /tmp/logs/svelte.log
