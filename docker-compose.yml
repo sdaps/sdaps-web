@@ -24,6 +24,7 @@ services:
       - 8080:8080
     environment:
       - USERID=${USERID}
+      - GROUPID=${GROUPID}
     volumes:
       - .:/project
       - ./proj:/tmp/projects
