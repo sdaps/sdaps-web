@@ -16,9 +16,10 @@ docker-compose up -d
 
 echo "Running migrations"
 sleep 1s
-easy/exec "wait-for-it -t 90 db:5432 -- python manage.py migrate"
+easy/exec wait-for-it -t 90 db:5432
+easy/exec python manage.py migrate
 
-echo "Running script to create the superuser"
+echo "Please type in the new password for the sdaps 'admin' account"
 sleep 1s
 easy/exec python manage.py createsuperuser --username "admin" --email "admin@sdaps.dev"
 
