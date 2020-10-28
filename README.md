@@ -114,10 +114,16 @@ After doing that, run:
 
 This will setup the docker environment for you.
 
-After this is finished, run the server by running:
+After this is finished, start the server by running:
 
 ```shell
 ./easy/server
+```
+
+You can stop the server by running:
+
+```shell
+./easy/stop-server
 ```
 
 To see the logs for the currently running services and build pipelines, take a look at the following scripts:

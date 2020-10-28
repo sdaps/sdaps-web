@@ -2,8 +2,16 @@
 
 set -e
 
-echo "Resetting everything!"
+echo "This will delete the whole database and all projects in your workspace."
+echo "It also will reset your docker setup."
+read -p "Are you sure you want to continue? [y/N]" yn
+echo
 
-docker-compose down
-rm -rf node_modules db proj .env
-./easy/init
+if [[ $yn =~ ^[Yy]$ ]]
+then
+  echo "Resetting everything!"
+
+  docker-compose down
+  rm -rf node_modules db proj .env
+  ./easy/init
+fi
