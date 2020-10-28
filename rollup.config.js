@@ -26,12 +26,6 @@ export default {
       },
       preprocess: sveltePreprocess(),
     }),
-
-    // If you have external dependencies installed from
-    // npm, you'll most likely need these plugins. In
-    // some cases you'll need additional configuration -
-    // consult the documentation for details:
-    // https://github.com/rollup/plugins/tree/master/packages/commonjs
     resolve({
       browser: true,
       dedupe: ["svelte"],
@@ -42,8 +36,8 @@ export default {
       inlineSources: !production,
     }),
 
-    // If we're building for production (npm run build
-    // instead of npm run dev), minify
+    // If we're building for production (yarn build
+    // instead of yarn dev), minify
     production && terser(),
   ],
   watch: {
