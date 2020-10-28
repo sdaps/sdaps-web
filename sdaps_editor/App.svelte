@@ -8,14 +8,9 @@
     stepCount += 1;
 
     sections.splice(startIdx, 0, {
+      id: stepCount,
       type: "section",
-      idx: startIdx,
-      step: stepCount,
     });
-
-    for (let index = startIdx; index < sections.length; index++) {
-      sections[index].idx = index;
-    }
 
     sections = sections;
   }
@@ -24,10 +19,6 @@
     const startIdx = idx;
 
     sections.splice(startIdx, 1);
-
-    for (let index = startIdx; index < sections.length; index++) {
-      sections[index].idx = index;
-    }
 
     sections = sections;
   }
@@ -52,19 +43,16 @@
       <button class="btn btn-primary" on:click={() => addSection(-1)}>Add
         Section</button>
     </div>
-    {#each sections as section (section.idx)}
+    {#each sections as section, idx (section.id)}
       <div class="section">
-        <button class="btn" disabled>Section
-          {section.idx}
-          ({section.step})</button>
+        <button class="btn" disabled>Section {section.id}</button>
         <button
           class="btn btn-danger"
-          on:click={() => deleteSection(section.idx)}>Remove</button>
+          on:click={() => deleteSection(idx)}>Remove</button>
       </div>
       <div class="section">
-        <button
-          class="btn btn-primary"
-          on:click={() => addSection(section.idx)}>Add Section</button>
+        <button class="btn btn-primary" on:click={() => addSection(idx)}>Add
+          Section</button>
       </div>
     {/each}
   </div>
