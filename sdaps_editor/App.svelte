@@ -30,29 +30,43 @@
     flex-flow: column;
 
     width: 100%;
+    border: solid 1px black;
   }
 
   .section {
     display: block;
+    border: solid 1px black;
+
+    padding: 0.6em;
+  }
+
+  .addSection {
+    display: block;
+    border: solid 1px black;
+  }
+
+  button {
+    border: solid 1px black;
+  }
+
+  button.add {
+    width: 100%;
+    border: none;
   }
 </style>
 
 <main>
   <div class="sectionContainer">
-    <div class="section">
-      <button class="btn btn-primary" on:click={() => addSection(-1)}>Add
-        Section</button>
+    <div class="addSection">
+      <button class="add" on:click={() => addSection(-1)}>Add Section</button>
     </div>
     {#each sections as section, idx (section.id)}
       <div class="section">
-        <button class="btn" disabled>Section {section.id}</button>
-        <button
-          class="btn btn-danger"
-          on:click={() => deleteSection(idx)}>Remove</button>
+        <p>Section {section.id}</p>
+        <button on:click={() => deleteSection(idx)}>Remove</button>
       </div>
-      <div class="section">
-        <button class="btn btn-primary" on:click={() => addSection(idx)}>Add
-          Section</button>
+      <div class="addSection">
+        <button class="add" on:click={() => addSection(idx)}>Add Section</button>
       </div>
     {/each}
   </div>
