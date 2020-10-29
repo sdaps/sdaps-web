@@ -14,16 +14,14 @@ sleep 1s
 docker-compose build
 docker-compose up -d
 
-echo "Waiting for 20 seconds to let the containers start properly"
-sleep 20s
-
 echo "Running migrations"
 sleep 1s
-docker-compose exec web python manage.py migrate
+easy/exec wait-for-it -t 90 db:5432
+easy/exec python manage.py migrate
 
-echo "Running script to create the superuser"
+echo "Please type in the new password for the sdaps 'admin' account"
 sleep 1s
-docker-compose exec web python manage.py createsuperuser --username "admin" --email "admin@sdaps.dev"
+easy/exec python manage.py createsuperuser --username "admin" --email "admin@sdaps.dev"
 
 echo ""
 echo "Created superuser with username 'admin' with password"

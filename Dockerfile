@@ -29,6 +29,7 @@ RUN apt update && \
   python3-cairo-dev \
   python3-pip \
   screen \
+  wait-for-it \
   yarn \
   sdaps
 
@@ -40,8 +41,14 @@ ADD . /project
 
 USER app
 
+ADD ./entrypoint.sh /entrypoint.sh
+
 WORKDIR /project
 
 RUN pip install -r requirements.txt
+
+USER root
+
+CMD usermod -u $USERID app && su app -c /entrypoint.sh
 
 EXPOSE 8080

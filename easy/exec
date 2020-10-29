@@ -1,0 +1,5 @@
+#!/bin/bash
+
+args="$@"
+
+docker-compose exec web su app -c "$args"

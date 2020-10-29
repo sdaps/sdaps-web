@@ -8,7 +8,7 @@ There is a public instance of this code running on https://demo.sdaps.org.
 You can log in using the username "demo" and the password "sdapsdemo". Please
 do not rely on this service for any production use.
 
-To contribute you can create issues and pull requests or join our 
+To contribute you can create issues and pull requests or join our
 irc/matrix chat you can find on the project site https://sdaps.org
 
 ---
@@ -45,7 +45,7 @@ First, you have to install `docker` and `docker-compose`: [https://docs.docker.c
 After doing that, run:
 
 ```shell
-./easy/init
+easy/init
 ```
 
 This will setup the docker environment for you.
@@ -53,31 +53,39 @@ This will setup the docker environment for you.
 After this is finished, start the server by running:
 
 ```shell
-./easy/server
+easy/server
 ```
 
 You can stop the server by running:
 
 ```shell
-./easy/stop-server
+easy/stop-server
 ```
 
 To see the logs for the currently running services and build pipelines, take a look at the following scripts:
 
 ```shell
-./easy/django-log
+easy/django-log
 ```
 
 ```shell
-./easy/celery-log
+easy/celery-log
 ```
 
 ```shell
-./easy/svelte-log
+easy/svelte-log
 ```
 
 If you wanna have a fresh start and wipe everything, just run:
 
 ```shell
-./easy/reset
+easy/reset
 ```
+
+If you want to execute arbitrary commands, you should always do it using the `easy/exec` script e.g.
+
+```shell
+easy/exec python manage.py test tests
+```
+
+to run the tests

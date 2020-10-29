@@ -22,10 +22,8 @@ services:
     build: .
     ports:
       - 8080:8080
-    entrypoint: ./entrypoint.sh
     environment:
       - USERID=${USERID}
-    user: "${USERID}:${GROUPID}"
     volumes:
       - .:/project
       - ./proj:/tmp/projects
