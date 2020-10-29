@@ -1,8 +1,7 @@
 <script lang="ts">
-  import QuestionnaireObject from "./QuestionnaireObject.svelte";
+  import SaveQuestionaire from "./SaveQuestionaire.svelte";
 
   const basePath = window.location.pathname;
-
   const questionnairePath = `${basePath}questionnaire/`;
 
   const questionnaireRequest = fetch(questionnairePath)
@@ -14,6 +13,6 @@
   {#await questionnaireRequest}
     Loading questionnaire...
   {:then questionnaire}
-    <QuestionnaireObject {questionnaire} />
+    <SaveQuestionaire {questionnaire} />
   {/await}
 </main>
