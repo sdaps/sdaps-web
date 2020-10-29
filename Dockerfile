@@ -49,6 +49,6 @@ RUN pip install -r requirements.txt
 
 USER root
 
-CMD usermod -u $USERID -g $GROUPID app && su app -c /entrypoint.sh
+CMD usermod -u $USERID app && su app -c /entrypoint.sh
 
 EXPOSE 8080
