@@ -8,17 +8,19 @@ mkdir node_modules db proj
 echo "USERID=$(id -u)" > .env
 echo "GROUPID=$(id -g)" >> .env
 
+echo ""
 echo "Building Docker image for sdaps_web"
 sleep 1s
-
 docker-compose build
 docker-compose up -d
 
+echo ""
 echo "Running migrations"
 sleep 1s
 easy/exec wait-for-it -t 90 db:5432
 easy/exec python manage.py migrate
 
+echo ""
 echo "Please type in the new password for the sdaps 'admin' account"
 sleep 1s
 easy/exec python manage.py createsuperuser --username "admin" --email "admin@sdaps.dev"
