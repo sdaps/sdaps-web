@@ -1,8 +1,7 @@
-This is absolutely experimental code. It is just public in case someone
-is interested in development.
+![](https://raw.githubusercontent.com/sdaps/sdaps-web/main/sdaps_ctl/static/sdaps_ctl/img/sdaps.png)
 
-This repository contains the beginning of a django application that can be
-used as a frontend for SDAPS and is written in Python 3.
+sdaps-web is a django application that can be used as a frontend for
+[SDAPS](https://github.com/sdaps/sdaps) and is written in Python 3.
 
 There is a public instance of this code running on https://demo.sdaps.org.
 You can log in using the username "demo" and the password "sdapsdemo". Please
