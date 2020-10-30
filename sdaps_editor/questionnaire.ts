@@ -103,7 +103,7 @@ export interface InnerGroupAddChoice extends OrderedObject {
   type: "groupaddchoice";
   choice: string;
 }
-export interface InnerChoiceLine {
+export interface InnerChoiceLine extends OrderedObject {
   type: "choiceline";
   question: string;
 }
