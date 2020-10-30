@@ -1,8 +1,10 @@
 <script lang="ts">
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
+  import { createQuestionnaireObject } from "./factory";
 
   import type { Questionnaire } from "./questionnaire";
+  import { getHighestKey } from "./questionnaire";
 
   import Textbody from "./objects/Textbody.svelte";
   import Textbox from "./objects/Textbox.svelte";
@@ -11,11 +13,6 @@
 
   export let questionnaire: Questionnaire;
 
-  export function getHighestKey(questionnaire: Questionnaire): number {
-    return (
-      questionnaire.reduce((key, section) => Math.max(key, section.id), 0) + 1
-    );
-  }
   let stepCount = getHighestKey(questionnaire);
 
   function addSection(idx: number) {
@@ -96,9 +93,23 @@
   .moveSection {
     background-color: white;
   }
+
+  .toolbox {
+    display: block;
+    position: -webkit-sticky; /* Safari */
+    position: sticky;
+    top: 0;
+    border: solid 1px black;
+    margin-bottom: 1em;
+  }
 </style>
 
 <main>
+  <div class="toolbox">
+    Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox
+    Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox
+    Toolbox Toolbox Toolbox Toolbox Toolbox
+  </div>
   <div class="sectionContainer">
     <div class="addSection">
       <button class="add" on:click={() => addSection(-1)}>Add Section</button>

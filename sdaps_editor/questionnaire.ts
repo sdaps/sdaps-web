@@ -1,26 +1,9 @@
 export type Questionnaire = Array<QuestionnaireObject>;
-
-// TODO: Maybe integrate later
-const defaults = {
-  multicol: { columns: 2 },
-  section: { title: "Title" },
-  textbody: { text: "Text" },
-  singlemark: {
-    question: "question",
-    checkboxcount: 5,
-    lower: "a",
-    upper: "b",
-  },
-  choicequestion: { question: "Question", columns: 4 },
-  markgroup: { heading: "Headline", checkboxcount: 5 },
-  choicegroup: { heading: "Headline" },
-  textbox: { question: "Question", height: 4.0, expand: true },
-  choiceitem: { answer: "Item", colspan: 1 },
-  choiceitemtext: { answer: "Item", colspan: 2, height: 1.2 },
-  markline: { question: "Question", lower: "a", upper: "b" },
-  groupaddchoice: { choice: "Choice" },
-  choiceline: { question: "question" },
-};
+export function getHighestKey(questionnaire: Questionnaire): number {
+  return (
+    questionnaire.reduce((key, section) => Math.max(key, section.id), 0) + 1
+  );
+}
 
 //
 export type QuestionnaireObject =
