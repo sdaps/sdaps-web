@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""'texwriter' creates a tex file, which is the basis for the questionnaire
+sdaps uses, from a json file, that is stored in the database and was created
+via the questionnaire editor in the frontend on the '/edit' page."""
 # sdaps_web - Webinterface for SDAPS
 # Copyright(C) 2019, Benjamin Berg <benjamin@sipsolutions.net>
 #
@@ -19,41 +22,49 @@ import os
 
 import json
 
-def get(d, attr, val):
+
+def get(qobject, attr, val):
+    """reads the value of a questionnaire object, if available."""
     try:
-        return d[attr]
+        return qobject[attr]
     except KeyError:
         return val
 
+
 def render_qobject(qobject, allowed_types=None):
-    t = get(qobject, 'type', '')
+    """translates json code of the questionnaire from the database to LaTeX
+    code."""
+    qotype = get(qobject, 'type', '')
 
-    assert allowed_types is None or t in allowed_types
+    assert allowed_types is None or qotype in allowed_types
 
-    if t == 'section':
+    if qotype == 'section':
         return r'\section{%s}' % get(qobject, 'title', '')
 
-    elif t == 'textbody':
+    if qotype == 'textbody':
         return get(qobject, 'text', '') + '\n\n'
 
-    elif t == 'singlemark':
+    if qotype == 'singlemark':
         return r'\setcounter{markcheckboxcount}{%i}\singlemark{%s}{%s}{%s}' % (get(qobject, 'checkboxcount', 2), get(qobject, 'question', ''), get(qobject, 'lower', ''), get(qobject, 'upper', ''))
 
-    elif t == 'choicequestion':
+    if qotype == 'choicequestion':
         choices = []
 
         for answer in get(qobject, 'children', []):
             if answer['type'] == 'choiceitem':
                 if get(answer, 'colspan', 1) <= 1:
-                    choices.append('\choiceitem{%s}' % get(answer, 'answer', ''))
+                    choices.append('\choiceitem{%s}' %
+                                   get(answer, 'answer', ''))
                 else:
-                    choices.append('\choicemulticolitem{%i}{%s}' % (answer['colspan'], get(answer, 'answer', '')))
+                    choices.append('\choicemulticolitem{%i}{%s}' % (
+                        answer['colspan'], get(answer, 'answer', '')))
             else:
-                choices.append('\choiceitemtext{%fcm}{%i}{%s}' % (get(answer, 'height', 1.2), get(answer, 'colspan', 1), get(answer, 'answer', 1)))
+                choices.append('\choiceitemtext{%fcm}{%i}{%s}' % (
+                    get(answer, 'height', 1.2), get(answer, 'colspan', 1), get(answer, 'answer', 1)))
 
         return '\\begin{choicequestion}[cols=%i]{%s}\n%s\n\\end{choicequestion}' % (get(qobject, 'columns', 4), get(qobject, 'question', ''), '\n'.join(choices))
 
-    elif t == 'textbox':
+    if qotype == 'textbox':
 
         children = []
 
@@ -62,7 +73,7 @@ def render_qobject(qobject, allowed_types=None):
 
         return '\\textbox%s{%fcm}{%s}' % ('' if get(qobject, 'expand', True) else '*', get(qobject, 'height', 2.0), get(qobject, 'question', ''))
 
-    elif t == 'multicol':
+    if qotype == 'multicol':
 
         children = []
 
@@ -71,17 +82,18 @@ def render_qobject(qobject, allowed_types=None):
 
         return '\\begin{multicols}{%i}\n%s\n\\end{multicols}' % (get(qobject, 'columns', 2), '\n'.join(children))
 
-    elif t == 'markgroup':
+    if qotype == 'markgroup':
         marklines = []
 
         for markline in get(qobject, 'children', []):
             assert markline['type'] == 'markline'
 
-            marklines.append('\\markline{%s}{%s}{%s}' % (get(markline, 'question', ''), get(markline, 'lower', ''), get(markline, 'upper', '')))
+            marklines.append('\\markline{%s}{%s}{%s}' % (get(markline, 'question', ''), get(
+                markline, 'lower', ''), get(markline, 'upper', '')))
 
         return '\\setcounter{markcheckboxcount}{%i}\n\\begin{markgroup}{%s}\n%s\n\\end{markgroup}' % (get(qobject, 'checkboxcount', 5), get(qobject, 'heading', ''), '\n'.join(marklines))
 
-    elif t == 'choicegroup':
+    if qotype == 'choicegroup':
         items = []
 
         for child in get(qobject, 'children', []):
@@ -94,10 +106,11 @@ def render_qobject(qobject, allowed_types=None):
 
         return '\\begin{choicegroup}{%s}\n%s\n\\end{choicegroup}' % (get(qobject, 'heading', ''), '\n'.join(items))
 
-    else:
-        raise AssertionError('Unknown qtype %s!' % t)
+    raise AssertionError('Unknown qtype %s!' % qotype)
+
 
 def return_template():
+    """only returns the LaTeX based questionnaire template."""
     template = r"""
 \documentclass[
   %% Babel language, also used to load translations
@@ -142,7 +155,12 @@ def return_template():
 """
     return template
 
+
 def texwriter(djsurvey):
+    """merges header with latex class options like paper format, the
+    questionnaire template of the sdaps LaTeX class and the from json
+    to tex translated question marks together to one single questionnaire.tex
+    file for LaTeX based pdf compiling."""
     template = return_template()
     data = {}
 
@@ -151,7 +169,8 @@ def texwriter(djsurvey):
 
     data['language'] = djsurvey.language + ","
 
-    data['globalid'] = ("globalid=" + djsurvey.globalid + ",") if djsurvey.globalid else "%"
+    data['globalid'] = ("globalid=" + djsurvey.globalid +
+                        ",") if djsurvey.globalid else "%"
 
     data['paper_format'] = "a4paper," if djsurvey.opts_paper_format == "a4paper" else "letterpaper,"
     data['noinfo'] = "noinfo" if djsurvey.opts_noinfo else ""
@@ -168,7 +187,7 @@ def texwriter(djsurvey):
     data['content'] = '\n'.join(content)
     document = template % data
 
-    f = open(os.path.join(djsurvey.path, 'questionnaire.tex'), 'w')
-    f.write(document)
+    qfile = open(os.path.join(djsurvey.path, 'questionnaire.tex'), 'w')
+    qfile.write(document)
 
-    return
+    return True

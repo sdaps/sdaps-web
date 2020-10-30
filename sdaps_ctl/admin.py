@@ -15,13 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from django.contrib.auth.models import User, Group
-
 from django.db.models import Q
-from django import forms
 from django.contrib import admin
-from .models import Survey, UploadedFile
 from guardian.admin import GuardedModelAdmin
+from .models import Survey, UploadedFile
+
 
 class SurveyAdmin(GuardedModelAdmin):
     list_display = ('name', 'title', 'author')
@@ -29,7 +27,7 @@ class SurveyAdmin(GuardedModelAdmin):
     @classmethod
     def has_permissions(cls, request, obj=None):
         if request.user.is_superuser or request.user.is_staff:
-            return True;
+            return True
 
         if obj is None:
             return True
@@ -38,9 +36,9 @@ class SurveyAdmin(GuardedModelAdmin):
         if obj.owner == request.user:
             return True
 
-        #if obj.group:
-        #    if request.user.groups.filter(pk=obj.group.id).exists():
-        #        return True
+        # if obj.group:
+        #     if request.user.groups.filter(pk=obj.group.id).exists():
+        #         return True
 
         return False
 
@@ -74,9 +72,12 @@ class SurveyAdmin(GuardedModelAdmin):
 
         return queryset.filter(Q(owner=user) | Q(group__in=groups))
 
+
 admin.site.register(Survey, SurveyAdmin)
 
 
 class UploadedFileAdmin(GuardedModelAdmin):
     pass
+
+
 admin.site.register(UploadedFile, UploadedFileAdmin)

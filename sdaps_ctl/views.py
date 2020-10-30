@@ -18,73 +18,70 @@
 import os
 import os.path
 import datetime
-
+import io
+import json
 import re
 
-from .admin import SurveyAdmin
+from wsgiref.util import FileWrapper
 
 from django.urls import reverse
-
 from django.views import generic
 from django.views.decorators import csrf
 from django.views.decorators.http import last_modified
 from django.utils.decorators import method_decorator
-
 from django.contrib.auth.decorators import login_required
-from guardian.decorators import permission_required
-from guardian.mixins import PermissionRequiredMixin, LoginRequiredMixin
-
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.core.files.base import ContentFile
-from guardian.core import ObjectPermissionChecker
-from wsgiref.util import FileWrapper
-
 from django.shortcuts import render, get_object_or_404
-from guardian.shortcuts import get_perms, get_objects_for_user, get_perms_for_model
-
 from django.template import Context, loader
+
+from guardian.decorators import permission_required
+from guardian.mixins import PermissionRequiredMixin, LoginRequiredMixin
+from guardian.core import ObjectPermissionChecker
+from guardian.shortcuts import get_objects_for_user, get_perms_for_model
+
+from sdaps.model.survey import Survey as SDAPSSurvey
+from sdaps import image
+from sdaps import csvdata
 
 from .mixins import AnyPermissionRequiredMixin
 from . import models
 from . import tasks
 from . import forms
-import io
 
-import json
-
-from sdaps.model.survey import Survey as SDAPSSurvey
-from sdaps import image
-from sdaps import matrix
-from sdaps import csvdata
-from . import buddies
-import cairo
 
 def survey_model_perms():
     return list(perm.codename for perm in get_perms_for_model(models.Survey))
 
+
 def without_global_survey_model_perms():
-    return [perm for perm in survey_model_perms() if perm not in ['add_survey', 'change_survey', 'delete_survey', 'view_survey']]
+    return [perm for perm in survey_model_perms() if perm not in ['add_survey',
+                                                                  'change_survey',
+                                                                  'delete_survey',
+                                                                  'view_survey']]
+
 
 class SurveyList(LoginRequiredMixin, generic.list.ListView):
+    """returns an overview of all surveys, that are owned by the user."""
     template_name = 'list.html'
     context_object_name = 'survey_list'
 
     def get_queryset(self):
         surveys_user_has_perms = get_objects_for_user(
-                user=self.request.user,
-                perms=without_global_survey_model_perms(),
-                klass=models.Survey,
-                any_perm=True,
-                accept_global_perms=False)
+            user=self.request.user,
+            perms=without_global_survey_model_perms(),
+            klass=models.Survey,
+            any_perm=True,
+            accept_global_perms=False)
         return surveys_user_has_perms
 
-@permission_required('can_initialize', (models.Survey, 'slug', 'slug'))
-def survey_build(request, slug):
-    if request.method == "POST":
-        survey = get_object_or_404(models.Survey, slug=slug)
 
-        if survey.initialized:
-            raise Http404
+@permission_required('can_initialize', (models.Survey, 'slug', 'slug'))
+def survey_build(request, slug: str):
+    """the sdaps survey gets build, after someone initilizes the survey in the
+    frontend."""
+    if request.method == "POST":
+        survey = get_object_or_404(models.Survey, slug=slug, initialized=True)
 
         # Queue project creation
         tasks.build_survey.apply_async(args=(survey.id, ))
@@ -94,13 +91,11 @@ def survey_build(request, slug):
     # XXX: Everything else is not allowed
     raise Http404
 
-@permission_required('can_download_results', (models.Survey, 'slug', 'slug'))
-def survey_report(request, slug):
-    if request.method == "POST":
-        survey = get_object_or_404(models.Survey, slug=slug)
 
-        if not survey.initialized:
-            raise Http404
+@permission_required('can_download_results', (models.Survey, 'slug', 'slug'))
+def survey_report(request, slug: str):
+    if request.method == "POST":
+        survey = get_object_or_404(models.Survey, slug=slug, initialized=True)
 
         # Queue project creation
         tasks.generate_report.apply_async(args=(survey.id, ))
@@ -109,6 +104,7 @@ def survey_report(request, slug):
 
     # XXX: Everything else is not allowed
     raise Http404
+
 
 class SurveyCreateView(LoginRequiredMixin, generic.edit.CreateView):
     model = models.Survey
@@ -120,13 +116,14 @@ class SurveyCreateView(LoginRequiredMixin, generic.edit.CreateView):
         self.model = form.save()
         self.model.save()
         self.model.owner.add(self.request.user)
-        survey_id = str(self.model.id)
+        survey_id = self.model.id
         # Rendering the empty document
         if tasks.write_questionnaire.apply_async(args=(survey_id, )):
             tasks.render_questionnaire.apply_async(args=(survey_id, ))
         response = super().form_valid(form)
 
         return response
+
 
 class SurveyDetail(AnyPermissionRequiredMixin, generic.DetailView):
     model = models.Survey
@@ -136,20 +133,24 @@ class SurveyDetail(AnyPermissionRequiredMixin, generic.DetailView):
         self.permission_required = survey_model_perms()
 
 # File download last modified test
-def survey_file_last_modification(request, slug, filename):
+
+
+def survey_file_last_modification(request, slug: str, filename: str):
+    """is used as a decorator, when downloading the questionnaire as pdf in
+    its latest state."""
     survey = get_object_or_404(models.Survey, slug=slug)
 
     filename = os.path.join(survey.path, filename)
     if not os.path.isfile(filename):
-        raise Http404
+        raise Http404("Questionnaire pdf file has not been found.")
 
     return datetime.datetime.utcfromtimestamp((os.stat(filename).st_ctime))
 
 
-## Questionnaire download
+# Questionnaire download
 @last_modified(lambda *args, **kwargs: survey_file_last_modification(*args, filename='questionnaire.pdf', **kwargs))
 @permission_required('can_design_draft', (models.Survey, 'slug', 'slug'))
-def questionnaire_download(request, slug):
+def questionnaire_download(request, slug: str):
     survey = get_object_or_404(models.Survey, slug=slug)
 
     filename = os.path.join(survey.path, 'questionnaire.pdf')
@@ -160,41 +161,50 @@ def questionnaire_download(request, slug):
     response = HttpResponse(wrapper, content_type='application/x-pdf')
     response['Content-Length'] = os.path.getsize(filename)
     response['Cache-Control'] = 'max-age=0, must-revalidate'
-    response['Content-Disposition'] = ('attachment; filename="%s_questionnaire.pdf"' % slug)
+    response['Content-Disposition'] = (
+        'attachment; filename="%s_questionnaire.pdf"' % slug)
 
     return response
 
+
 @last_modified(lambda *args, **kwargs: survey_file_last_modification(*args, filename='report.pdf', **kwargs))
 @permission_required('can_download_results', (models.Survey, 'slug', 'slug'))
-def report_download(request, slug):
-    survey = get_object_or_404(models.Survey, slug=slug)
+def report_download(request, slug: str):
+    """returns the survey results report, if it was successfully generated
+    beforehand, after initizilization of the survey."""
+    survey = get_object_or_404(models.Survey, slug=slug, initialized=True)
 
     filename = os.path.join(survey.path, 'report.pdf')
     if not os.path.isfile(filename):
-        raise Http404
+        raise Http404("""Survey results report does not exist.
+                      Please generate it beforehand.""")
 
     wrapper = FileWrapper(open(filename, 'rb'))
     response = HttpResponse(wrapper, content_type='application/x-pdf')
     response['Content-Length'] = os.path.getsize(filename)
-    response['Content-Disposition'] = ('attachment; filename="%s_report.pdf"' % slug)
+    response['Content-Disposition'] = (
+        'attachment; filename="%s_report.pdf"' % slug)
 
     return response
 
+
 @last_modified(lambda *args, **kwargs: survey_file_last_modification(*args, filename='questionnaire.tex', **kwargs))
 @login_required
-def questionnaire_tex_download(request, slug):
-    survey = get_object_or_404(models.Survey, slug=slug)
+def questionnaire_tex_download(request, slug: str):
+    survey = get_object_or_404(models.Survey, slug=slug, )
 
     filename = os.path.join(survey.path, 'questionnaire.tex')
     if not os.path.isfile(filename):
-        raise Http404
+        raise Http404("Tex file of questionnaire does not exists.")
 
     wrapper = FileWrapper(open(filename, 'rb'))
     response = HttpResponse(wrapper, content_type='text/x-tex')
     response['Content-Length'] = os.path.getsize(filename)
-    response['Content-Disposition'] = ('attachment; filename="%s_questionnaire.tex"' % slug)
+    response['Content-Disposition'] = (
+        'attachment; filename="%s_questionnaire.tex"' % slug)
 
     return response
+
 
 class SurveyUpdateView(PermissionRequiredMixin, generic.edit.UpdateView):
     permission_required = 'can_design_draft'
@@ -206,23 +216,24 @@ class SurveyUpdateView(PermissionRequiredMixin, generic.edit.UpdateView):
         return '/surveys/' + self.object.slug + '/edit'
 
     def get_object(self, queryset=None):
-        self.object = get_object_or_404(models.Survey, slug=self.kwargs['slug'])
-        if self.object.initialized:
-            raise Http404
-        return self.object
+        return get_object_or_404(models.Survey,
+                                 slug=self.kwargs['slug'],
+                                 initialized=False)
 
     def form_valid(self, form):
         # Rendering the empty document does not really hurt ...
         form.save()
-        survey_id = str(self.object.id)
+        survey_id = self.object.id
         if tasks.write_questionnaire.apply_async(args=(survey_id, )):
             tasks.render_questionnaire.apply_async(args=(survey_id, ))
         response = super().form_valid(form)
 
         return response
 
+
 @permission_required('can_delete', (models.Survey, 'slug', 'slug'))
-def delete(request, slug):
+def delete(request, slug: str):
+    """gives the order to delete the survey and returns to the surveys list."""
     survey = get_object_or_404(models.Survey, slug=slug)
 
     yes_missing = False
@@ -230,51 +241,53 @@ def delete(request, slug):
         if 'delete' in request.POST and request.POST['delete'] == "YES":
             survey.delete()
             return HttpResponseRedirect(reverse('surveys'))
-        else:
-            yes_missing = True
 
-    return render(request, 'delete.html', { 'survey' : survey, 'yes_missing' : yes_missing })
+        yes_missing = True
+
+    return render(request, 'delete.html', {'survey': survey,
+                                           'yes_missing': yes_missing})
+
 
 @permission_required('can_design_draft', (models.Survey, 'slug', 'slug'))
-def questionnaire(request, slug):
+def questionnaire(request, slug: str):
     '''GET always gives you the questionnaire as json file. POST is accepted
     when the survey is not initialized for sending in the questionnaire draft
     via the editor. The json gets written as latex and then rendered for the
     editor preview.'''
-    survey = get_object_or_404(models.Survey, slug=slug)
 
     # Get CSRF token, so that cookie will be included
     csrf.get_token(request)
 
     if request.method == 'POST':
-        if survey.initialized:
-            raise Http404
-        else:
-            survey.questionnaire = request.body.decode("utf-8")
-            survey.save()
+        survey = get_object_or_404(models.Survey, slug=slug, initialized=False)
 
-            survey_id = str(survey.id)
-            if tasks.write_questionnaire.apply_async(args=(survey_id, )):
-                tasks.render_questionnaire.apply_async(args=(survey_id, ))
-            return HttpResponse(status=202)
+        survey.questionnaire = request.body.decode("utf-8")
+        survey.save()
 
-    elif request.method == 'GET':
-        response = HttpResponse(survey.questionnaire, content_type="application/json")
-        response['Content-Disposition'] = ('attachment; filename="%s_questionnaire.json"' % slug)
+        if tasks.write_questionnaire.apply_async(args=(survey.id, )):
+            tasks.render_questionnaire.apply_async(args=(survey.id, ))
+        return HttpResponse(status=202)
+
+    if request.method == 'GET':
+        survey = get_object_or_404(models.Survey, slug=slug)
+        response = HttpResponse(survey.questionnaire,
+                                content_type="application/json")
+        response['Content-Disposition'] = (
+            'attachment; filename="%s_questionnaire.json"' % slug)
 
         return response
 
 
 @permission_required('can_review_scans', (models.Survey, 'slug', 'slug'))
-def survey_scan(request, slug, filenum, page):
+def survey_scan(request, slug: str, filenum: int, page: int):
     # This function does not open the real SDAPS survey, as unpickling the data
     # is way to inefficient.
-    survey = get_object_or_404(models.Survey, slug=slug)
+    survey = get_object_or_404(models.Survey, slug=slug, initialized=True)
+
+    if not survey.path:
+        raise Http404("SDAPS project folder does not exist.")
 
     image_file = os.path.join(survey.path, "%s.tif" % (filenum,))
-
-    if not os.path.exists(os.path.join(survey.path)):
-        raise Http404
 
     surface = image.get_rgb24_from_tiff(image_file, int(page), False)
     if surface is None:
@@ -287,40 +300,32 @@ def survey_scan(request, slug, filenum, page):
 
     return response
 
-@permission_required('can_review_scans', (models.Survey, 'slug', 'slug'))
-def survey_review(request, slug):
-    djsurvey = get_object_or_404(models.Survey, slug=slug)
 
-    if not djsurvey.initialized:
-        raise Http404
+@permission_required('can_review_scans', (models.Survey, 'slug', 'slug'))
+def survey_review(request, slug: str):
+    djsurvey = get_object_or_404(models.Survey, slug=slug, initialized=True)
 
     survey = SDAPSSurvey.load(djsurvey.path)
 
     context_dict = {
-        'survey' : djsurvey,
-        'sheet_count' : survey.sheet_count
+        'survey': djsurvey,
+        'sheet_count': survey.sheet_count
     }
 
     return render(request, 'survey_review.html', context_dict)
 
+
 @permission_required('can_review_scans', (models.Survey, 'slug', 'slug'))
 def survey_review_sheet(request, slug, sheet):
-    djsurvey = get_object_or_404(models.Survey, slug=slug)
+    djsurvey = get_object_or_404(models.Survey, slug=slug, initialized=True)
 
     # Get CSRF token, so that cookie will be included
     csrf.get_token(request)
 
     sheet = int(sheet)
 
-    # XXX: Throw sane error in this case!
-    #if djsurvey.active_task:
-    #    raise Http404
-
-    if not djsurvey.initialized:
-        raise Http404
-
     # Now this is getting hairy, we need to unpickle the data :-(
-    #with models.LockedSurvey(djsurvey.id, 5):
+    # with models.LockedSurvey(djsurvey.id, 5):
 
     survey = SDAPSSurvey.load(djsurvey.path)
 
@@ -339,40 +344,43 @@ def survey_review_sheet(request, slug, sheet):
 
     # Assume image is NUMBER.tif
     res = {
-        'images' : [
+        'images': [
             {
-                'image' : int(image.filename[:-4]),
-                'image_page' : image.tiff_page,
-                'page' : image.page_number if image.survey_id == survey.survey_id else -1,
-                'rotated' : image.rotated,
-                'pxtomm' : tuple(image.matrix.px_to_mm()),
-                'mmtopx' : tuple(image.matrix.mm_to_px()),
+                'image': int(image.filename[:-4]),
+                'image_page': image.tiff_page,
+                'page': image.page_number if image.survey_id == survey.survey_id else -1,
+                'rotated': image.rotated,
+                'pxtomm': tuple(image.matrix.px_to_mm()),
+                'mmtopx': tuple(image.matrix.mm_to_px()),
             } for image in survey.sheet.images if not image.ignored
         ],
-        'data' : survey.questionnaire.sdaps_ctl.get_data()
+        'data': survey.questionnaire.sdaps_ctl.get_data()
     }
 
     response = HttpResponse(json.dumps(res), content_type="application/json")
-    response['Content-Disposition'] = ('attachment; filename="%s_questionnaire.json"' % slug)
+    response['Content-Disposition'] = (
+        'attachment; filename="%s_questionnaire.json"' % slug)
 
     return response
 
 
 @permission_required('can_download_results', (models.Survey, 'slug', 'slug'))
-def csv_download(request, slug):
+def csv_download(request, slug: str):
     '''GET gives you the csv-file from an initialized survey.'''
-    djsurvey = get_object_or_404(models.Survey, slug=slug)
+    djsurvey = get_object_or_404(models.Survey, slug=slug, initialized=True)
 
-    if not djsurvey.initialized:
-        raise Http404
+    if djsurvey.path:
+        raise Http404("Sdaps project folder does not exist.")
 
     survey = SDAPSSurvey.load(djsurvey.path)
 
     outdata = io.StringIO()
     csvdata.csvdata_export(survey, outdata, None)
 
-    response = HttpResponse(outdata.getvalue(), content_type="text/csv; charset=utf-8")
-    response['Content-Disposition'] = ('attachment; filename="%s_data.csv"' % slug)
+    response = HttpResponse(
+        outdata.getvalue(), content_type="text/csv; charset=utf-8")
+    response['Content-Disposition'] = (
+        'attachment; filename="%s_data.csv"' % slug)
 
     return response
 
@@ -380,15 +388,17 @@ def csv_download(request, slug):
 class SurveyAddScans(PermissionRequiredMixin, generic.edit.UpdateView):
     """
     There is a difference between uploading the files of scans to the database
-    (SurveyUploadScansFiles) and adding them to the survey for recognition (this View).
+    (SurveyUploadScansFiles) and adding them to the survey for recognition
+    (this View).
     """
     permission_required = 'can_upload_scans'
-    content_range_pattern = re.compile(r'^bytes (?P<start>\d+)-(?P<end>\d+)/(?P<size>\d+)')
+    content_range_pattern = re.compile(
+        r'^bytes (?P<start>\d+)-(?P<end>\d+)/(?P<size>\d+)')
 
     def get_object(self):
         return get_object_or_404(models.Survey, slug=self.kwargs['slug'], initialized=True)
 
-    def post(self, request, slug):
+    def post(self, request, slug: str):
         """
         Adding already uploaded files to the survey for recognition, then start
         recognition task for uploaded files.
@@ -396,39 +406,41 @@ class SurveyAddScans(PermissionRequiredMixin, generic.edit.UpdateView):
         survey = self.get_object()
 
         # Queue file addition
-        survey_id = str(survey.id)
-        if tasks.add_scans.apply_async(args=(survey_id, )):
-            tasks.recognize_scan.apply_async(args=(survey_id, ))
+        if tasks.add_scans.apply_async(args=(survey.id, )):
+            tasks.recognize_scan.apply_async(args=(survey.id, ))
 
         return HttpResponseRedirect(reverse('survey_overview', args=(survey.slug,)))
 
-    def get(self, request, slug):
+    def get(self, request):
         """
-        Get list of all uploaded scans (which have been not added to the survey for
-        recognition) from the database for specific survey
+        Get list of all uploaded scans (which have been not added to the survey
+        for recognition) from the database for specific survey
         """
         csrf.get_token(request)
 
         context_dict = {
-            'survey' : self.get_object(),
+            'survey': self.get_object(),
         }
         return render(request, 'survey_upload_scans.html', context_dict)
 
+
 class SurveyUploadScansFiles(PermissionRequiredMixin, generic.edit.UpdateView):
     """
-    View for handling single scan files before adding them to survey for recognition.
-    """
+    View for handling single scan files before adding them to survey for
+    recognition."""
     permission_required = 'can_upload_scans'
 
     def get_object(self):
-        return get_object_or_404(models.Survey, slug=self.kwargs['slug'], initialized=True)
+        return get_object_or_404(models.Survey,
+                                 slug=self.kwargs['slug'],
+                                 initialized=True)
 
 #    def ensure_valid_upload(self, upload):
 #        if upload.status != models.UPLOADING:
 #            return False
 #        return True
 
-    def post(self, request, slug):
+    def post(self, request, slug: str):
         """
         Upload single files of scans to the database and get response (like upload errors) via json.
         """
@@ -443,7 +455,8 @@ class SurveyUploadScansFiles(PermissionRequiredMixin, generic.edit.UpdateView):
             if content_range:
                 match = self.content_range_pattern.match(content_range)
                 if not match:
-                    response_uploaded_files.append({ 'name' : chunk.name, 'error' : 'Broken or wrong content range.' })
+                    response_uploaded_files.append({'name': chunk.name,
+                                                    'error': 'Broken or wrong content range.'})
                     continue
 
                 start = int(match.group('start'))
@@ -459,15 +472,19 @@ class SurveyUploadScansFiles(PermissionRequiredMixin, generic.edit.UpdateView):
 
             # TODO: Figure out a way that name collisions work!
             # Check if file with the same name is already uploaded for that survey
-            upload = models.UploadedFile.objects.filter(survey=self.get_object(), filename=chunk.name).first()
+            upload = models.UploadedFile.objects.filter(survey=self.get_object(),
+                                                        filename=chunk.name).first()
             if upload:
-                response_uploaded_files.append({ 'name' : chunk.name, 'error' : 'File already uploaded or in an error state. Please, rename the file and upload again.' })
+                response_uploaded_files.append({'name': chunk.name,
+                                                'error': 'File already uploaded or in an error state. Please, rename the file and upload again.'})
             else:
                 # Create a new upload
-                new_upload = models.UploadedFile(survey=self.get_object(), filename=chunk.name, filesize=length)
+                new_upload = models.UploadedFile(
+                    survey=self.get_object(), filename=chunk.name, filesize=length)
                 # Ensure PK is created
                 new_upload.save()
-                new_upload.file.save(name='', content=ContentFile(''), save=True)
+                new_upload.file.save(
+                    name='', content=ContentFile(''), save=True)
 
                 new_upload.append_chunk(chunk, offset=start, length=size)
                 new_upload.save()
@@ -480,45 +497,54 @@ class SurveyUploadScansFiles(PermissionRequiredMixin, generic.edit.UpdateView):
 
         # only include the uploaded files in response
         result = {
-            'files' : response_uploaded_files,
+            'files': response_uploaded_files,
         }
 
-        response = HttpResponse(json.dumps(result), content_type="application/json")
+        response = HttpResponse(json.dumps(
+            result), content_type="application/json")
         if range_header is not None:
             response['Range'] = range_header
 
         return response
 
-    def get(self, request, slug, filename=''):
+    def get(self, request, slug: str, filename: str =''):
         """
         This gives one single uploaded file of a survey.
         """
 
         if filename:
-            upload =  get_object_or_404(klass=models.UploadedFile, survey=self.get_object(), filename=filename)
+            upload = get_object_or_404(
+                klass=models.UploadedFile, survey=self.get_object(), filename=filename)
             wrapper = FileWrapper(open(upload.file, 'rb'))
             response = HttpResponse(wrapper, content_type='application/x-pdf')
             response['Content-Length'] = upload.filesize
-            response['Content-Disposition'] = ('attachment; filename="%s_%s_upload.pdf"' % (slug, upload.filename))
+            response['Content-Disposition'] = (
+                'attachment; filename="%s_%s_upload.pdf"' % (slug, upload.filename))
         else:
-            uploaded_files_from_db = list(models.UploadedFile.objects.filter(survey=self.get_object()))
+            uploaded_files_from_db = list(
+                models.UploadedFile.objects.filter(survey=self.get_object()))
             #uploaded_files_from_db = list(self.get_object().uploads.all())
             uploaded_files_to_view = []
             for uploaded_file_from_db in uploaded_files_from_db:
-                uploaded_files_to_view.append(uploaded_file_from_db.get_description())
+                uploaded_files_to_view.append(
+                    uploaded_file_from_db.get_description())
 
             result = {
-                'files' : uploaded_files_to_view,
+                'files': uploaded_files_to_view,
             }
-            response = HttpResponse(json.dumps(result), content_type="application/json")
+            response = HttpResponse(json.dumps(result),
+                                    content_type="application/json")
         return response
 
-    def delete(self, request, slug, filename):
+    def delete(self, request, slug: str, filename: str):
         """
         Deleting uploaded scans (which have been not added to the survey) from
         the database
         """
-        upload = models.UploadedFile.objects.filter(survey=self.get_object(), filename=filename).first()
+        upload = models.UploadedFile.objects.filter(survey=self.get_object(),
+                                                    filename=filename).first()
         upload.delete()
 
-        return HttpResponse(json.dumps({ 'files' : [ { filename : True }] }), content_type="application/json")
+        return HttpResponse(json.dumps({'files': [{
+            filename: True}]
+        }), content_type="application/json")

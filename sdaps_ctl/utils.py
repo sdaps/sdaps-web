@@ -15,14 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-from celery.task import task
-
-from sdaps import defs
 import tempfile
 import shutil
 import subprocess
 import resource
 import os
+
+from celery.task import task
+
+from sdaps import defs
 
 class SecureEnv:
     def __init__(self, timeout):
@@ -43,7 +44,7 @@ class SecureEnv:
         os.environ['shell_escape'] = 'f'
 
 @task
-def atomic_latex_compile(path, target, timeout=10, need_sdaps=False):
+def atomic_latex_compile(path: os.PathLike, target, timeout=10, need_sdaps=False):
 
     setup_env = SecureEnv(timeout)
 
@@ -57,7 +58,10 @@ def atomic_latex_compile(path, target, timeout=10, need_sdaps=False):
     try:
         print("Running %s now three times to generate the questionnaire." % defs.latex_engine)
         for i in range(0, 3):
-            print('Executing: ' + str(defs.latex_engine) + ' -halt-on-error' + ' -output-directory ' + str(tmpdir) + ' -interaction ' + 'batchmode ' + str(target) + ' ' + str(path))
+            print("""
+                  Executing: %s -halt-on-error -output-directory %s -interaction
+                  batchmode %s %s
+                  """, (defs.latex_engine, tmpdir, target, path))
             subprocess.call([defs.latex_engine, '-halt-on-error', '-output-directory', tmpdir,
                              '-interaction', 'batchmode', target],
                             cwd=path, preexec_fn=setup_env)

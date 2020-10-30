@@ -16,8 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from sdaps import model
-from sdaps import surface
-from sdaps import image
+
 
 class Questionnaire(model.buddy.Buddy, metaclass=model.buddy.Register):
 
@@ -33,14 +32,14 @@ class Questionnaire(model.buddy.Buddy, metaclass=model.buddy.Register):
             for box in qobject.boxes:
                 bdata = box.data
                 data[box.id_str()] = {
-                    'type' : box.__class__.__name__,
-                    'state' : bool(bdata.state),
-                    'quality' : bdata.quality,
-                    'x' : bdata.x,
-                    'y' : bdata.y,
-                    'width' : bdata.width,
-                    'height' : bdata.height,
-                    'page' : box.page_number,
+                    'type': box.__class__.__name__,
+                    'state': bool(bdata.state),
+                    'quality': bdata.quality,
+                    'x': bdata.x,
+                    'y': bdata.y,
+                    'width': bdata.width,
+                    'height': bdata.height,
+                    'page': box.page_number,
                 }
                 if isinstance(bdata, model.data.Textbox):
                     data[box.id_str()]['text'] = bdata.text
@@ -48,7 +47,6 @@ class Questionnaire(model.buddy.Buddy, metaclass=model.buddy.Register):
                     data[box.id_str()]['form'] = box.form
 
         return data
-
 
     def set_data(self, data):
         for qobject in self.obj.qobjects:
@@ -70,7 +68,8 @@ class Questionnaire(model.buddy.Buddy, metaclass=model.buddy.Register):
                 # some of the keys.
                 items = [('state', int)]
                 if isinstance(bdata, model.data.Textbox):
-                    items += [('x', float), ('y', float), ('width', float), ('height', float)]
+                    items += [('x', float), ('y', float),
+                              ('width', float), ('height', float)]
                     items += [('text', str)]
 
                 # Try to convert values, if it fails, whatever
@@ -85,5 +84,3 @@ class Questionnaire(model.buddy.Buddy, metaclass=model.buddy.Register):
 
                 for k, v in list(values.items()):
                     setattr(bdata, k, v)
-
-
