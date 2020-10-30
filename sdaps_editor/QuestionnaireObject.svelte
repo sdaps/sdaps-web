@@ -3,7 +3,7 @@
   import { flip } from "svelte/animate";
   import { createQuestionnaireObject } from "./factory";
 
-  import type { Questionnaire } from "./questionnaire";
+  import type { Questionnaire, QuestionnaireObject } from "./questionnaire";
   import { getHighestKey } from "./questionnaire";
 
   import Textbody from "./objects/Textbody.svelte";
@@ -15,18 +15,18 @@
 
   let stepCount = getHighestKey(questionnaire);
 
+  let tool: QuestionnaireObject["type"] = "section";
+
   function addSection(idx: number) {
     const startIdx = idx + 1;
 
     stepCount += 1;
 
-    questionnaire.splice(startIdx, 0, {
-      id: stepCount,
-      type: "textbox",
-      expand: false,
-      height: 12,
-      question: "What?",
-    });
+    questionnaire.splice(
+      startIdx,
+      0,
+      createQuestionnaireObject(tool, stepCount)
+    );
 
     questionnaire = questionnaire;
   }
@@ -96,23 +96,52 @@
 
   .toolbox {
     display: block;
-    position: -webkit-sticky; /* Safari */
     position: sticky;
     top: 0;
     border: solid 1px black;
+    background-color: antiquewhite;
     margin-bottom: 1em;
+    box-shadow: 0px 10px 13px -7px black, 5px 5px 15px 5px rgba(0, 0, 0, 0);
   }
 </style>
 
 <main>
   <div class="toolbox">
-    Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox
-    Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox Toolbox
-    Toolbox Toolbox Toolbox Toolbox Toolbox
+    <input
+      type="radio"
+      id="section"
+      name="tool"
+      value="section"
+      bind:group={tool} />
+    <label for="section">Section</label>
+
+    <input
+      type="radio"
+      id="textbody"
+      name="tool"
+      value="textbody"
+      bind:group={tool} />
+    <label for="textbody">Textbody</label>
+
+    <input
+      type="radio"
+      id="textbox"
+      name="tool"
+      value="textbox"
+      bind:group={tool} />
+    <label for="textbox">Textbox</label>
+
+    <input
+      type="radio"
+      id="singlemark"
+      name="tool"
+      value="singlemark"
+      bind:group={tool} />
+    <label for="singlemark">Singlemark</label>
   </div>
   <div class="sectionContainer">
     <div class="addSection">
-      <button class="add" on:click={() => addSection(-1)}>Add Section</button>
+      <button class="add" on:click={() => addSection(-1)}>Add {tool}</button>
     </div>
     <div
       use:dndzone={{ items: questionnaire, flipDurationMs, dropTargetStyle }}
@@ -136,7 +165,8 @@
               on:click={() => deleteSection(idx)}>Remove</button>
           </div>
           <div class="addSection">
-            <button class="add" on:click={() => addSection(idx)}>Add Section</button>
+            <button class="add" on:click={() => addSection(idx)}>Add
+              {tool}</button>
           </div>
         </div>
       {/each}

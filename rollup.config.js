@@ -24,7 +24,11 @@ export default {
       css: (css) => {
         css.write("css/likert_editor.css");
       },
-      preprocess: sveltePreprocess(),
+      preprocess: sveltePreprocess({
+        postcss: {
+          plugins: [require('autoprefixer')],
+        },
+      }),
     }),
     resolve({
       browser: true,
