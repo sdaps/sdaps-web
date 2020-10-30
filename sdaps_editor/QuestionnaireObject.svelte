@@ -4,6 +4,11 @@
 
   import type { Questionnaire } from "./questionnaire";
 
+  import Textbody from "./objects/Textbody.svelte";
+  import Textbox from "./objects/Textbox.svelte";
+  import Section from "./objects/Section.svelte";
+  import Singlemark from "./objects/Singlemark.svelte";
+
   export let questionnaire: Questionnaire;
 
   export function getHighestKey(questionnaire: Questionnaire): number {
@@ -20,8 +25,10 @@
 
     questionnaire.splice(startIdx, 0, {
       id: stepCount,
-      type: "section",
-      title: "Hello",
+      type: "textbox",
+      expand: false,
+      height: 12,
+      question: "What?",
     });
 
     questionnaire = questionnaire;
@@ -60,7 +67,7 @@
     border: solid 1px black;
   }
 
-  .section {
+  .questionnaireObject {
     display: block;
     border: solid 1px black;
   }
@@ -100,12 +107,18 @@
       use:dndzone={{ items: questionnaire, flipDurationMs, dropTargetStyle }}
       on:consider={handleDndConsider}
       on:finalize={handleDndFinalize}>
-      {#each questionnaire as section, idx (section.id)}
+      {#each questionnaire as questionnaireObject, idx (questionnaireObject.id)}
         <div class="moveSection" animate:flip={{ duration: flipDurationMs }}>
-          <div class="section">
-            <p>Section {section.id}</p>
-
-            <!-- <slot /> -->
+          <div class="questionnaireObject">
+            {#if questionnaireObject.type == 'textbody'}
+              <Textbody bind:textbody={questionnaireObject} />
+            {:else if questionnaireObject.type == 'textbox'}
+              <Textbox bind:textbox={questionnaireObject} />
+            {:else if questionnaireObject.type == 'section'}
+              <Section bind:section={questionnaireObject} />
+            {:else if questionnaireObject.type == 'singlemark'}
+              <Singlemark bind:singlemark={questionnaireObject} />
+            {/if}
 
             <button
               class="remove"

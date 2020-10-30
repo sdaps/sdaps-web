@@ -4,6 +4,7 @@
   import QuestionnaireObject from "./QuestionnaireObject.svelte";
   import type { Questionnaire } from "./questionnaire";
   import { onDestroy } from "svelte";
+  import throttle from "lodash/throttle";
 
   export let questionnaire: Questionnaire;
 
@@ -43,9 +44,9 @@
     });
   }
 
-  const unsubscribe = questionnaireStore.subscribe((value) => {
-    save(value);
-  });
+  const unsubscribe = questionnaireStore.subscribe(
+    throttle((value) => save(value), 500, { leading: true })
+  );
 
   onDestroy(unsubscribe);
 </script>
