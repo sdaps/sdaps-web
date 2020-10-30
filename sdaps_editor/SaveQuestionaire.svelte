@@ -1,13 +1,16 @@
-<script>
-  import QuestionnaireObject from "./QuestionnaireObject.svelte";
+<script lang="ts">
+  import { writable } from "svelte/store";
 
-  export let questionnaire = [];
+  import QuestionnaireObject from "./QuestionnaireObject.svelte";
+  import type { Questionnaire } from "./questionnaire";
+  import { onDestroy } from "svelte";
+
+  export let questionnaire: Questionnaire;
+
+  const questionnaireStore = writable(questionnaire);
 
   const basePath = window.location.pathname;
   const questionnairePath = `${basePath}questionnaire/`;
-
-  const BASE_TIMEOUT = 1000;
-  let timeout = BASE_TIMEOUT;
 
   function getCookie(name) {
     if (!document.cookie) {
@@ -25,31 +28,26 @@
     return decodeURIComponent(xsrfCookies[0].split("=")[1]);
   }
 
-  function save() {
+  function save(value: Questionnaire) {
     const csrfToken = getCookie("csrftoken");
 
     fetch(questionnairePath, {
       method: "POST",
-      body: JSON.stringify(questionnaire),
+      body: JSON.stringify(value),
       credentials: "include",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
         "X-CSRFToken": csrfToken,
       },
-    })
-      .then((res) => {
-        if (res.ok) {
-          return (timeout = BASE_TIMEOUT);
-        } else {
-          return (timeout = timeout * 2);
-        }
-      })
-      .catch(() => (timeout = timeout * 2))
-      .finally(() => setTimeout(save, timeout));
+    });
   }
 
-  save();
+  const unsubscribe = questionnaireStore.subscribe((value) => {
+    save(value);
+  });
+
+  onDestroy(unsubscribe);
 </script>
 
-<QuestionnaireObject {questionnaire} />
+<QuestionnaireObject bind:questionnaire={$questionnaireStore} />

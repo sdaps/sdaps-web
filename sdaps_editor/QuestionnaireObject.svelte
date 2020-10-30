@@ -4,9 +4,19 @@
 
   import type { Questionnaire } from "./questionnaire";
 
-  export let questionnaire: Questionnaire = [];
+  export let questionnaire: Questionnaire;
 
-  let stepCount = 0;
+  function getHighestKey(questionnaire: Questionnaire): number {
+    let key = 0;
+
+    for (const { id } of questionnaire) {
+      key = Math.max(key, id);
+    }
+
+    return key + 1;
+  }
+
+  let stepCount = getHighestKey(questionnaire);
 
   function addSection(idx: number) {
     const startIdx = idx + 1;
