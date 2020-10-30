@@ -6,16 +6,11 @@
 
   export let questionnaire: Questionnaire;
 
-  function getHighestKey(questionnaire: Questionnaire): number {
-    let key = 0;
-
-    for (const { id } of questionnaire) {
-      key = Math.max(key, id);
-    }
-
-    return key + 1;
+  export function getHighestKey(questionnaire: Questionnaire): number {
+    return (
+      questionnaire.reduce((key, section) => Math.max(key, section.id), 0) + 1
+    );
   }
-
   let stepCount = getHighestKey(questionnaire);
 
   function addSection(idx: number) {
