@@ -1,6 +1,6 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
-  "include": ["sdaps_editor/src/**/*", "sdaps_editor/main.ts"],
+  "include": ["sdaps_editor/**/*", "sdaps_editor/main.ts"],
   "exclude": ["node_modules/*", "public/*"],
   "strict": true,
   "noUnusedParameters": true,

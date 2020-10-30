@@ -1,4 +1,10 @@
-export type Questionnaire = Array<QuestionnaireObject>;
+export class Questionnaire extends Array<QuestionnaireObject> {
+  getHighestKey(): number {
+    return (
+      this.reduce((key, section) => Math.max(key, section.id), 0) + 1
+    );
+  }
+}
 
 // TODO: Maybe integrate later
 const defaults = {
