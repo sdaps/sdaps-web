@@ -30,4 +30,4 @@
 <textarea
   name="answer"
   rows={textbox.height * window.devicePixelRatio}
-  disabled />
+  readonly />
