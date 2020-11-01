@@ -1,7 +1,8 @@
 export type Questionnaire = Array<QuestionnaireObject>;
-export function getHighestKey(questionnaire: Questionnaire): number {
+
+export function getHighestKey<T extends OrderedObject>(ordered: Array<T>): number {
   return (
-    questionnaire.reduce((key, section) => Math.max(key, section.id), 0) + 1
+    ordered.reduce((key, section) => Math.max(key, section.id), 0) + 1
   );
 }
 
@@ -18,7 +19,7 @@ export type QuestionnaireObject =
 
 //
 export interface OrderedObject {
-  id?: number;
+  id: number;
   type: string;
 }
 

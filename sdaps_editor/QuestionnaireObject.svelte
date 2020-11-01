@@ -2,6 +2,7 @@
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
   import { createQuestionnaireObject } from "./factory";
+  import { updateKey } from "./keyTracker";
 
   import type { Questionnaire, QuestionnaireObject } from "./questionnaire";
   import { getHighestKey } from "./questionnaire";
@@ -10,22 +11,24 @@
   import Textbox from "./objects/Textbox.svelte";
   import Section from "./objects/Section.svelte";
   import Singlemark from "./objects/Singlemark.svelte";
+  import Markgroup from "./objects/Markgroup.svelte";
 
   export let questionnaire: Questionnaire;
 
-  let stepCount = getHighestKey(questionnaire);
+  const stepCount = getHighestKey(questionnaire);
+  const listKey = updateKey(stepCount);
 
   let tool: QuestionnaireObject["type"] = "section";
 
   function addSection(idx: number) {
     const startIdx = idx + 1;
 
-    stepCount += 1;
+    $listKey += 1;
 
     questionnaire.splice(
       startIdx,
       0,
-      createQuestionnaireObject(tool, stepCount)
+      createQuestionnaireObject(tool, $listKey)
     );
 
     questionnaire = questionnaire;
@@ -41,13 +44,8 @@
 
   const flipDurationMs = 50;
 
-  let dropTargetStyle;
   function handleDndConsider(e) {
     questionnaire = e.detail.items;
-
-    dropTargetStyle = {
-      outline: "solid 2px blue",
-    };
   }
 
   function handleDndFinalize(e) {
@@ -138,13 +136,21 @@
       value="singlemark"
       bind:group={tool} />
     <label for="singlemark">Singlemark</label>
+
+    <input
+      type="radio"
+      id="markgroup"
+      name="tool"
+      value="markgroup"
+      bind:group={tool} />
+    <label for="markgroup">Markgroup</label>
   </div>
   <div class="sectionContainer">
     <div class="addSection">
       <button class="add" on:click={() => addSection(-1)}>Add {tool}</button>
     </div>
     <div
-      use:dndzone={{ items: questionnaire, flipDurationMs, dropTargetStyle }}
+      use:dndzone={{ items: questionnaire, flipDurationMs, dropTargetStyle: { outline: 'solid 2px blue' } }}
       on:consider={handleDndConsider}
       on:finalize={handleDndFinalize}>
       {#each questionnaire as questionnaireObject, idx (questionnaireObject.id)}
@@ -158,6 +164,8 @@
               <Section bind:section={questionnaireObject} />
             {:else if questionnaireObject.type == 'singlemark'}
               <Singlemark bind:singlemark={questionnaireObject} />
+            {:else if questionnaireObject.type == 'markgroup'}
+              <Markgroup bind:markgroup={questionnaireObject} />
             {/if}
 
             <button

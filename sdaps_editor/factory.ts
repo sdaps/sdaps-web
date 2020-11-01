@@ -13,32 +13,26 @@ export function createQuestionnaireObject(type: QuestionnaireObject["type"], id:
   let res;
 
   if (type == "multicol") {
-    res = { columns: 2 };
-  }
-  else if (type == "section") {
+    res = { columns: 2, children: [] };
+  } else if (type == "section") {
     res = { title: "Title" }
   }
   else if (type == "textbody") {
     res = { text: "Text" }
-  }
-  else if (type == "singlemark") {
+  } else if (type == "singlemark") {
     res = {
       question: "question",
       checkboxcount: 5,
       lower: "a",
       upper: "b",
     }
-  }
-  else if (type == "choicequestion") {
+  } else if (type == "choicequestion") {
     res = { question: "Question", columns: 4 }
-  }
-  else if (type == "markgroup") {
-    res = { heading: "Headline", checkboxcount: 5 }
-  }
-  else if (type == "choicegroup") {
-    res = { heading: "Headline" }
-  }
-  else if (type == "textbox") {
+  } else if (type == "markgroup") {
+    res = { heading: "Headline", checkboxcount: 5, children: [] }
+  } else if (type == "choicegroup") {
+    res = { heading: "Headline", children: [] }
+  } else if (type == "textbox") {
     res = { question: "Question", height: 4.0, expand: true }
   }
 
