@@ -52,40 +52,53 @@
   .dropZone {
     min-height: 3em;
   }
+  .markgroupChild {
+    margin-top: 10px;
+  }
 </style>
 
-<label> Heading: <input type="text" bind:value={markgroup.heading} /></label>
 
-<label>
-  Number of checkboxes:
-  <input
-    type="number"
-    min="2"
-    max="10"
-    step="1"
-    bind:value={markgroup.checkboxcount} />
-</label>
+<div class="input-group mb-3">
+  <div class="input-group-prepend">
+    <label class="input-group-text" for="inputGroupSelect01">Heading:</label>
+  </div>
+  <input type="text" class="form-control" placeholder="" aria-label="Example text with button addon" bind:value={markgroup.heading} />
+  <div class="input-group-prepend">
+    <label class="input-group-text" for="inputGroupSelect01">Number of checkboxes:</label>
+  </div>
+  <input class="form-control" placeholder="" aria-label="Example text with button addon" type="number" min="2" max="10" step="1" bind:value={markgroup.checkboxcount} />
+</div>
 
-<p><button on:click={() => addSection(-1)}>Add</button></p>
+<p><button class="btn btn-sm btn-success" on:click={() => addSection(-1)}>Add</button></p>
 <div
   class="dropZone"
   use:dndzone={{ items: markgroup.children, flipDurationMs, dropTargetStyle: { outline: 'solid 2px blue' }, type: 'markgroup' }}
   on:consider={handleDndConsider}
   on:finalize={handleDndFinalize}>
   {#each markgroup.children as markline, idx (markline.id)}
-    <div>
-      <p>
-        <label>
-          Question:
-          <input type="text" bind:value={markline.question} /></label>
-
-        <label> Upper: <input type="text" bind:value={markline.upper} /></label>
-
-        <label> Lower: <input type="text" bind:value={markline.lower} /></label>
-
-        <button on:click={() => deleteSection(idx)}>Remove</button>
-      </p>
-      <p><button on:click={() => addSection(idx)}>Add</button></p>
+    <div class="markgroupChild card">
+      <div class="card-body">
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Question</span>
+          </div>
+          <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3" bind:value={markline.question}>
+        </div>
+        <div class="input-group mb-3">
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Lower</span>
+          </div>
+          <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3" bind:value={markline.lower}>
+          <div class="input-group-prepend">
+            <span class="input-group-text" id="basic-addon3">Upper</span>
+          </div>
+          <input type="text" class="form-control" id="basic-url" aria-describedby="basic-addon3" bind:value={markline.upper}>
+        </div>
+        <div class="btn-group-vertical" role="group">
+          <button class="btn btn-sm btn-danger" on:click={() => deleteSection(idx)}>Remove</button>
+          <button class="btn btn-sm btn-success" on:click={() => addSection(idx)}>Add</button>
+        </div>
+      </div>
     </div>
   {/each}
 </div>

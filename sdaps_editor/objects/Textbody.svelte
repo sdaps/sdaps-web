@@ -4,4 +4,6 @@
   export let textbody: TextbodyQuestionnaireObject;
 </script>
 
-<label>Textbody: <input type="text" bind:value={textbody.text} /></label>
+<div class="form-group">
+  <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" bind:value={textbody.text}></textarea>
+</div>

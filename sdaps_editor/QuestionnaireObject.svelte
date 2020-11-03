@@ -63,33 +63,23 @@
     flex-flow: column;
 
     width: 100%;
-    border: solid 1px black;
   }
 
   .questionnaireObject {
     display: block;
-    border: solid 1px black;
   }
 
   .addSection {
     display: block;
-    border: solid 1px black;
   }
 
   button {
     border: none;
   }
 
-  button.remove {
-    background-color: #ef2929;
-    color: white;
-    font-weight: bold;
-  }
-
   button.add {
     width: 100%;
     border: none;
-    background-color: #8ae234;
   }
 
   .moveSection {
@@ -103,7 +93,6 @@
     border: solid 1px black;
     background-color: antiquewhite;
     margin-bottom: 1em;
-    box-shadow: 0px 10px 13px -7px black, 5px 5px 15px 5px rgba(0, 0, 0, 0);
   }
 </style>
 
@@ -150,16 +139,24 @@
     <label for="markgroup">Markgroup</label>
   </div>
   <div class="sectionContainer">
-    <div class="addSection">
-      <button class="add" on:click={() => addSection(-1)}>Add {tool}</button>
+    <div class="addSection list-group-item list-group-item-action">
+      <button class="add btn btn-sm btn-success" on:click={() => addSection(-1)}>Add {tool}</button>
     </div>
     <div
       use:dndzone={{ items: questionnaire, flipDurationMs, dropTargetStyle: { outline: 'solid 2px blue' } }}
       on:consider={handleDndConsider}
       on:finalize={handleDndFinalize}>
       {#each questionnaire as questionnaireObject, idx (questionnaireObject.id)}
-        <div class="moveSection" animate:flip={{ duration: flipDurationMs }}>
-          <div class="questionnaireObject">
+        <div class="moveSection list-group" animate:flip={{ duration: flipDurationMs }}>
+          <div class="questionnaireObject list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+              <h6 class="mb-1"><span class="badge badge-dark">{questionnaireObject.type}</span></h6>
+              <small>
+                <button
+                  class="remove btn btn-sm btn-outline-danger"
+                  on:click={() => deleteSection(idx)}><i class="la la-trash"></i></button>
+              </small>
+            </div>
             {#if questionnaireObject.type == 'textbody'}
               <Textbody bind:textbody={questionnaireObject} />
             {:else if questionnaireObject.type == 'textbox'}
@@ -171,13 +168,10 @@
             {:else if questionnaireObject.type == 'markgroup'}
               <Markgroup bind:markgroup={questionnaireObject} />
             {/if}
-
-            <button
-              class="remove"
-              on:click={() => deleteSection(idx)}>Remove</button>
           </div>
-          <div class="addSection">
-            <button class="add" on:click={() => addSection(idx)}>Add
+
+          <div class="addSection list-group-item list-group-item-action">
+            <button class="add btn btn-sm btn-success" on:click={() => addSection(idx)}>Add
               {tool}</button>
           </div>
         </div>
