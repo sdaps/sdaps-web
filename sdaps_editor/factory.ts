@@ -1,4 +1,5 @@
 import type {
+  QuestionnaireObject,
   MulticolQuestionnaireObject,
   SectionQuestionnaireObject,
   TextbodyQuestionnaireObject,
@@ -41,7 +42,10 @@ export function createQuestionnaireObject(
   type: "choicequestion",
   id: number
 ): ChoicequestionQuestionnaireObject;
-export function createQuestionnaireObject(type, id) {
+export function createQuestionnaireObject(
+  type: QuestionnaireObject["type"],
+  id: number
+) {
   if (type === "multicol") {
     return { type, id, columns: 2, children: [] };
   } else if (type === "section") {
