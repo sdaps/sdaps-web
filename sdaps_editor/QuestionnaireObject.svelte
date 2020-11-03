@@ -20,6 +20,8 @@
 
   let tool: QuestionnaireObject["type"] = "section";
 
+  // Add and remove
+
   function addSection(idx: number) {
     const startIdx = idx + 1;
 
@@ -41,6 +43,8 @@
 
     questionnaire = questionnaire;
   }
+
+  // Drag and drop
 
   const flipDurationMs = 50;
 
