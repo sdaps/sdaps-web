@@ -22,6 +22,9 @@
   import Section from "./objects/Section.svelte";
   import Singlemark from "./objects/Singlemark.svelte";
   import Markgroup from "./objects/Markgroup.svelte";
+  import Choicegroup from "./objects/Choicegroup.svelte";
+  import Choicequestion from "./objects/Choicequestion.svelte";
+
   import LayoutMarker from "./LayoutMarker.svelte";
 
   export let questionnaire: EditorQuestionnaire;
@@ -160,6 +163,24 @@
               bind:group={tool} />
             <label for="markgroup">Markgroup</label>
           </Col>
+          <Col>
+            <input
+              type="radio"
+              id="choicegroup"
+              name="tool"
+              value="choicegroup"
+              bind:group={tool} />
+            <label for="choicegroup">Choicegroup</label>
+          </Col>
+          <Col>
+            <input
+              type="radio"
+              id="choicequestion"
+              name="tool"
+              value="choicequestion"
+              bind:group={tool} />
+            <label for="choicequestion">Choicequestion</label>
+          </Col>
         </Row>
       </CardBody>
     </Card>
@@ -221,6 +242,10 @@
               <Singlemark bind:singlemark={questionnaireObject} />
             {:else if questionnaireObject.type === 'markgroup'}
               <Markgroup bind:markgroup={questionnaireObject} />
+            {:else if questionnaireObject.type === 'choicegroup'}
+              <Choicegroup bind:choicegroup={questionnaireObject} />
+            {:else if questionnaireObject.type === 'choicequestion'}
+              <Choicequestion bind:choicequestion={questionnaireObject} />
             {:else if questionnaireObject.type === 'LAYOUT'}
               <LayoutMarker bind:marker={questionnaireObject} />
             {/if}

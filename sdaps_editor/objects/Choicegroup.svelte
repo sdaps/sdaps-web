@@ -16,11 +16,18 @@
   // }
 
   import {
+    InputGroup,
+    InputGroupAddon,
+    InputGroupText,
+    Input,
+  } from "sveltestrap";
+
+  import type {
     ChoicegroupQuestionnaireObject,
     InnerGroupAddChoice,
     InnerChoiceLine,
-    getHighestKey,
   } from "../questionnaire";
+  import { getHighestKey } from "../questionnaire";
 
   export let choicegroup: ChoicegroupQuestionnaireObject;
 
@@ -37,19 +44,15 @@
     }
   }
 
+  let mode: "groupaddchoice" | "choiceline" = "choiceline";
+
   // Add and remove
   function addSection(idx: number) {
     const startIdx = idx + 1;
 
     $listKey += 1;
 
-    choicegroup.children.splice(startIdx, 0, {
-      id: $listKey,
-      type: "markline",
-      question: "Question",
-      upper: "upper",
-      lower: "lower",
-    });
+    choicegroup.children.splice(startIdx, 0, createSubObject(mode));
 
     choicegroup.children = choicegroup.children;
   }
@@ -74,3 +77,12 @@
     choicegroup.children = e.detail.items;
   }
 </script>
+
+<InputGroup>
+  <InputGroupAddon addonType="prepend">
+    <InputGroupText>Heading:</InputGroupText>
+  </InputGroupAddon>
+  <Input placeholder="heading" bind:value={choicegroup.heading} />
+</InputGroup>
+
+{#each choicegroup.children as child (child.id)}child{/each}

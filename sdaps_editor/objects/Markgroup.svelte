@@ -53,7 +53,7 @@
     min-height: 3em;
   }
   .markgroupChild {
-    margin-top: 10px;
+    margin-bottom: 0.625em;
   }
 
   summary {
