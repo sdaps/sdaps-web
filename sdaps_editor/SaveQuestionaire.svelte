@@ -2,11 +2,12 @@
   import { writable } from "svelte/store";
 
   import QuestionnaireObject from "./QuestionnaireObject.svelte";
-  import type { Questionnaire } from "./questionnaire";
+  import type { Questionnaire, EditorQuestionnaire } from "./questionnaire";
+  import { editorToQuestionnaire } from "./questionnaire";
   import { onDestroy } from "svelte";
   import throttle from "lodash/throttle";
 
-  export let questionnaire: Questionnaire;
+  export let questionnaire: EditorQuestionnaire;
 
   const questionnaireStore = writable(questionnaire);
 
@@ -29,12 +30,14 @@
     return decodeURIComponent(xsrfCookies[0].split("=")[1]);
   }
 
-  function save(value: Questionnaire) {
+  function save(value: EditorQuestionnaire) {
     const csrfToken = getCookie("csrftoken");
+
+    const questionnaire: Questionnaire = editorToQuestionnaire(value);
 
     fetch(questionnairePath, {
       method: "POST",
-      body: JSON.stringify(value),
+      body: JSON.stringify(questionnaire),
       credentials: "include",
       headers: {
         Accept: "application/json",

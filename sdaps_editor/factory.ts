@@ -11,10 +11,6 @@ import type {
 } from "./questionnaire";
 
 export function createQuestionnaireObject(
-  type: "multicol",
-  id: number
-): MulticolQuestionnaireObject;
-export function createQuestionnaireObject(
   type: "section",
   id: number
 ): SectionQuestionnaireObject;

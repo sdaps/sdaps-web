@@ -4,7 +4,7 @@
   import { createQuestionnaireObject } from "./factory";
   import { updateKey } from "./keyTracker";
 
-  import type { Questionnaire, QuestionnaireObject } from "./questionnaire";
+  import type { EditorQuestionnaire, MulticolChild } from "./questionnaire";
   import { getHighestKey } from "./questionnaire";
 
   import {
@@ -22,25 +22,34 @@
   import Section from "./objects/Section.svelte";
   import Singlemark from "./objects/Singlemark.svelte";
   import Markgroup from "./objects/Markgroup.svelte";
+  import LayoutMarker from "./LayoutMarker.svelte";
 
-  export let questionnaire: Questionnaire;
+  export let questionnaire: EditorQuestionnaire;
 
   const stepCount = getHighestKey(questionnaire);
   const listKey = updateKey(stepCount);
 
-  let tool: QuestionnaireObject["type"] = "section";
+  let tool: MulticolChild["type"] = "section";
 
   // Add and remove
-  function addSection(idx: number) {
+  function addSection(idx: number, layout?: boolean) {
     const startIdx = idx + 1;
 
     $listKey += 1;
 
-    questionnaire.splice(
-      startIdx,
-      0,
-      createQuestionnaireObject(tool, $listKey)
-    );
+    if (layout) {
+      questionnaire.splice(startIdx, 0, {
+        id: $listKey,
+        type: "LAYOUT",
+        columns: 1,
+      });
+    } else {
+      questionnaire.splice(
+        startIdx,
+        0,
+        createQuestionnaireObject(tool, $listKey)
+      );
+    }
 
     questionnaire = questionnaire;
   }
@@ -164,13 +173,21 @@
             size="sm"
             color="success"
             block
+            outline
             on:click={() => addSection(-1)}>
             Add
             {tool}
           </Button>
         </Col>
         <Col>
-          <Button size="sm" color="dark" block>Change layout</Button>
+          <Button
+            on:click={() => addSection(-1, true)}
+            size="sm"
+            color="dark"
+            outline
+            block>
+            Change layout
+          </Button>
         </Col>
       </Row>
     </ListGroupItem>
@@ -194,16 +211,18 @@
                 </Button>
               </small>
             </div>
-            {#if questionnaireObject.type == 'textbody'}
+            {#if questionnaireObject.type === 'textbody'}
               <Textbody bind:textbody={questionnaireObject} />
-            {:else if questionnaireObject.type == 'textbox'}
+            {:else if questionnaireObject.type === 'textbox'}
               <Textbox bind:textbox={questionnaireObject} />
-            {:else if questionnaireObject.type == 'section'}
+            {:else if questionnaireObject.type === 'section'}
               <Section bind:section={questionnaireObject} />
-            {:else if questionnaireObject.type == 'singlemark'}
+            {:else if questionnaireObject.type === 'singlemark'}
               <Singlemark bind:singlemark={questionnaireObject} />
-            {:else if questionnaireObject.type == 'markgroup'}
+            {:else if questionnaireObject.type === 'markgroup'}
               <Markgroup bind:markgroup={questionnaireObject} />
+            {:else if questionnaireObject.type === 'LAYOUT'}
+              <LayoutMarker bind:marker={questionnaireObject} />
             {/if}
           </ListGroupItem>
 
@@ -214,13 +233,21 @@
                   size="sm"
                   color="success"
                   block
+                  outline
                   on:click={() => addSection(idx)}>
                   Add
                   {tool}
                 </Button>
               </Col>
               <Col>
-                <Button size="sm" color="dark" block>Change layout</Button>
+                <Button
+                  on:click={() => addSection(idx, true)}
+                  size="sm"
+                  color="dark"
+                  outline
+                  block>
+                  Change layout
+                </Button>
               </Col>
             </Row>
           </ListGroupItem>

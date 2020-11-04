@@ -4,9 +4,7 @@ export interface EditorLayoutMarker extends OrderedObject {
   columns: 1 | 2 | 3 | 4;
 }
 export type EditorQuestionnaire = Array<EditorQuestionnaireObject>;
-export type EditorQuestionnaireObject =
-  | Exclude<QuestionnaireObject, MulticolQuestionnaireObject>
-  | EditorLayoutMarker;
+export type EditorQuestionnaireObject = MulticolChild | EditorLayoutMarker;
 
 const MARKER_KEY = -1;
 
@@ -62,7 +60,7 @@ export function questionnaireToEditor(
 export function editorToQuestionnaire(
   editorQuestionnaire: EditorQuestionnaire
 ): Questionnaire {
-  let questionnaire = [];
+  let questionnaire: Questionnaire = [];
 
   let currentMulticol: MulticolQuestionnaireObject | null = null;
 
@@ -93,6 +91,11 @@ export function editorToQuestionnaire(
         currentMulticol.children.push(qObject);
       }
     }
+  }
+
+  if (currentMulticol !== null) {
+    // There is a dangling multicol
+    questionnaire.push(currentMulticol);
   }
 
   return questionnaire;
