@@ -11,7 +11,7 @@
 
   let mode: Mode = marker.columns > 1 ? Mode.MultiColumn : Mode.SingleColumn;
 
-  let columns: 1 | 2 | 3 | 4 = marker.columns;
+  let columns: 1 | 2 | 3 | 4 = marker.columns > 1 ? marker.columns : 2;
 
   $: marker.columns = mode === Mode.SingleColumn ? 1 : columns;
 </script>
