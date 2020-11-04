@@ -1,9 +1,110 @@
+export const DEFAULT_COLUMN_COUNT = 1;
+export interface EditorLayoutMarker extends OrderedObject {
+  type: "LAYOUT";
+  columns: 1 | 2 | 3 | 4;
+}
+export type EditorQuestionnaire = Array<EditorQuestionnaireObject>;
+export type EditorQuestionnaireObject =
+  | Exclude<QuestionnaireObject, MulticolQuestionnaireObject>
+  | EditorLayoutMarker;
+
+const MARKER_KEY = -1;
+
+export function questionnaireToEditor(
+  questionnaire: Questionnaire
+): EditorQuestionnaire {
+  let editorQuestionnaire: EditorQuestionnaire = [];
+
+  let lastWasMultiCol = false;
+
+  for (const qObject of questionnaire) {
+    if (qObject.type === "multicol") {
+      lastWasMultiCol = true;
+
+      editorQuestionnaire.push({
+        id: MARKER_KEY,
+        type: "LAYOUT",
+        columns: qObject.columns,
+      });
+
+      for (const innerQObject of qObject.children) {
+        editorQuestionnaire.push(innerQObject);
+      }
+    } else {
+      if (lastWasMultiCol) {
+        lastWasMultiCol = false;
+
+        editorQuestionnaire.push({
+          id: MARKER_KEY,
+          type: "LAYOUT",
+          columns: DEFAULT_COLUMN_COUNT,
+        });
+      }
+
+      editorQuestionnaire.push(qObject);
+    }
+  }
+
+  let highestKey = getHighestKey(editorQuestionnaire);
+
+  for (const key in editorQuestionnaire) {
+    const element = editorQuestionnaire[key];
+
+    if (element.id === MARKER_KEY) {
+      highestKey += 1;
+      editorQuestionnaire[key].id = highestKey;
+    }
+  }
+
+  return editorQuestionnaire;
+}
+
+export function editorToQuestionnaire(
+  editorQuestionnaire: EditorQuestionnaire
+): Questionnaire {
+  let questionnaire = [];
+
+  let currentMulticol: MulticolQuestionnaireObject | null = null;
+
+  for (const qObject of editorQuestionnaire) {
+    if (qObject.type === "LAYOUT") {
+      // There is a layout change happening
+      if (currentMulticol !== null) {
+        // push existing mulitcolumn object to questionnaire
+        questionnaire.push(currentMulticol);
+      }
+
+      if (qObject.columns === 1) {
+        // This is a layout reset. Go back to just adding qObjects
+        currentMulticol = null;
+      } else {
+        currentMulticol = {
+          id: qObject.id,
+          type: "multicol",
+          columns: qObject.columns,
+          children: [],
+        };
+      }
+    } else {
+      // There is no change in layout
+      if (currentMulticol === null) {
+        questionnaire.push(qObject);
+      } else {
+        currentMulticol.children.push(qObject);
+      }
+    }
+  }
+
+  return questionnaire;
+}
+
+//
 export type Questionnaire = Array<QuestionnaireObject>;
 
-export function getHighestKey<T extends OrderedObject>(ordered: Array<T>): number {
-  return (
-    ordered.reduce((key, section) => Math.max(key, section.id), 0) + 1
-  );
+export function getHighestKey<T extends OrderedObject>(
+  ordered: Array<T>
+): number {
+  return ordered.reduce((key, section) => Math.max(key, section.id), 0) + 1;
 }
 
 //
@@ -32,7 +133,7 @@ export interface SectionQuestionnaireObject extends OrderedObject {
 //
 export interface MulticolQuestionnaireObject extends OrderedObject {
   type: "multicol";
-  columns: 1 | 2 | 3 | 4;
+  columns: 2 | 3 | 4;
   children: Array<MulticolChild>;
 }
 export type MulticolChild = Exclude<
