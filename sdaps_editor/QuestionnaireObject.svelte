@@ -7,6 +7,16 @@
   import type { Questionnaire, QuestionnaireObject } from "./questionnaire";
   import { getHighestKey } from "./questionnaire";
 
+  import {
+    ListGroupItem,
+    Button,
+    Col,
+    Row,
+    Badge,
+    Card,
+    CardBody,
+  } from "sveltestrap";
+
   import Textbody from "./objects/Textbody.svelte";
   import Textbox from "./objects/Textbox.svelte";
   import Section from "./objects/Section.svelte";
@@ -21,7 +31,6 @@
   let tool: QuestionnaireObject["type"] = "section";
 
   // Add and remove
-
   function addSection(idx: number) {
     const startIdx = idx + 1;
 
@@ -65,23 +74,6 @@
     width: 100%;
   }
 
-  .questionnaireObject {
-    display: block;
-  }
-
-  .addSection {
-    display: block;
-  }
-
-  button {
-    border: none;
-  }
-
-  button.add {
-    width: 100%;
-    border: none;
-  }
-
   .moveSection {
     background-color: white;
   }
@@ -90,71 +82,116 @@
     display: block;
     position: sticky;
     top: 0;
-    border: solid 1px black;
-    background-color: antiquewhite;
     margin-bottom: 1em;
+    z-index: 1;
+  }
+
+  .infoHeader {
+    margin-bottom: 0.4em;
+  }
+
+  input[type="radio"] + label {
+    color: white;
+    line-height: normal;
+  }
+
+  input[type="radio"] {
+    margin-top: -1px;
+    vertical-align: middle;
   }
 </style>
 
 <main>
   <div class="toolbox">
-    <input
-      type="radio"
-      id="section"
-      name="tool"
-      value="section"
-      bind:group={tool} />
-    <label for="section">Section</label>
-
-    <input
-      type="radio"
-      id="textbody"
-      name="tool"
-      value="textbody"
-      bind:group={tool} />
-    <label for="textbody">Textbody</label>
-
-    <input
-      type="radio"
-      id="textbox"
-      name="tool"
-      value="textbox"
-      bind:group={tool} />
-    <label for="textbox">Textbox</label>
-
-    <input
-      type="radio"
-      id="singlemark"
-      name="tool"
-      value="singlemark"
-      bind:group={tool} />
-    <label for="singlemark">Singlemark</label>
-
-    <input
-      type="radio"
-      id="markgroup"
-      name="tool"
-      value="markgroup"
-      bind:group={tool} />
-    <label for="markgroup">Markgroup</label>
+    <Card color="dark">
+      <CardBody>
+        <Row>
+          <Col>
+            <input
+              type="radio"
+              id="section"
+              name="tool"
+              value="section"
+              bind:group={tool} />
+            <label for="section">Section</label>
+          </Col>
+          <Col>
+            <input
+              type="radio"
+              id="textbody"
+              name="tool"
+              value="textbody"
+              bind:group={tool} />
+            <label for="textbody">Textbody</label>
+          </Col>
+          <Col>
+            <input
+              type="radio"
+              id="textbox"
+              name="tool"
+              value="textbox"
+              bind:group={tool} />
+            <label for="textbox">Textbox</label>
+          </Col>
+          <Col>
+            <input
+              type="radio"
+              id="singlemark"
+              name="tool"
+              value="singlemark"
+              bind:group={tool} />
+            <label for="singlemark">Singlemark</label>
+          </Col>
+          <Col>
+            <input
+              type="radio"
+              id="markgroup"
+              name="tool"
+              value="markgroup"
+              bind:group={tool} />
+            <label for="markgroup">Markgroup</label>
+          </Col>
+        </Row>
+      </CardBody>
+    </Card>
   </div>
+
   <div class="sectionContainer">
-    <div class="addSection list-group-item list-group-item-action">
-      <button class="add btn btn-sm btn-success" on:click={() => addSection(-1)}>Add {tool}</button>
-    </div>
+    <ListGroupItem>
+      <Row>
+        <Col>
+          <Button
+            size="sm"
+            color="success"
+            block
+            on:click={() => addSection(-1)}>
+            Add
+            {tool}
+          </Button>
+        </Col>
+        <Col>
+          <Button size="sm" color="dark" block>Change layout</Button>
+        </Col>
+      </Row>
+    </ListGroupItem>
     <div
       use:dndzone={{ items: questionnaire, flipDurationMs, dropTargetStyle: { outline: 'solid 2px blue' } }}
       on:consider={handleDndConsider}
       on:finalize={handleDndFinalize}>
       {#each questionnaire as questionnaireObject, idx (questionnaireObject.id)}
-        <div class="moveSection list-group" animate:flip={{ duration: flipDurationMs }}>
-          <div class="questionnaireObject list-group-item list-group-item-action">
-            <div class="d-flex w-100 justify-content-between">
-              <h6 class="mb-1"><span class="badge badge-dark">{questionnaireObject.type}</span></h6>
+        <div class="moveSection" animate:flip={{ duration: flipDurationMs }}>
+          <ListGroupItem>
+            <div class="infoHeader d-flex w-100 justify-content-between">
+              <h6>
+                <Badge color="dark">{questionnaireObject.type}</Badge>
+              </h6>
               <small>
-                <button
-                  class="remove btn btn-sm btn-outline-danger"
-                  on:click={() => deleteSection(idx)}><i class="la la-trash"></i></button>
+                <Button
+                  on:click={() => deleteSection(idx)}
+                  color="danger"
+                  size="sm">
+                  Remove
+                </Button>
               </small>
             </div>
             {#if questionnaireObject.type == 'textbody'}
@@ -168,12 +205,25 @@
             {:else if questionnaireObject.type == 'markgroup'}
               <Markgroup bind:markgroup={questionnaireObject} />
             {/if}
-          </div>
+          </ListGroupItem>
 
-          <div class="addSection list-group-item list-group-item-action">
-            <button class="add btn btn-sm btn-success" on:click={() => addSection(idx)}>Add
-              {tool}</button>
-          </div>
+          <ListGroupItem>
+            <Row>
+              <Col>
+                <Button
+                  size="sm"
+                  color="success"
+                  block
+                  on:click={() => addSection(idx)}>
+                  Add
+                  {tool}
+                </Button>
+              </Col>
+              <Col>
+                <Button size="sm" color="dark" block>Change layout</Button>
+              </Col>
+            </Row>
+          </ListGroupItem>
         </div>
       {/each}
     </div>

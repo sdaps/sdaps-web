@@ -45,7 +45,7 @@
   }
 
   const unsubscribe = questionnaireStore.subscribe(
-    throttle((value) => save(value), 500, { leading: true })
+    throttle((value) => save(value), 2000, { leading: true })
   );
 
   onDestroy(unsubscribe);

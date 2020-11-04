@@ -23,6 +23,7 @@
     "svelte-check": "^1.0.0",
     "svelte-dnd-action": "^0.6.18",
     "svelte-preprocess": "^4.0.0",
+    "sveltestrap": "^3.9.5",
     "tslib": "^2.0.0",
     "typescript": "^3.9.3"
   },
