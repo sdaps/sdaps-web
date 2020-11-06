@@ -87,6 +87,7 @@
   }
 
   .moveSection {
+    position: relative;
     background-color: white;
   }
 
@@ -95,7 +96,7 @@
     position: sticky;
     top: 0;
     margin-bottom: 1em;
-    z-index: 1;
+    z-index: 2;
   }
 
   .infoHeader {
@@ -110,6 +111,33 @@
   input[type="radio"] {
     margin-top: -1px;
     vertical-align: middle;
+  }
+
+  .layoutIndicator {
+    z-index: 1;
+    margin-left: -1em;
+    margin-right: -1em;
+    position: relative;
+  }
+
+  .addArrow {
+    background-color: white;
+    height: 2em;
+    position: absolute;
+    width: 6em;
+    left: -6em;
+    bottom: 0;
+    transform: translateY(50%);
+  }
+
+  .changeLayoutArrow {
+    background-color: white;
+    height: 2em;
+    position: absolute;
+    width: 8em;
+    right: -8em;
+    bottom: 0;
+    transform: translateY(50%);
   }
 </style>
 
@@ -217,7 +245,10 @@
       on:consider={handleDndConsider}
       on:finalize={handleDndFinalize}>
       {#each questionnaire as questionnaireObject, idx (questionnaireObject.id)}
-        <div class="moveSection" animate:flip={{ duration: flipDurationMs }}>
+        <div
+          class="moveSection"
+          class:layoutIndicator={questionnaireObject.type === 'LAYOUT'}
+          animate:flip={{ duration: flipDurationMs }}>
           <ListGroupItem>
             <div class="infoHeader d-flex w-100 justify-content-between">
               <h6>
@@ -251,31 +282,28 @@
             {/if}
           </ListGroupItem>
 
-          <ListGroupItem>
-            <Row>
-              <Col>
-                <Button
-                  size="sm"
-                  color="success"
-                  block
-                  outline
-                  on:click={() => addSection(idx)}>
-                  Add
-                  {tool}
-                </Button>
-              </Col>
-              <Col>
-                <Button
-                  on:click={() => addSection(idx, true)}
-                  size="sm"
-                  color="dark"
-                  outline
-                  block>
-                  Change layout
-                </Button>
-              </Col>
-            </Row>
-          </ListGroupItem>
+          <div class="addArrow">
+            <Button
+              size="sm"
+              color="success"
+              block
+              outline
+              on:click={() => addSection(idx)}>
+              Add
+              {tool}
+            </Button>
+          </div>
+
+          <div class="changeLayoutArrow">
+            <Button
+              on:click={() => addSection(idx, true)}
+              size="sm"
+              color="dark"
+              outline
+              block>
+              Change layout
+            </Button>
+          </div>
         </div>
       {/each}
     </div>

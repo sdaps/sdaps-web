@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { EditorLayoutMarker } from "./questionnaire";
-  import { FormGroup, Label, CustomInput, Input } from "sveltestrap";
+  import { FormGroup, CustomInput, Input, Row, Col } from "sveltestrap";
 
   export let marker: EditorLayoutMarker;
 
@@ -16,27 +16,32 @@
   $: marker.columns = mode === Mode.SingleColumn ? 1 : columns;
 </script>
 
-<FormGroup>
-  <CustomInput
-    type="select"
-    id="exampleCustomSelect"
-    name="customSelect"
-    bind:value={mode}>
-    <option value={Mode.SingleColumn}>Single column</option>
-    <option value={Mode.MultiColumn}>Multi column</option>
-  </CustomInput>
-</FormGroup>
+<Row>
+  <Col>
+    <FormGroup>
+      <CustomInput
+        type="select"
+        id="exampleCustomSelect"
+        name="customSelect"
+        bind:value={mode}>
+        <option value={Mode.SingleColumn}>Single column</option>
+        <option value={Mode.MultiColumn}>Multi column</option>
+      </CustomInput>
+    </FormGroup>
+  </Col>
 
-{#if mode === Mode.MultiColumn}
-  <FormGroup>
-    <Label for="exampleNumber">Number of columns</Label>
-    <Input
-      type="number"
-      name="number"
-      id="exampleNumber"
-      min="2"
-      max="4"
-      step="1"
-      bind:value={columns} />
-  </FormGroup>
-{/if}
+  {#if mode === Mode.MultiColumn}
+    <Col>
+      <FormGroup>
+        <Input
+          type="number"
+          name="number"
+          id="exampleNumber"
+          min="2"
+          max="4"
+          step="1"
+          bind:value={columns} />
+      </FormGroup>
+    </Col>
+  {/if}
+</Row>

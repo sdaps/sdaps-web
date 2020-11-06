@@ -30,12 +30,12 @@
     return decodeURIComponent(xsrfCookies[0].split("=")[1]);
   }
 
-  function save(value: EditorQuestionnaire) {
+  async function save(value: EditorQuestionnaire) {
     const csrfToken = getCookie("csrftoken");
 
     const questionnaire: Questionnaire = editorToQuestionnaire(value);
 
-    fetch(questionnairePath, {
+    await fetch(questionnairePath, {
       method: "POST",
       body: JSON.stringify(questionnaire),
       credentials: "include",
@@ -47,8 +47,15 @@
     });
   }
 
+  let saving = false;
+
   const unsubscribe = questionnaireStore.subscribe(
-    throttle((value) => save(value), 2000, { leading: true })
+    throttle((value) => {
+      if (!saving) {
+        saving = true;
+        save(value).then(() => (saving = false));
+      }
+    }, 2000)
   );
 
   onDestroy(unsubscribe);
