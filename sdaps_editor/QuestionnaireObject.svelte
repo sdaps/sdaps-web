@@ -87,6 +87,7 @@
   }
 
   .moveSection {
+    z-index: 1;
     position: relative;
     background-color: white;
   }
@@ -115,28 +116,28 @@
 
   .layoutIndicator {
     z-index: 1;
-    margin-left: -1em;
-    margin-right: -1em;
+    margin-left: 1em;
+    margin-right: 1em;
     position: relative;
   }
 
   .addArrow {
     background-color: white;
-    height: 2em;
     position: absolute;
     width: 6em;
-    left: -6em;
+    left: calc(-6em + 2px);
     bottom: 0;
+    z-index: -1;
     transform: translateY(50%);
   }
 
   .changeLayoutArrow {
     background-color: white;
-    height: 2em;
     position: absolute;
     width: 8em;
-    right: -8em;
+    right: calc(-8em + 2px);
     bottom: 0;
+    z-index: -1;
     transform: translateY(50%);
   }
 </style>
@@ -247,7 +248,7 @@
       {#each questionnaire as questionnaireObject, idx (questionnaireObject.id)}
         <div
           class="moveSection"
-          class:layoutIndicator={questionnaireObject.type === 'LAYOUT'}
+          class:layoutIndicator={questionnaireObject.type !== 'LAYOUT'}
           animate:flip={{ duration: flipDurationMs }}>
           <ListGroupItem>
             <div class="infoHeader d-flex w-100 justify-content-between">
