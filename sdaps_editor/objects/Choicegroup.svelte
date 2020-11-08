@@ -66,12 +66,22 @@
     }
   }
 
-  function deleteSection(idx: number) {
+  function deleteSection(idx: number, mode: "groupaddchoice" | "choiceline") {
     const startIdx = idx;
 
     choicegroup.children.splice(startIdx, 1);
 
     choicegroup.children = choicegroup.children;
+
+    if (mode === "groupaddchoice") {
+      groupAddChoice.splice(startIdx, 1);
+
+      groupAddChoice = groupAddChoice;
+    } else if (mode === "choiceline") {
+      choiceLine.splice(startIdx, 1);
+
+      choiceLine = choiceLine;
+    }
   }
 
   // Drag and drop
@@ -112,14 +122,21 @@
     use:dndzone={{ items: groupAddChoice, flipDurationMs, dropTargetStyle: { outline: 'solid 2px blue' }, type: 'groupaddchoice' }}
     on:consider={handleGroupaddchoiceDndConsider}
     on:finalize={handleGroupaddchoiceDndFinalize}>
-    {#each groupAddChoice as child (child.id)}
+    {#each groupAddChoice as child, idx (child.id)}
       <div animate:flip={{ duration: flipDurationMs }}>
         {#if child.type === 'groupaddchoice'}
           <InputGroup>
             <InputGroupAddon addonType="prepend">
-              <InputGroupText>Choice:</InputGroupText>
+              <InputGroupText>Choice</InputGroupText>
             </InputGroupAddon>
             <Input placeholder="Choice" bind:value={child.choice} />
+            <InputGroupAddon addonType="append">
+              <Button
+                color="danger"
+                on:click={() => deleteSection(idx, 'groupaddchoice')}>
+                Remove
+              </Button>
+            </InputGroupAddon>
           </InputGroup>
         {/if}
       </div>
@@ -133,14 +150,21 @@
     use:dndzone={{ items: choiceLine, flipDurationMs, dropTargetStyle: { outline: 'solid 2px blue' }, type: 'choiceline' }}
     on:consider={handleChoiceLineDndConsider}
     on:finalize={handleChoiceLineDndFinalize}>
-    {#each choiceLine as child (child.id)}
+    {#each choiceLine as child, idx (child.id)}
       <div animate:flip={{ duration: flipDurationMs }}>
         {#if child.type === 'choiceline'}
           <InputGroup>
             <InputGroupAddon addonType="prepend">
-              <InputGroupText>Question:</InputGroupText>
+              <InputGroupText>Question</InputGroupText>
             </InputGroupAddon>
             <Input placeholder="Question" bind:value={child.question} />
+            <InputGroupAddon addonType="append">
+              <Button
+                color="danger"
+                on:click={() => deleteSection(idx, 'choiceline')}>
+                Remove
+              </Button>
+            </InputGroupAddon>
           </InputGroup>
         {/if}
       </div>
