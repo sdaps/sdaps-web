@@ -121,7 +121,9 @@
               <Input placeholder="Answer" bind:value={child.answer} />
             </InputGroup>
 
-            <Button on:click={() => deleteSection(idx)}>Remove</Button>
+            <Button color="danger" on:click={() => deleteSection(idx)}>
+              Remove
+            </Button>
           {:else}
             <InputGroup>
               <InputGroupAddon addonType="prepend">
@@ -154,7 +156,9 @@
                 bind:value={child.height} />
             </InputGroup>
 
-            <Button on:click={() => deleteSection(idx)}>Remove</Button>
+            <Button color="danger" on:click={() => deleteSection(idx)}>
+              Remove
+            </Button>
           {/if}
         </CardBody>
       </div>
