@@ -41,6 +41,10 @@ export function createQuestionnaireObject(
 export function createQuestionnaireObject(
   type: QuestionnaireObject["type"],
   id: number
+);
+export function createQuestionnaireObject(
+  type: QuestionnaireObject["type"],
+  id: number
 ) {
   if (type === "multicol") {
     return { type, id, columns: 2, children: [] };

@@ -26,6 +26,7 @@
   import Choicequestion from "./objects/Choicequestion.svelte";
 
   import LayoutMarker from "./LayoutMarker.svelte";
+  import Toolbox from "./Toolbox.svelte";
 
   export let questionnaire: EditorQuestionnaire;
 
@@ -104,16 +105,6 @@
     margin-bottom: 0.4em;
   }
 
-  input[type="radio"] + label {
-    color: white;
-    line-height: normal;
-  }
-
-  input[type="radio"] {
-    margin-top: -1px;
-    vertical-align: middle;
-  }
-
   .layoutIndicator {
     z-index: 1;
     margin-left: 1em;
@@ -144,75 +135,7 @@
 
 <main>
   <div class="toolbox">
-    <Card color="dark">
-      <CardBody>
-        <Row>
-          <Col>
-            <input
-              type="radio"
-              id="section"
-              name="tool"
-              value="section"
-              bind:group={tool} />
-            <label for="section">Section</label>
-          </Col>
-          <Col>
-            <input
-              type="radio"
-              id="textbody"
-              name="tool"
-              value="textbody"
-              bind:group={tool} />
-            <label for="textbody">Textbody</label>
-          </Col>
-          <Col>
-            <input
-              type="radio"
-              id="textbox"
-              name="tool"
-              value="textbox"
-              bind:group={tool} />
-            <label for="textbox">Textbox</label>
-          </Col>
-          <Col>
-            <input
-              type="radio"
-              id="singlemark"
-              name="tool"
-              value="singlemark"
-              bind:group={tool} />
-            <label for="singlemark">Singlemark</label>
-          </Col>
-          <Col>
-            <input
-              type="radio"
-              id="markgroup"
-              name="tool"
-              value="markgroup"
-              bind:group={tool} />
-            <label for="markgroup">Markgroup</label>
-          </Col>
-          <Col>
-            <input
-              type="radio"
-              id="choicegroup"
-              name="tool"
-              value="choicegroup"
-              bind:group={tool} />
-            <label for="choicegroup">Choicegroup</label>
-          </Col>
-          <Col>
-            <input
-              type="radio"
-              id="choicequestion"
-              name="tool"
-              value="choicequestion"
-              bind:group={tool} />
-            <label for="choicequestion">Choicequestion</label>
-          </Col>
-        </Row>
-      </CardBody>
-    </Card>
+    <Toolbox bind:tool />
   </div>
 
   <div class="sectionContainer">
@@ -283,28 +206,54 @@
             {/if}
           </ListGroupItem>
 
-          <div class="addArrow">
-            <Button
-              size="sm"
-              color="success"
-              block
-              outline
-              on:click={() => addSection(idx)}>
-              Add
-              {tool}
-            </Button>
-          </div>
+          {#if idx === questionnaire.length - 1}
+            <ListGroupItem>
+              <Row>
+                <Col>
+                  <Button
+                    size="sm"
+                    color="success"
+                    block
+                    outline
+                    on:click={() => addSection(-1)}>
+                    Add
+                    {tool}
+                  </Button>
+                </Col>
+                <Col>
+                  <Button
+                    on:click={() => addSection(-1, true)}
+                    size="sm"
+                    color="dark"
+                    outline
+                    block>
+                    Change layout
+                  </Button>
+                </Col>
+              </Row>
+            </ListGroupItem>
+          {:else}
+            <div class="addArrow">
+              <Button
+                size="sm"
+                color="success"
+                block
+                on:click={() => addSection(idx)}>
+                Add
+                {tool}
+              </Button>
+            </div>
 
-          <div class="changeLayoutArrow">
-            <Button
-              on:click={() => addSection(idx, true)}
-              size="sm"
-              color="dark"
-              outline
-              block>
-              Change layout
-            </Button>
-          </div>
+            <div class="changeLayoutArrow">
+              <Button
+                on:click={() => addSection(idx, true)}
+                size="sm"
+                color="dark"
+                block>
+                Change layout
+              </Button>
+            </div>
+          {/if}
         </div>
       {/each}
     </div>

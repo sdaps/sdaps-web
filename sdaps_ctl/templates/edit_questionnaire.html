@@ -8,7 +8,7 @@
         <a type="button" class="btn btn-primary" href="{% url "survey_overview" survey.slug %}"><i class="la la-arrow-left"></i> Back to Survey Overview</a><br><br>
 	    {% if form.errors %}
 	       {% for field in form %}
-		   {% for error in field.errors %} 
+		   {% for error in field.errors %}
 		      <div class="alert alert-danger">
 			   <strong>{{ error|escape }}</strong>
 		      </div>
@@ -32,8 +32,8 @@
     </div>
 </div>
 <hr>
-<div class="row">
-    <div id="likert-editor" class="col-12" />
+<div class="row justify-content-md-center">
+    <div id="likert-editor" class="col col-10" />
 </div>
 {% endblock %}
 
