@@ -107,7 +107,7 @@
 
 <InputGroup>
   <InputGroupAddon addonType="prepend">
-    <InputGroupText>Heading:</InputGroupText>
+    <InputGroupText>Heading</InputGroupText>
   </InputGroupAddon>
   <Input placeholder="heading" bind:value={choicegroup.heading} />
 </InputGroup>
