@@ -7,3 +7,13 @@ sdaps/
 proj/
 db/
 .env
+
+sdaps_ctl/static/sdaps_ctl/likert_editor.js
+sdaps_ctl/static/sdaps_ctl/likert_editor.js.map
+
+sdaps_ctl/static/sdaps_ctl/css/likert_editor.css
+sdaps_ctl/static/sdaps_ctl/css/likert_editor.css.map
+
+node_modules/
+
+.DS_Store

@@ -1,0 +1,261 @@
+<script lang="ts">
+  import { dndzone } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
+  import { createQuestionnaireObject } from "./factory";
+  import { updateKey } from "./keyTracker";
+
+  import type { EditorQuestionnaire, MulticolChild } from "./questionnaire";
+  import { getHighestKey } from "./questionnaire";
+
+  import {
+    ListGroupItem,
+    Button,
+    Col,
+    Row,
+    Badge,
+    Card,
+    CardBody,
+  } from "sveltestrap";
+
+  import Textbody from "./objects/Textbody.svelte";
+  import Textbox from "./objects/Textbox.svelte";
+  import Section from "./objects/Section.svelte";
+  import Singlemark from "./objects/Singlemark.svelte";
+  import Markgroup from "./objects/Markgroup.svelte";
+  import Choicegroup from "./objects/Choicegroup.svelte";
+  import Choicequestion from "./objects/Choicequestion.svelte";
+
+  import LayoutMarker from "./LayoutMarker.svelte";
+  import Toolbox from "./Toolbox.svelte";
+
+  export let questionnaire: EditorQuestionnaire;
+
+  const stepCount = getHighestKey(questionnaire);
+  const listKey = updateKey(stepCount);
+
+  let tool: MulticolChild["type"] = "section";
+
+  // Add and remove
+  function addSection(idx: number, layout?: boolean) {
+    const startIdx = idx + 1;
+
+    $listKey += 1;
+
+    if (layout) {
+      questionnaire.splice(startIdx, 0, {
+        id: $listKey,
+        type: "LAYOUT",
+        columns: 1,
+      });
+    } else {
+      questionnaire.splice(
+        startIdx,
+        0,
+        createQuestionnaireObject(tool, $listKey)
+      );
+    }
+
+    questionnaire = questionnaire;
+  }
+
+  function deleteSection(idx: number) {
+    const startIdx = idx;
+
+    questionnaire.splice(startIdx, 1);
+
+    questionnaire = questionnaire;
+  }
+
+  // Drag and drop
+
+  const flipDurationMs = 50;
+
+  function handleDndConsider(e) {
+    questionnaire = e.detail.items;
+  }
+
+  function handleDndFinalize(e) {
+    questionnaire = e.detail.items;
+  }
+</script>
+
+<style>
+  .sectionContainer {
+    display: flex;
+    flex-flow: column;
+
+    width: 100%;
+  }
+
+  .moveSection {
+    z-index: 1;
+    position: relative;
+    background-color: white;
+  }
+
+  .toolbox {
+    display: block;
+    position: sticky;
+    top: 0;
+    margin-bottom: 1em;
+    z-index: 2;
+  }
+
+  .infoHeader {
+    margin-bottom: 0.4em;
+  }
+
+  .layoutIndicator {
+    z-index: 1;
+    margin-left: 1em;
+    margin-right: 1em;
+    position: relative;
+  }
+
+  .addArrow {
+    background-color: white;
+    position: absolute;
+    width: 6em;
+    left: calc(-6em + 2px);
+    bottom: 0;
+    z-index: -1;
+    transform: translateY(50%);
+  }
+
+  .changeLayoutArrow {
+    background-color: white;
+    position: absolute;
+    width: 8em;
+    right: calc(-8em + 2px);
+    bottom: 0;
+    z-index: -1;
+    transform: translateY(50%);
+  }
+</style>
+
+<main>
+  <div class="toolbox">
+    <Toolbox bind:tool />
+  </div>
+
+  <div class="sectionContainer">
+    <ListGroupItem>
+      <Row>
+        <Col>
+          <Button
+            size="sm"
+            color="success"
+            block
+            outline
+            on:click={() => addSection(-1)}>
+            Add
+            {tool}
+          </Button>
+        </Col>
+        <Col>
+          <Button
+            on:click={() => addSection(-1, true)}
+            size="sm"
+            color="dark"
+            outline
+            block>
+            Change layout
+          </Button>
+        </Col>
+      </Row>
+    </ListGroupItem>
+    <div
+      use:dndzone={{ items: questionnaire, flipDurationMs, dropTargetStyle: { outline: 'solid 2px blue' } }}
+      on:consider={handleDndConsider}
+      on:finalize={handleDndFinalize}>
+      {#each questionnaire as questionnaireObject, idx (questionnaireObject.id)}
+        <div
+          class="moveSection"
+          class:layoutIndicator={questionnaireObject.type !== 'LAYOUT'}
+          animate:flip={{ duration: flipDurationMs }}>
+          <ListGroupItem>
+            <div class="infoHeader d-flex w-100 justify-content-between">
+              <h6>
+                <Badge color="dark">{questionnaireObject.type}</Badge>
+              </h6>
+              <small>
+                <Button
+                  on:click={() => deleteSection(idx)}
+                  color="danger"
+                  size="sm">
+                  Remove
+                </Button>
+              </small>
+            </div>
+            {#if questionnaireObject.type === 'textbody'}
+              <Textbody bind:textbody={questionnaireObject} />
+            {:else if questionnaireObject.type === 'textbox'}
+              <Textbox bind:textbox={questionnaireObject} />
+            {:else if questionnaireObject.type === 'section'}
+              <Section bind:section={questionnaireObject} />
+            {:else if questionnaireObject.type === 'singlemark'}
+              <Singlemark bind:singlemark={questionnaireObject} />
+            {:else if questionnaireObject.type === 'markgroup'}
+              <Markgroup bind:markgroup={questionnaireObject} />
+            {:else if questionnaireObject.type === 'choicegroup'}
+              <Choicegroup bind:choicegroup={questionnaireObject} />
+            {:else if questionnaireObject.type === 'choicequestion'}
+              <Choicequestion bind:choicequestion={questionnaireObject} />
+            {:else if questionnaireObject.type === 'LAYOUT'}
+              <LayoutMarker bind:marker={questionnaireObject} />
+            {/if}
+          </ListGroupItem>
+
+          {#if idx === questionnaire.length - 1}
+            <ListGroupItem>
+              <Row>
+                <Col>
+                  <Button
+                    size="sm"
+                    color="success"
+                    block
+                    outline
+                    on:click={() => addSection(-1)}>
+                    Add
+                    {tool}
+                  </Button>
+                </Col>
+                <Col>
+                  <Button
+                    on:click={() => addSection(-1, true)}
+                    size="sm"
+                    color="dark"
+                    outline
+                    block>
+                    Change layout
+                  </Button>
+                </Col>
+              </Row>
+            </ListGroupItem>
+          {:else}
+            <div class="addArrow">
+              <Button
+                size="sm"
+                color="success"
+                block
+                on:click={() => addSection(idx)}>
+                Add
+                {tool}
+              </Button>
+            </div>
+
+            <div class="changeLayoutArrow">
+              <Button
+                on:click={() => addSection(idx, true)}
+                size="sm"
+                color="dark"
+                block>
+                Change layout
+              </Button>
+            </div>
+          {/if}
+        </div>
+      {/each}
+    </div>
+  </div>
+</main>

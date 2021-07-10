@@ -1,4 +1,8 @@
+<center>
+
 ![](https://raw.githubusercontent.com/sdaps/sdaps-web/main/sdaps_ctl/static/sdaps_ctl/img/sdaps.png)
+
+</center>
 
 sdaps-web is a django application that can be used as a frontend for
 [SDAPS](https://github.com/sdaps/sdaps) and is written in Python 3.
