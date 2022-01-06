@@ -1,5 +1,5 @@
 django==2.2.18
-celery==4.2.1
+celery==5.2.2
 django-celery-results==1.0.1
 django-crispy-forms==1.7.2
 simplejson==3.16
