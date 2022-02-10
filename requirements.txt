@@ -1,4 +1,4 @@
-django==2.2.18
+django==2.2.27
 celery==4.2.1
 django-celery-results==1.0.1
 django-crispy-forms==1.7.2
